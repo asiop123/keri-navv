@@ -1,4 +1,4 @@
-import { TimelineEntry } from '@/types';
+import { TimelineEntry, RestStopInfo } from '@/types';
 
 const API_KEY = 'MuNXa5wvdkAvcr10ExFWNBen06rcF3mT';
 const BASE_URL = 'https://api.tomtom.com';
@@ -12,6 +12,7 @@ export interface RouteResult {
   geoJson: GeoJSON.FeatureCollection;
   bbox: [number, number, number, number];
   waypoints: { lat: number; lng: number; name: string }[];
+  routePoints: [number, number][]; // [lng, lat] coordinates along route
 }
 
 export interface RouteLeg {
@@ -62,7 +63,6 @@ export async function calculateRoute(
   const route = data.routes[0];
   const summary = route.summary;
 
-  // Build GeoJSON from route points
   const allPoints: [number, number][] = [];
   for (const leg of route.legs) {
     for (const point of leg.points) {
@@ -102,17 +102,89 @@ export async function calculateRoute(
     geoJson,
     bbox: [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)],
     waypoints: allCoords.map(c => ({ lat: c.lat, lng: c.lng, name: c.name })),
+    routePoints: allPoints,
   };
 }
 
 /**
- * Generate EU driving/rest timeline from a route result.
- * Rules: 4.5h driving → 45min break, max 9h daily driving, 11h overnight rest.
+ * Get the coordinate along the route at a given fraction (0-1) of total distance.
  */
-export function generateTimeline(
+function getPointAlongRoute(
+  routePoints: [number, number][],
+  fraction: number
+): { lng: number; lat: number } {
+  if (routePoints.length === 0) return { lng: 0, lat: 0 };
+  if (fraction <= 0) return { lng: routePoints[0][0], lat: routePoints[0][1] };
+  if (fraction >= 1) {
+    const last = routePoints[routePoints.length - 1];
+    return { lng: last[0], lat: last[1] };
+  }
+
+  // Calculate cumulative distances
+  const distances: number[] = [0];
+  let totalDist = 0;
+  for (let i = 1; i < routePoints.length; i++) {
+    const dx = routePoints[i][0] - routePoints[i - 1][0];
+    const dy = routePoints[i][1] - routePoints[i - 1][1];
+    totalDist += Math.sqrt(dx * dx + dy * dy);
+    distances.push(totalDist);
+  }
+
+  const targetDist = fraction * totalDist;
+  for (let i = 1; i < distances.length; i++) {
+    if (distances[i] >= targetDist) {
+      const segFraction = (targetDist - distances[i - 1]) / (distances[i] - distances[i - 1]);
+      const lng = routePoints[i - 1][0] + segFraction * (routePoints[i][0] - routePoints[i - 1][0]);
+      const lat = routePoints[i - 1][1] + segFraction * (routePoints[i][1] - routePoints[i - 1][1]);
+      return { lng, lat };
+    }
+  }
+
+  const last = routePoints[routePoints.length - 1];
+  return { lng: last[0], lat: last[1] };
+}
+
+/**
+ * Search for rest stops / truck stops near a coordinate using TomTom POI search.
+ */
+export async function searchRestStops(
+  lat: number,
+  lng: number,
+  radius: number = 15000 // 15km
+): Promise<RestStopInfo[]> {
+  // Category IDs: 7311 = petrol station, 7312 = rest area, 9352 = truck stop
+  const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${lat}&lon=${lng}&radius=${radius}&categorySet=7312,9352,7311&limit=5&language=sv-SE`;
+  
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    
+    if (!data.results?.length) return [];
+    
+    return data.results.map((r: any) => {
+      const distKm = (r.dist / 1000).toFixed(1);
+      return {
+        name: r.poi?.name || r.address?.freeformAddress || 'Rastplats',
+        lat: r.position.lat,
+        lng: r.position.lon,
+        distance: `${distKm} km`,
+        category: r.poi?.categories?.[0] || 'Rastplats',
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Generate EU driving/rest timeline from a route result.
+ * Now also searches for actual rest stop locations along the route.
+ */
+export async function generateTimeline(
   route: RouteResult,
   routeType: 'normal' | 'fastest'
-): TimelineEntry[] {
+): Promise<TimelineEntry[]> {
   const timeline: TimelineEntry[] = [];
   const MAX_DRIVE_BEFORE_REST = 4.5 * 60; // 270 min
   const REST_DURATION = 45; // min
@@ -122,6 +194,11 @@ export function generateTimeline(
   let currentTime = new Date(route.departureTime);
   let drivingSinceRest = 0;
   let dailyDriving = 0;
+  let totalDrivenMinutes = 0;
+  const totalTravelMinutes = Math.round(route.travelTimeSeconds / 60);
+
+  // Collect rest break points (fraction of route) to search for stops
+  const restBreakPoints: { index: number; fraction: number; type: 'rest' | 'overnight' }[] = [];
 
   const addEntry = (type: TimelineEntry['type'], label: string, durationMinutes: number, location?: string) => {
     const startTime = new Date(currentTime);
@@ -141,7 +218,6 @@ export function generateTimeline(
     const leg = route.legs[i];
     let remainingDriveMin = Math.round(leg.travelTimeSeconds / 60);
 
-    // Stop at waypoint (loading/unloading) if not first
     if (i > 0) {
       addEntry('stop', `Stopp: ${leg.startLabel}`, 30, leg.startLabel);
     }
@@ -152,40 +228,69 @@ export function generateTimeline(
       const maxDrive = Math.min(driveUntilRest, driveUntilDaily, remainingDriveMin);
       const driveChunk = Math.max(maxDrive, 1);
 
-      addEntry(
-        'drive',
-        `Körning ${leg.startLabel} → ${leg.endLabel}`,
-        driveChunk,
-        undefined
-      );
+      addEntry('drive', `Körning ${leg.startLabel} → ${leg.endLabel}`, driveChunk);
 
       remainingDriveMin -= driveChunk;
       drivingSinceRest += driveChunk;
       dailyDriving += driveChunk;
+      totalDrivenMinutes += driveChunk;
 
       if (remainingDriveMin <= 0) break;
 
-      // Need overnight rest?
+      const fraction = Math.min(totalDrivenMinutes / totalTravelMinutes, 1);
+
       if (dailyDriving >= MAX_DAILY_DRIVE) {
-        addEntry('overnight', 'Dygnsvila (11h)', OVERNIGHT_REST, undefined);
+        const entryIndex = timeline.length;
+        addEntry('overnight', 'Dygnsvila (11h)', OVERNIGHT_REST);
+        restBreakPoints.push({ index: entryIndex, fraction, type: 'overnight' });
         drivingSinceRest = 0;
         dailyDriving = 0;
-      }
-      // Need driving rest?
-      else if (drivingSinceRest >= MAX_DRIVE_BEFORE_REST) {
-        addEntry('rest', 'Rast (45 min)', REST_DURATION, undefined);
+      } else if (drivingSinceRest >= MAX_DRIVE_BEFORE_REST) {
+        const entryIndex = timeline.length;
+        addEntry('rest', 'Rast (45 min)', REST_DURATION);
+        restBreakPoints.push({ index: entryIndex, fraction, type: 'rest' });
         drivingSinceRest = 0;
       }
     }
   }
 
-  // Arrival
   addEntry(
     'arrival',
     `Ankomst ${route.waypoints[route.waypoints.length - 1].name}`,
     0,
     route.waypoints[route.waypoints.length - 1].name
   );
+
+  // Search for rest stop locations at each break point
+  if (restBreakPoints.length > 0 && route.routePoints.length > 0) {
+    const searches = restBreakPoints.map(async (bp) => {
+      const point = getPointAlongRoute(route.routePoints, bp.fraction);
+      const stops = await searchRestStops(point.lat, point.lng);
+      return { bp, stops, searchPoint: point };
+    });
+
+    const results = await Promise.all(searches);
+
+    for (const { bp, stops, searchPoint } of results) {
+      const entry = timeline[bp.index];
+      if (entry && stops.length > 0) {
+        const bestStop = stops[0];
+        entry.restStop = bestStop;
+        entry.location = bestStop.name;
+        entry.label = bp.type === 'overnight'
+          ? `Dygnsvila (11h) – ${bestStop.name}`
+          : `Rast (45 min) – ${bestStop.name}`;
+      } else if (entry) {
+        // No POI found, use approximate location
+        entry.restStop = {
+          name: 'Längs rutten',
+          lat: searchPoint.lat,
+          lng: searchPoint.lng,
+          category: 'Rastplats',
+        };
+      }
+    }
+  }
 
   return timeline;
 }
