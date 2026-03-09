@@ -62,7 +62,9 @@ export default function RoutePlanning() {
     endTime?: string;
     durationMinutes?: number;
     timelineIndex?: number;
-    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string }>;
+    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string; suitability?: string; suitabilityNote?: string }>;
+    suitability?: string;
+    suitabilityNote?: string;
   } | null>(null);
 
   useEffect(() => { setSavedTrips(getSavedTrips()); }, []);
@@ -182,7 +184,7 @@ export default function RoutePlanning() {
 
       const result = await calculateRoute(startCoord, endCoord, waypointCoords, new Date(departureTime).toISOString(), vehicleParams);
       const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
-      const tl = await generateTimeline(result, routeType, stopMinutes);
+      const tl = await generateTimeline(result, routeType, stopMinutes, vehicleParams);
 
       setRouteResult(result);
       setTimeline(tl);
@@ -256,6 +258,8 @@ export default function RoutePlanning() {
         durationMinutes: entry.durationMinutes,
         timelineIndex,
         alternatives,
+        suitability: entry.restStop?.suitability,
+        suitabilityNote: entry.restStop?.suitabilityNote,
       });
       mapHandleRef.current?.flyToLocation(lng, lat, 14);
     }
@@ -295,6 +299,8 @@ export default function RoutePlanning() {
       lng: alt.lng,
       category: alt.category || '',
       distance: alt.distance || '',
+      suitability: (alt as any).suitability || 'good',
+      suitabilityNote: (alt as any).suitabilityNote || '',
       alternatives: [currentStop, ...otherAlts],
     } : null);
     mapHandleRef.current?.flyToLocation(alt.lng, alt.lat, 14);
@@ -747,6 +753,25 @@ export default function RoutePlanning() {
                       {selectedLocation.category && (
                         <p className="text-[11px] text-muted-foreground mt-0.5">{selectedLocation.category}</p>
                       )}
+                      {/* Vehicle suitability badge */}
+                      {selectedLocation.suitability && (
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            selectedLocation.suitability === 'perfect' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' :
+                            selectedLocation.suitability === 'good' ? 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400' :
+                            selectedLocation.suitability === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400' :
+                            'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
+                          }`}>
+                            {selectedLocation.suitability === 'perfect' ? '✓ Perfekt' :
+                             selectedLocation.suitability === 'good' ? '👍 Bra' :
+                             selectedLocation.suitability === 'warning' ? '⚠ Varning' :
+                             '✗ Olämplig'}
+                          </span>
+                        </div>
+                      )}
+                      {selectedLocation.suitabilityNote && (
+                        <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{selectedLocation.suitabilityNote}</p>
+                      )}
                     </div>
                   </div>
 
@@ -828,14 +853,24 @@ export default function RoutePlanning() {
                           <button
                             key={idx}
                             onClick={() => handleSwapRestStop(alt)}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/40 hover:bg-accent transition-colors text-left"
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-left ${
+                              alt.suitability === 'unsuitable' ? 'bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100/50' :
+                              alt.suitability === 'warning' ? 'bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50' :
+                              'bg-muted/40 hover:bg-accent'
+                            }`}
                           >
-                            <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <div className={`shrink-0 w-2 h-2 rounded-full ${
+                              alt.suitability === 'perfect' ? 'bg-emerald-500' :
+                              alt.suitability === 'good' ? 'bg-sky-500' :
+                              alt.suitability === 'warning' ? 'bg-amber-500' :
+                              alt.suitability === 'unsuitable' ? 'bg-red-500' : 'bg-muted-foreground'
+                            }`} />
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-medium truncate">{alt.name}</div>
                               <div className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                                 {alt.distance && <span>{alt.distance}</span>}
                                 {alt.category && <span>· {alt.category}</span>}
+                                {alt.suitabilityNote && <span>· {alt.suitabilityNote}</span>}
                               </div>
                             </div>
                             <span className="text-[10px] text-primary font-medium shrink-0">Byt</span>
