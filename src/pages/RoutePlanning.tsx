@@ -299,6 +299,8 @@ export default function RoutePlanning() {
       lng: alt.lng,
       category: alt.category || '',
       distance: alt.distance || '',
+      suitability: (alt as any).suitability || 'good',
+      suitabilityNote: (alt as any).suitabilityNote || '',
       alternatives: [currentStop, ...otherAlts],
     } : null);
     mapHandleRef.current?.flyToLocation(alt.lng, alt.lat, 14);
