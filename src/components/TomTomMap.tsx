@@ -52,6 +52,7 @@ interface TomTomMapProps {
 export interface TomTomMapHandle {
   getMap: () => tt.Map | null;
   centerOnUser: () => void;
+  flyToLocation: (lng: number, lat: number, zoom?: number) => void;
 }
 
 const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
@@ -73,9 +74,17 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       }
     }, [userPosition]);
 
+    const flyToLocation = useCallback((lng: number, lat: number, zoom = 14) => {
+      const map = mapInstance.current;
+      if (map) {
+        (map as any).flyTo({ center: [lng, lat], zoom, duration: 1000 });
+      }
+    }, []);
+
     useImperativeHandle(ref, () => ({
       getMap: () => mapInstance.current,
       centerOnUser,
+      flyToLocation,
     }));
 
     // Initialize map
