@@ -18,6 +18,7 @@ import SignScanning from "@/pages/SignScanning";
 import Economy from "@/pages/Economy";
 import Community from "@/pages/Community";
 import NotFound from "@/pages/NotFound";
+import Install from "@/pages/Install";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ function AppRoutes() {
         <Route path="/skyltskanning" element={<SignScanning />} />
         <Route path="/ekonomi" element={<Economy />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/install" element={<Install />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>
