@@ -25,7 +25,7 @@ export default function RoutePlanning() {
   const [viewState, setViewState] = useState<ViewState>('search');
   const [destination, setDestination] = useState('');
   const [start, setStart] = useState('');
-  const [waypoints, setWaypoints] = useState<string[]>([]);
+  const [waypoints, setWaypoints] = useState<{ address: string; stopMinutes: number }[]>([]);
   const [vehicleId, setVehicleId] = useState('');
   const [loadWeight, setLoadWeight] = useState('');
   const [routeType, setRouteType] = useState<'normal' | 'fastest'>('normal');
