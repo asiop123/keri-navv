@@ -396,10 +396,22 @@ export default function RoutePlanning() {
                               {' – '}
                               {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            {entry.location && (
+                            {entry.location && !entry.restStop && (
                               <span className="text-[10px] text-muted-foreground">· {entry.location}</span>
                             )}
                           </div>
+                          {entry.restStop && (
+                            <div className="ml-7 mt-1.5 rounded bg-card/80 px-2 py-1.5 text-[11px] space-y-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="h-3 w-3 text-primary shrink-0" />
+                                <span className="font-medium">{entry.restStop.name}</span>
+                              </div>
+                              <div className="flex items-center gap-3 text-muted-foreground">
+                                {entry.restStop.distance && <span>{entry.restStop.distance} från rutten</span>}
+                                {entry.restStop.category && <span>· {entry.restStop.category}</span>}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
