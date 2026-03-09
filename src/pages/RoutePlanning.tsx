@@ -154,7 +154,7 @@ export default function RoutePlanning() {
           ? Promise.resolve({ lat: userPosition.lat, lng: userPosition.lng, name: start || 'Min position' })
           : geocode(startQuery),
         geocode(destination),
-        ...waypoints.filter(w => w.trim()).map(w => geocode(w)),
+        ...waypoints.filter(w => w.address.trim()).map(w => geocode(w.address)),
       ]);
 
       const vehicleParams: VehicleParams | undefined = selectedVehicle
@@ -162,7 +162,8 @@ export default function RoutePlanning() {
         : undefined;
 
       const result = await calculateRoute(startCoord, endCoord, waypointCoords, undefined, vehicleParams);
-      const tl = await generateTimeline(result, routeType);
+      const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
+      const tl = await generateTimeline(result, routeType, stopMinutes);
 
       setRouteResult(result);
       setTimeline(tl);
