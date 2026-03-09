@@ -90,7 +90,9 @@ export default function RoutePlanning() {
       ]);
 
       const result = await calculateRoute(startCoord, endCoord, waypointCoords);
-      const tl = generateTimeline(result, routeType);
+      
+      toast.info('Söker rastplatser längs rutten...');
+      const tl = await generateTimeline(result, routeType);
 
       setRouteResult(result);
       setTimeline(tl);
