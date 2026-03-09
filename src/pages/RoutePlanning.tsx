@@ -610,7 +610,9 @@ export default function RoutePlanning() {
                                 <div className="h-px flex-1 bg-border" />
                               </div>
                             )}
-                            <div className={`rounded-lg px-3 py-2 ${
+                            <button
+                              onClick={() => handleTimelineEntryClick(entry)}
+                              className={`w-full text-left rounded-lg px-3 py-2 transition-colors hover:ring-1 hover:ring-primary/30 cursor-pointer ${
                               entry.type === 'drive' ? 'border-l-4 border-l-primary/60' :
                               entry.type === 'rest' ? 'border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20' :
                               entry.type === 'overnight' ? 'border-l-4 border-l-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20' :
@@ -622,9 +624,14 @@ export default function RoutePlanning() {
                                   <span className="text-sm">{timelineIcon(entry.type)}</span>
                                   <span className="text-xs font-medium">{entry.label}</span>
                                 </div>
-                                {entry.durationMinutes > 0 && (
-                                  <span className="text-[10px] text-muted-foreground">{entry.durationMinutes} min</span>
-                                )}
+                                <div className="flex items-center gap-1.5">
+                                  {entry.durationMinutes > 0 && (
+                                    <span className="text-[10px] text-muted-foreground">{entry.durationMinutes} min</span>
+                                  )}
+                                  {(entry.restStop || entry.type === 'stop' || entry.type === 'arrival') && (
+                                    <MapPin className="h-3 w-3 text-primary" />
+                                  )}
+                                </div>
                               </div>
                               <div className="ml-7 text-[10px] text-muted-foreground">
                                 {new Date(entry.startTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
@@ -632,12 +639,12 @@ export default function RoutePlanning() {
                                 {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                               </div>
                               {entry.restStop && (
-                                <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px]">
-                                  <MapPin className="h-3 w-3 text-primary" />
-                                  <span>{entry.restStop.name}</span>
+                                <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px] text-primary">
+                                  <MapPin className="h-3 w-3" />
+                                  <span className="underline underline-offset-2">{entry.restStop.name}</span>
                                 </div>
                               )}
-                            </div>
+                            </button>
                           </div>
                         );
                       })}
