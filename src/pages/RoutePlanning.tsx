@@ -62,7 +62,9 @@ export default function RoutePlanning() {
     endTime?: string;
     durationMinutes?: number;
     timelineIndex?: number;
-    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string }>;
+    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string; suitability?: string; suitabilityNote?: string }>;
+    suitability?: string;
+    suitabilityNote?: string;
   } | null>(null);
 
   useEffect(() => { setSavedTrips(getSavedTrips()); }, []);
