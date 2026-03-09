@@ -169,10 +169,84 @@ function getPointAlongRoute(
   return { lng: last[0], lat: last[1] };
 }
 
+/**
+ * Assess how suitable a rest stop is for a specific vehicle based on
+ * its physical dimensions and the stop's category/type.
+ */
+function assessStopSuitability(
+  categories: string[],
+  vehicle?: VehicleParams
+): { suitability: RestStopSuitability; note: string } {
+  if (!vehicle) return { suitability: 'good', note: '' };
+
+  const catsLower = categories.map(c => c.toLowerCase());
+  const isTruckStop = catsLower.some(c => c.includes('truck'));
+  const isRestArea = catsLower.some(c => c.includes('rest') || c.includes('rast'));
+  const isPetrolStation = catsLower.some(c => c.includes('petrol') || c.includes('gas') || c.includes('fuel') || c.includes('bensin'));
+  const isParking = catsLower.some(c => c.includes('parking') || c.includes('parkering'));
+
+  const lengthM = vehicle.lengthM || 0;
+  const heightM = vehicle.heightM || 0;
+  const weightKg = vehicle.weightKg || 0;
+
+  // Truck stops: designed for heavy vehicles
+  if (isTruckStop) {
+    if (lengthM > 25) {
+      return { suitability: 'good', note: `Lastbilsstopp – extra långt ekipage (${lengthM}m), kontrollera svängutrymme` };
+    }
+    return { suitability: 'perfect', note: `Lastbilsstopp – anpassat för tunga fordon` };
+  }
+
+  // Rest areas: usually OK but check dimensions
+  if (isRestArea) {
+    if (lengthM > 20) {
+      return { suitability: 'good', note: `Rastplats – ditt ekipage (${lengthM}m) kan behöva extra utrymme` };
+    }
+    return { suitability: 'perfect', note: 'Rastplats – bra för tunga fordon' };
+  }
+
+  // Parking: may have height/length restrictions
+  if (isParking) {
+    const warnings: string[] = [];
+    if (heightM > 3.5) warnings.push(`höjd ${heightM}m kan vara för hög`);
+    if (lengthM > 12) warnings.push(`längd ${lengthM}m – begränsat utrymme`);
+    if (weightKg > 16000) warnings.push(`vikt ${(weightKg / 1000).toFixed(0)}t – ej för tung trafik`);
+
+    if (warnings.length > 0) {
+      return {
+        suitability: lengthM > 16 || heightM > 4 ? 'unsuitable' : 'warning',
+        note: `Parkering – ${warnings.join(', ')}`,
+      };
+    }
+    return { suitability: 'good', note: 'Parkering – troligen lämplig' };
+  }
+
+  // Petrol stations: tight for large trucks
+  if (isPetrolStation) {
+    if (lengthM > 16 || weightKg > 26000) {
+      return {
+        suitability: 'warning',
+        note: `Bensinstation – trångt för ${lengthM}m ekipage, ${(weightKg / 1000).toFixed(0)}t`,
+      };
+    }
+    if (heightM > 4) {
+      return { suitability: 'warning', note: `Bensinstation – tak kan vara lågt (ditt fordon ${heightM}m)` };
+    }
+    return { suitability: 'good', note: 'Bensinstation – bör fungera' };
+  }
+
+  // Unknown category
+  if (lengthM > 16 || weightKg > 26000) {
+    return { suitability: 'warning', note: `Okänd typ – verifiera att ${lengthM}m / ${(weightKg / 1000).toFixed(0)}t ryms` };
+  }
+  return { suitability: 'good', note: '' };
+}
+
 export async function searchRestStops(
   lat: number,
   lng: number,
-  radius: number = 20000
+  radius: number = 20000,
+  vehicle?: VehicleParams
 ): Promise<RestStopInfo[]> {
   // 7369 = truck stop, 7311 = petrol/gas station, 9352 = rest area, 7312 = parking
   const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${lat}&lon=${lng}&radius=${radius}&categorySet=7369,9352,7312,7311&limit=8&language=sv-SE`;
@@ -183,18 +257,28 @@ export async function searchRestStops(
     const data = await res.json();
     if (!data.results?.length) return [];
     
-    return data.results.map((r: any) => {
+    const stops: RestStopInfo[] = data.results.map((r: any) => {
       const distKm = (r.dist / 1000).toFixed(1);
-      const cats = r.poi?.categories || [];
+      const cats: string[] = r.poi?.categories || [];
       const isTruckStop = cats.some((c: string) => c.toLowerCase().includes('truck'));
+      const { suitability, note } = assessStopSuitability(cats, vehicle);
+
       return {
         name: r.poi?.name || r.address?.freeformAddress || 'Rastplats',
         lat: r.position.lat,
         lng: r.position.lon,
         distance: `${distKm} km`,
-        category: isTruckStop ? 'Lastbilsparkering' : (r.poi?.categories?.[0] || 'Rastplats'),
+        category: isTruckStop ? 'Lastbilsparkering' : (cats[0] || 'Rastplats'),
+        suitability,
+        suitabilityNote: note,
       };
     });
+
+    // Sort: perfect first, then good, warning, unsuitable last
+    const order: Record<RestStopSuitability, number> = { perfect: 0, good: 1, warning: 2, unsuitable: 3 };
+    stops.sort((a, b) => (order[a.suitability || 'good']) - (order[b.suitability || 'good']));
+
+    return stops;
   } catch {
     return [];
   }
