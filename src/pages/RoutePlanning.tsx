@@ -655,7 +655,7 @@ export default function RoutePlanning() {
                               </div>
                             )}
                             <button
-                              onClick={() => handleTimelineEntryClick(entry)}
+                              onClick={() => handleTimelineEntryClick(entry, i)}
                               className={`w-full text-left rounded-lg px-3 py-2 transition-colors hover:ring-1 hover:ring-primary/30 cursor-pointer ${
                               entry.type === 'drive' ? 'border-l-4 border-l-primary/60' :
                               entry.type === 'rest' ? 'border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20' :
