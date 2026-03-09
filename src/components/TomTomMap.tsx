@@ -97,7 +97,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
 
       // In navigation mode, follow user
       if (isNavigating) {
-        map.easeTo({ center: [userPosition.lng, userPosition.lat], zoom: 15, duration: 500 });
+        (map as any).easeTo({ center: [userPosition.lng, userPosition.lat], zoom: 15, duration: 500 });
       }
     }, [userPosition, isNavigating]);
 
