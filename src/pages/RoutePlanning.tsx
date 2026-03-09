@@ -25,7 +25,7 @@ export default function RoutePlanning() {
   const [viewState, setViewState] = useState<ViewState>('search');
   const [destination, setDestination] = useState('');
   const [start, setStart] = useState('');
-  const [waypoints, setWaypoints] = useState<string[]>([]);
+  const [waypoints, setWaypoints] = useState<{ address: string; stopMinutes: number }[]>([]);
   const [vehicleId, setVehicleId] = useState('');
   const [loadWeight, setLoadWeight] = useState('');
   const [routeType, setRouteType] = useState<'normal' | 'fastest'>('normal');
@@ -154,7 +154,7 @@ export default function RoutePlanning() {
           ? Promise.resolve({ lat: userPosition.lat, lng: userPosition.lng, name: start || 'Min position' })
           : geocode(startQuery),
         geocode(destination),
-        ...waypoints.filter(w => w.trim()).map(w => geocode(w)),
+        ...waypoints.filter(w => w.address.trim()).map(w => geocode(w.address)),
       ]);
 
       const vehicleParams: VehicleParams | undefined = selectedVehicle
@@ -162,7 +162,8 @@ export default function RoutePlanning() {
         : undefined;
 
       const result = await calculateRoute(startCoord, endCoord, waypointCoords, undefined, vehicleParams);
-      const tl = await generateTimeline(result, routeType);
+      const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
+      const tl = await generateTimeline(result, routeType, stopMinutes);
 
       setRouteResult(result);
       setTimeline(tl);
@@ -295,23 +296,36 @@ export default function RoutePlanning() {
 
                     {/* Waypoints */}
                     {waypoints.map((wp, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
-                        <AddressAutocomplete
-                          value={wp}
-                          onChange={(val) => { const n = [...waypoints]; n[i] = val; setWaypoints(n); }}
-                          placeholder={`Stopp ${i + 1}`}
-                          className="h-9 text-sm"
-                          biasLat={userPosition?.lat}
-                          biasLng={userPosition?.lng}
-                        />
-                        <button onClick={() => setWaypoints(waypoints.filter((_, j) => j !== i))} className="p-1 hover:bg-accent rounded">
-                          <X className="h-3.5 w-3.5 text-muted-foreground" />
-                        </button>
+                      <div key={i} className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
+                          <AddressAutocomplete
+                            value={wp.address}
+                            onChange={(val) => { const n = [...waypoints]; n[i] = { ...n[i], address: val }; setWaypoints(n); }}
+                            placeholder={`Stopp ${i + 1}`}
+                            className="h-9 text-sm"
+                            biasLat={userPosition?.lat}
+                            biasLng={userPosition?.lng}
+                          />
+                          <button onClick={() => setWaypoints(waypoints.filter((_, j) => j !== i))} className="p-1 hover:bg-accent rounded">
+                            <X className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                        </div>
+                        <div className="ml-5 flex items-center gap-2">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          <input
+                            type="number"
+                            min={0}
+                            value={wp.stopMinutes}
+                            onChange={(e) => { const n = [...waypoints]; n[i] = { ...n[i], stopMinutes: Number(e.target.value) }; setWaypoints(n); }}
+                            className="w-16 h-7 rounded-md border border-input bg-background px-2 text-xs text-center"
+                          />
+                          <span className="text-[10px] text-muted-foreground">min lasttid</span>
+                        </div>
                       </div>
                     ))}
 
-                    <button onClick={() => setWaypoints([...waypoints, ''])} className="text-xs text-primary hover:underline flex items-center gap-1">
+                    <button onClick={() => setWaypoints([...waypoints, { address: '', stopMinutes: 30 }])} className="text-xs text-primary hover:underline flex items-center gap-1">
                       <Plus className="h-3 w-3" /> Lägg till stopp
                     </button>
 

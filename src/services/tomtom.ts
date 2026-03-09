@@ -199,7 +199,8 @@ export async function searchRestStops(
 
 export async function generateTimeline(
   route: RouteResult,
-  routeType: 'normal' | 'fastest'
+  routeType: 'normal' | 'fastest',
+  waypointStopMinutes?: number[]
 ): Promise<TimelineEntry[]> {
   const timeline: TimelineEntry[] = [];
   const MAX_DRIVE_BEFORE_REST = 4.5 * 60;
@@ -226,7 +227,10 @@ export async function generateTimeline(
     const leg = route.legs[i];
     let remainingDriveMin = Math.round(leg.travelTimeSeconds / 60);
 
-    if (i > 0) addEntry('stop', `Stopp: ${leg.startLabel}`, 30, leg.startLabel);
+    if (i > 0) {
+      const stopDuration = waypointStopMinutes?.[i - 1] ?? 30;
+      addEntry('stop', `Stopp: ${leg.startLabel} (${stopDuration} min)`, stopDuration, leg.startLabel);
+    }
 
     while (remainingDriveMin > 0) {
       const driveUntilRest = MAX_DRIVE_BEFORE_REST - drivingSinceRest;
