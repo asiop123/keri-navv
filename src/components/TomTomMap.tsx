@@ -26,7 +26,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     const centerOnUser = useCallback(() => {
       const map = mapInstance.current;
       if (map && userPosition) {
-        map.flyTo({ center: [userPosition.lng, userPosition.lat], zoom: 15, duration: 800 });
+        (map as any).flyTo({ center: [userPosition.lng, userPosition.lat], zoom: 15, duration: 800 });
       }
     }, [userPosition]);
 
