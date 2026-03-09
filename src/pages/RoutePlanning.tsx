@@ -5,20 +5,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Clock, Truck, Plus, X, Route, AlertTriangle } from 'lucide-react';
-import { mockVehicles, mockTrips, getVehicleById } from '@/data/mockData';
-import { BK_LIMITS, BKClass, Trip, TimelineEntry } from '@/types';
+import { MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2 } from 'lucide-react';
+import { mockVehicles, getVehicleById } from '@/data/mockData';
+import { BK_LIMITS, BKClass, TimelineEntry } from '@/types';
 import { toast } from 'sonner';
+import { geocode, calculateRoute, generateTimeline, RouteResult } from '@/services/tomtom';
+import TomTomMap from '@/components/TomTomMap';
 
 export default function RoutePlanning() {
-  const [showForm, setShowForm] = useState(false);
-  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(mockTrips[0] || null);
+  const [showForm, setShowForm] = useState(true);
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [waypoints, setWaypoints] = useState<string[]>([]);
   const [vehicleId, setVehicleId] = useState('');
   const [loadWeight, setLoadWeight] = useState('');
   const [routeType, setRouteType] = useState<'normal' | 'fastest'>('normal');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Result state
+  const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
+  const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
 
   const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
   const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
@@ -52,12 +58,40 @@ export default function RoutePlanning() {
     }
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Resa skapad! (mockdata – genererar exempeltidslinje)');
-    setShowForm(false);
-    setSelectedTrip(mockTrips[0]);
+    setIsLoading(true);
+
+    try {
+      // Geocode all locations in parallel
+      const [startCoord, endCoord, ...waypointCoords] = await Promise.all([
+        geocode(start),
+        geocode(end),
+        ...waypoints.filter(w => w.trim()).map(w => geocode(w)),
+      ]);
+
+      toast.info('Beräknar rutt via TomTom...');
+
+      const result = await calculateRoute(startCoord, endCoord, waypointCoords);
+      const tl = generateTimeline(result, routeType);
+
+      setRouteResult(result);
+      setTimeline(tl);
+      setShowForm(false);
+
+      const hours = Math.floor(result.travelTimeSeconds / 3600);
+      const mins = Math.round((result.travelTimeSeconds % 3600) / 60);
+      toast.success(`Rutt beräknad: ${result.distanceKm} km, ${hours}h ${mins}min körtid`);
+    } catch (err: any) {
+      toast.error(err.message || 'Kunde inte beräkna rutt');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const totalDriveTimeH = routeResult
+    ? Math.round((routeResult.travelTimeSeconds / 3600) * 10) / 10
+    : 0;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -133,8 +167,8 @@ export default function RoutePlanning() {
                   <Select value={routeType} onValueChange={v => setRouteType(v as 'normal' | 'fastest')}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="normal">Normal (strikt)</SelectItem>
-                      <SelectItem value="fastest">Snabbast (flex)</SelectItem>
+                      <SelectItem value="normal">Normal (strikt 9h)</SelectItem>
+                      <SelectItem value="fastest">Snabbast (flex 10h)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -170,15 +204,30 @@ export default function RoutePlanning() {
                 </Card>
               )}
 
-              <Button type="submit" size="lg" className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold h-12">
-                <Route className="h-5 w-5 mr-2" /> Beräkna rutt
+              <Button
+                type="submit"
+                size="lg"
+                disabled={isLoading}
+                className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold h-12"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Beräknar rutt...
+                  </>
+                ) : (
+                  <>
+                    <Route className="h-5 w-5 mr-2" />
+                    Beräkna rutt
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
       )}
 
-      {selectedTrip && (
+      {routeResult && (
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader className="pb-3">
@@ -188,11 +237,30 @@ export default function RoutePlanning() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Sträcka</span><span className="font-medium">{selectedTrip.startLocation} → {selectedTrip.waypoints.join(' → ')} → {selectedTrip.endLocation}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Avstånd</span><span className="font-medium">{selectedTrip.totalDistanceKm} km</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Total körtid</span><span className="font-medium">{selectedTrip.totalDriveTimeH}h</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Totalvikt</span><span className="font-medium">{selectedTrip.totalWeightKg.toLocaleString()} kg</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Rutttyp</span><Badge variant="secondary">{selectedTrip.routeType === 'normal' ? 'Normal' : 'Snabbast'}</Badge></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Sträcka</span>
+                <span className="font-medium text-right">
+                  {routeResult.waypoints.map(w => w.name).join(' → ')}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Avstånd</span>
+                <span className="font-medium">{routeResult.distanceKm} km</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Körtid (TomTom)</span>
+                <span className="font-medium">{totalDriveTimeH}h</span>
+              </div>
+              {selectedVehicle && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Totalvikt</span>
+                  <span className="font-medium">{totalWeight.toLocaleString()} kg</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Rutttyp</span>
+                <Badge variant="secondary">{routeType === 'normal' ? 'Normal (9h)' : 'Snabbast (10h)'}</Badge>
+              </div>
             </CardContent>
           </Card>
 
@@ -200,17 +268,11 @@ export default function RoutePlanning() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-primary" />
-                Placeholder-karta
+                Karta
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="aspect-video rounded-lg bg-muted flex items-center justify-center border-2 border-dashed border-border">
-                <div className="text-center space-y-2">
-                  <MapPin className="h-12 w-12 text-muted-foreground/40 mx-auto" />
-                  <p className="text-sm text-muted-foreground">Kartvy (Google Maps / TomTom)</p>
-                  <p className="text-xs text-muted-foreground">Integreras i framtida version</p>
-                </div>
-              </div>
+              <TomTomMap route={routeResult} className="aspect-video" />
             </CardContent>
           </Card>
 
@@ -224,11 +286,11 @@ export default function RoutePlanning() {
             </CardHeader>
             <CardContent>
               <div className="space-y-0">
-                {selectedTrip.timeline.map((entry, i) => (
+                {timeline.map((entry, i) => (
                   <div key={i} className="flex gap-4 relative">
                     <div className="flex flex-col items-center">
                       <div className="text-xl">{timelineIcon(entry.type)}</div>
-                      {i < selectedTrip.timeline.length - 1 && (
+                      {i < timeline.length - 1 && (
                         <div className="w-0.5 flex-1 bg-border my-1" />
                       )}
                     </div>
@@ -255,7 +317,7 @@ export default function RoutePlanning() {
                   <p className="text-xs font-semibold text-muted-foreground mb-1">EU kör- och vilotidsregler (tillämpade):</p>
                   <ul className="text-xs text-muted-foreground space-y-0.5">
                     <li>• Max 4,5h körning → 45 min rast (kan delas 15+30)</li>
-                    <li>• Max 9h körning/dag (10h max 2 ggr/vecka vid "Snabbast")</li>
+                    <li>• Max {routeType === 'fastest' ? '10h' : '9h'} körning/dag</li>
                     <li>• Dygnsvila: minst 11 timmar</li>
                     <li>• Nattarbete (01–05): max 10h totalt per 24h</li>
                   </ul>
