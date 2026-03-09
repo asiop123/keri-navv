@@ -814,6 +814,36 @@ export default function RoutePlanning() {
                       Zooma in
                     </button>
                   </div>
+
+                  {/* Alternatives - swap rest stop */}
+                  {selectedLocation.alternatives && selectedLocation.alternatives.length > 0 && (
+                    selectedLocation.type === 'rest' || selectedLocation.type === 'overnight'
+                  ) && (
+                    <div className="mt-3 border-t border-border/50 pt-3">
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                        Alternativa rastplatser
+                      </div>
+                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                        {selectedLocation.alternatives.map((alt, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleSwapRestStop(alt)}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/40 hover:bg-accent transition-colors text-left"
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-medium truncate">{alt.name}</div>
+                              <div className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                                {alt.distance && <span>{alt.distance}</span>}
+                                {alt.category && <span>· {alt.category}</span>}
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-primary font-medium shrink-0">Byt</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
