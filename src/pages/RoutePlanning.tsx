@@ -353,6 +353,32 @@ export default function RoutePlanning() {
                       </div>
                     </div>
 
+                    {/* Departure time */}
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Avgångstid</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="datetime-local"
+                          value={departureTime}
+                          onChange={e => setDepartureTime(e.target.value)}
+                          className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs"
+                        />
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        {(() => {
+                          const d = new Date(departureTime);
+                          const dayName = d.toLocaleDateString('sv-SE', { weekday: 'long' });
+                          const dateStr = d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
+                          const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                          return (
+                            <span className={isWeekend ? 'text-amber-500 font-medium' : ''}>
+                              {dayName} {dateStr} {isWeekend && '(helg – annan trafik)'}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
                     {/* Route type */}
                     <div className="flex gap-2">
                       <button
