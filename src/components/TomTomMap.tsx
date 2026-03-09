@@ -2,9 +2,11 @@ import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import tt from '@tomtom-international/web-sdk-maps';
 import '@tomtom-international/web-sdk-maps/dist/maps.css';
 import { getTomTomApiKey, RouteResult } from '@/services/tomtom';
+import { TimelineEntry } from '@/types';
 
 interface TomTomMapProps {
   route?: RouteResult | null;
+  timeline?: TimelineEntry[];
   className?: string;
 }
 
