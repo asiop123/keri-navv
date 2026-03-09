@@ -206,9 +206,10 @@ export async function generateTimeline(
   waypointStopMinutes?: number[]
 ): Promise<TimelineEntry[]> {
   const timeline: TimelineEntry[] = [];
-  const MAX_DRIVE_BEFORE_REST = 4.5 * 60;
+  const SAFETY_MARGIN = 10; // 10 min margin before legal limit
+  const MAX_DRIVE_BEFORE_REST = 4.5 * 60 - SAFETY_MARGIN; // 260 min instead of 270
   const REST_DURATION = 45;
-  const MAX_DAILY_DRIVE = (routeType === 'fastest' ? 10 : 9) * 60;
+  const MAX_DAILY_DRIVE = (routeType === 'fastest' ? 10 : 9) * 60 - SAFETY_MARGIN;
   const OVERNIGHT_REST = 11 * 60;
 
   let currentTime = new Date(route.departureTime);
