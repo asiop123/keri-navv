@@ -3,23 +3,51 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { RoleProvider, useRole } from "@/context/RoleContext";
+import { AppLayout } from "@/components/layout/AppLayout";
+import ChefDashboard from "@/pages/chef/Dashboard";
+import ChauffeurMyDay from "@/pages/chauffeur/MyDay";
+import Vehicles from "@/pages/Vehicles";
+import VehicleDetail from "@/pages/VehicleDetail";
+import AddVehicle from "@/pages/AddVehicle";
+import RoutePlanning from "@/pages/RoutePlanning";
+import Reminders from "@/pages/Reminders";
+import Documents from "@/pages/Documents";
+import Tasks from "@/pages/Tasks";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function AppRoutes() {
+  const { role } = useRole();
+
+  return (
+    <AppLayout>
+      <Routes>
+        <Route path="/" element={role === 'chef' ? <ChefDashboard /> : <ChauffeurMyDay />} />
+        <Route path="/fordon" element={<Vehicles />} />
+        <Route path="/fordon/ny" element={<AddVehicle />} />
+        <Route path="/fordon/:id" element={<VehicleDetail />} />
+        <Route path="/ruttplanering" element={<RoutePlanning />} />
+        <Route path="/paminnelser" element={<Reminders />} />
+        <Route path="/dokument" element={<Documents />} />
+        <Route path="/uppgifter" element={<Tasks />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AppLayout>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <RoleProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </RoleProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
