@@ -29,6 +29,11 @@ export default function RoutePlanning() {
   const [vehicleId, setVehicleId] = useState('');
   const [loadWeight, setLoadWeight] = useState('');
   const [routeType, setRouteType] = useState<'normal' | 'fastest'>('normal');
+  const [departureTime, setDepartureTime] = useState(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 15);
+    return now.toISOString().slice(0, 16); // yyyy-MM-ddTHH:mm
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
@@ -161,7 +166,7 @@ export default function RoutePlanning() {
         ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
         : undefined;
 
-      const result = await calculateRoute(startCoord, endCoord, waypointCoords, undefined, vehicleParams);
+      const result = await calculateRoute(startCoord, endCoord, waypointCoords, new Date(departureTime).toISOString(), vehicleParams);
       const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
       const tl = await generateTimeline(result, routeType, stopMinutes);
 
@@ -348,6 +353,32 @@ export default function RoutePlanning() {
                       </div>
                     </div>
 
+                    {/* Departure time */}
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Avgångstid</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="datetime-local"
+                          value={departureTime}
+                          onChange={e => setDepartureTime(e.target.value)}
+                          className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs"
+                        />
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        {(() => {
+                          const d = new Date(departureTime);
+                          const dayName = d.toLocaleDateString('sv-SE', { weekday: 'long' });
+                          const dateStr = d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
+                          const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                          return (
+                            <span className={isWeekend ? 'text-amber-500 font-medium' : ''}>
+                              {dayName} {dateStr} {isWeekend && '(helg – annan trafik)'}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
                     {/* Route type */}
                     <div className="flex gap-2">
                       <button
@@ -444,6 +475,18 @@ export default function RoutePlanning() {
                 </div>
               </div>
 
+              {/* Departure/arrival date context */}
+              <div className="px-4 py-1.5 border-t border-border/30 flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>
+                  Avg: {new Date(routeResult.departureTime).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}{' '}
+                  {new Date(routeResult.departureTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span>
+                  Ank: {new Date(routeResult.arrivalTime).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}{' '}
+                  {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+
               {/* Stats */}
               <div className="grid grid-cols-3 border-t border-border/50">
                 <div className="text-center py-3 border-r border-border/50">
@@ -502,36 +545,55 @@ export default function RoutePlanning() {
                 {showTimeline && (
                   <div className="max-h-[40vh] overflow-y-auto border-t border-border/30">
                     <div className="p-3 space-y-1">
-                      {timeline.map((entry, i) => (
-                        <div key={i} className={`rounded-lg px-3 py-2 ${
-                          entry.type === 'drive' ? 'border-l-4 border-l-primary/60' :
-                          entry.type === 'rest' ? 'border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20' :
-                          entry.type === 'overnight' ? 'border-l-4 border-l-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20' :
-                          entry.type === 'stop' ? 'border-l-4 border-l-orange-400 bg-orange-50/50 dark:bg-orange-950/20' :
-                          'border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
-                        }`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">{timelineIcon(entry.type)}</span>
-                              <span className="text-xs font-medium">{entry.label}</span>
-                            </div>
-                            {entry.durationMinutes > 0 && (
-                              <span className="text-[10px] text-muted-foreground">{entry.durationMinutes} min</span>
+                      {timeline.map((entry, i) => {
+                        // Show day header when date changes
+                        const entryDate = new Date(entry.startTime).toLocaleDateString('sv-SE');
+                        const prevDate = i > 0 ? new Date(timeline[i - 1].startTime).toLocaleDateString('sv-SE') : null;
+                        const showDayHeader = i === 0 || entryDate !== prevDate;
+                        const entryDay = new Date(entry.startTime);
+
+                        return (
+                          <div key={i}>
+                            {showDayHeader && (
+                              <div className="flex items-center gap-2 py-1.5 px-1 mt-1 mb-0.5">
+                                <div className="h-px flex-1 bg-border" />
+                                <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">
+                                  📅 {entryDay.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'short' })}
+                                </span>
+                                <div className="h-px flex-1 bg-border" />
+                              </div>
                             )}
-                          </div>
-                          <div className="ml-7 text-[10px] text-muted-foreground">
-                            {new Date(entry.startTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                            {' – '}
-                            {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                          {entry.restStop && (
-                            <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px]">
-                              <MapPin className="h-3 w-3 text-primary" />
-                              <span>{entry.restStop.name}</span>
+                            <div className={`rounded-lg px-3 py-2 ${
+                              entry.type === 'drive' ? 'border-l-4 border-l-primary/60' :
+                              entry.type === 'rest' ? 'border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20' :
+                              entry.type === 'overnight' ? 'border-l-4 border-l-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20' :
+                              entry.type === 'stop' ? 'border-l-4 border-l-orange-400 bg-orange-50/50 dark:bg-orange-950/20' :
+                              'border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
+                            }`}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm">{timelineIcon(entry.type)}</span>
+                                  <span className="text-xs font-medium">{entry.label}</span>
+                                </div>
+                                {entry.durationMinutes > 0 && (
+                                  <span className="text-[10px] text-muted-foreground">{entry.durationMinutes} min</span>
+                                )}
+                              </div>
+                              <div className="ml-7 text-[10px] text-muted-foreground">
+                                {new Date(entry.startTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                                {' – '}
+                                {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                              {entry.restStop && (
+                                <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px]">
+                                  <MapPin className="h-3 w-3 text-primary" />
+                                  <span>{entry.restStop.name}</span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      ))}
+                          </div>
+                        );
+                      })}
                     </div>
                     <div className="px-4 pb-3">
                       <div className="rounded-lg bg-muted/40 p-2.5 text-[10px] text-muted-foreground">
