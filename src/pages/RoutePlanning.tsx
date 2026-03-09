@@ -166,7 +166,7 @@ export default function RoutePlanning() {
         ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
         : undefined;
 
-      const result = await calculateRoute(startCoord, endCoord, waypointCoords, undefined, vehicleParams);
+      const result = await calculateRoute(startCoord, endCoord, waypointCoords, new Date(departureTime).toISOString(), vehicleParams);
       const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
       const tl = await generateTimeline(result, routeType, stopMinutes);
 
