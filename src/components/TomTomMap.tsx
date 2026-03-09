@@ -14,7 +14,7 @@ export interface TomTomMapHandle {
   getMap: () => tt.Map | null;
 }
 
-const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(({ route, className = '' }, ref) => {
+const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(({ route, timeline, className = '' }, ref) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<tt.Map | null>(null);
 
