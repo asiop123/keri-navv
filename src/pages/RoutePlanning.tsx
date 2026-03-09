@@ -1,19 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History } from 'lucide-react';
 import { mockVehicles, getVehicleById } from '@/data/mockData';
 import { BK_LIMITS, BKClass, TimelineEntry } from '@/types';
 import { toast } from 'sonner';
 import { geocode, calculateRoute, generateTimeline, RouteResult } from '@/services/tomtom';
+import { SavedTrip, getSavedTrips, saveTrip } from '@/services/tripStorage';
 import TomTomMap from '@/components/TomTomMap';
+import TripHistory from '@/components/TripHistory';
 
 export default function RoutePlanning() {
   const [showForm, setShowForm] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [waypoints, setWaypoints] = useState<string[]>([]);
@@ -21,10 +24,15 @@ export default function RoutePlanning() {
   const [loadWeight, setLoadWeight] = useState('');
   const [routeType, setRouteType] = useState<'normal' | 'fastest'>('normal');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
-  // Result state
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
+  const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
+
+  useEffect(() => {
+    setSavedTrips(getSavedTrips());
+  }, []);
 
   const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
   const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
@@ -61,9 +69,9 @@ export default function RoutePlanning() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setIsSaved(false);
 
     try {
-      // Geocode all locations in parallel
       const [startCoord, endCoord, ...waypointCoords] = await Promise.all([
         geocode(start),
         geocode(end),
@@ -78,6 +86,7 @@ export default function RoutePlanning() {
       setRouteResult(result);
       setTimeline(tl);
       setShowForm(false);
+      setShowHistory(false);
 
       const hours = Math.floor(result.travelTimeSeconds / 3600);
       const mins = Math.round((result.travelTimeSeconds % 3600) / 60);
@@ -89,25 +98,83 @@ export default function RoutePlanning() {
     }
   };
 
+  const handleSave = () => {
+    if (!routeResult) return;
+    const vehicle = selectedVehicle;
+    const trip: SavedTrip = {
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      startName: routeResult.waypoints[0].name,
+      endName: routeResult.waypoints[routeResult.waypoints.length - 1].name,
+      waypointNames: routeResult.waypoints.slice(1, -1).map(w => w.name),
+      distanceKm: routeResult.distanceKm,
+      travelTimeSeconds: routeResult.travelTimeSeconds,
+      totalWeightKg: totalWeight,
+      vehicleId: vehicleId,
+      vehicleLabel: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.regNr})` : 'Okänt',
+      routeType,
+      timeline,
+      route: routeResult,
+    };
+    saveTrip(trip);
+    setSavedTrips(getSavedTrips());
+    setIsSaved(true);
+    toast.success('Resa sparad!');
+  };
+
+  const handleSelectTrip = (trip: SavedTrip) => {
+    setRouteResult(trip.route);
+    setTimeline(trip.timeline);
+    setShowForm(false);
+    setShowHistory(false);
+    setIsSaved(true);
+    setVehicleId(trip.vehicleId);
+    toast.info(`Visar sparad resa: ${trip.startName} → ${trip.endName}`);
+  };
+
+  const handleDeleteTrip = (id: string) => {
+    setSavedTrips(prev => prev.filter(t => t.id !== id));
+  };
+
   const totalDriveTimeH = routeResult
     ? Math.round((routeResult.travelTimeSeconds / 3600) * 10) / 10
     : 0;
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Ruttplanering</h1>
           <p className="text-muted-foreground mt-1">Planera resor med kör- och vilotider</p>
         </div>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Ny resa
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => { setShowHistory(!showHistory); if (!showHistory) setShowForm(false); }}
+            className="font-semibold"
+          >
+            <History className="h-4 w-4 mr-2" />
+            Historik ({savedTrips.length})
+          </Button>
+          <Button
+            onClick={() => { setShowForm(!showForm); if (!showForm) setShowHistory(false); }}
+            className="bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Ny resa
+          </Button>
+        </div>
       </div>
+
+      {showHistory && (
+        <div>
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <History className="h-5 w-5 text-primary" />
+            Sparade resor
+          </h2>
+          <TripHistory trips={savedTrips} onSelect={handleSelectTrip} onDelete={handleDeleteTrip} />
+        </div>
+      )}
 
       {showForm && (
         <Card>
@@ -231,10 +298,21 @@ export default function RoutePlanning() {
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Route className="h-5 w-5 text-primary" />
-                Resdetaljer
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Route className="h-5 w-5 text-primary" />
+                  Resdetaljer
+                </CardTitle>
+                {!isSaved && (
+                  <Button size="sm" variant="outline" onClick={handleSave} className="font-semibold">
+                    <Save className="h-4 w-4 mr-1" />
+                    Spara resa
+                  </Button>
+                )}
+                {isSaved && (
+                  <Badge variant="secondary" className="text-xs">✓ Sparad</Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between">
