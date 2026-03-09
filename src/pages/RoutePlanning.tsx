@@ -29,6 +29,11 @@ export default function RoutePlanning() {
   const [vehicleId, setVehicleId] = useState('');
   const [loadWeight, setLoadWeight] = useState('');
   const [routeType, setRouteType] = useState<'normal' | 'fastest'>('normal');
+  const [departureTime, setDepartureTime] = useState(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 15);
+    return now.toISOString().slice(0, 16); // yyyy-MM-ddTHH:mm
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
