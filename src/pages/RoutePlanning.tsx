@@ -258,6 +258,8 @@ export default function RoutePlanning() {
         durationMinutes: entry.durationMinutes,
         timelineIndex,
         alternatives,
+        suitability: entry.restStop?.suitability,
+        suitabilityNote: entry.restStop?.suitabilityNote,
       });
       mapHandleRef.current?.flyToLocation(lng, lat, 14);
     }
