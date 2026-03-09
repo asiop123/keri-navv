@@ -358,7 +358,7 @@ export async function generateTimeline(
     const results = await Promise.all(
       restBreakPoints.map(async (bp) => {
         const point = getPointAlongRoute(route.routePoints, bp.fraction);
-        const stops = await searchRestStops(point.lat, point.lng);
+        const stops = await searchRestStops(point.lat, point.lng, 20000, vehicle);
         return { bp, stops, searchPoint: point };
       })
     );
