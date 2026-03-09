@@ -281,14 +281,14 @@ export async function generateTimeline(
     for (const { bp, stops, searchPoint } of results) {
       const entry = timeline[bp.index];
       if (entry && stops.length > 0) {
-        const bestStop = stops[0];
+        const bestStop = { ...stops[0], alternatives: stops.slice(1) };
         entry.restStop = bestStop;
         entry.location = bestStop.name;
         entry.label = bp.type === 'overnight'
           ? `Dygnsvila (11h) – ${bestStop.name}`
           : `Rast (45 min) – ${bestStop.name}`;
       } else if (entry) {
-        entry.restStop = { name: 'Längs rutten', lat: searchPoint.lat, lng: searchPoint.lng, category: 'Rastplats' };
+        entry.restStop = { name: 'Längs rutten', lat: searchPoint.lat, lng: searchPoint.lng, category: 'Rastplats', alternatives: [] };
       }
     }
   }
