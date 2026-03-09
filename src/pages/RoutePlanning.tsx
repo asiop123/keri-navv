@@ -50,6 +50,18 @@ export default function RoutePlanning() {
   const [distanceToNext, setDistanceToNext] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [navStartTime, setNavStartTime] = useState<Date | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    type: string;
+    label: string;
+    lat: number;
+    lng: number;
+    name: string;
+    category?: string;
+    distance?: string;
+    startTime?: string;
+    endTime?: string;
+    durationMinutes?: number;
+  } | null>(null);
 
   useEffect(() => { setSavedTrips(getSavedTrips()); }, []);
 
