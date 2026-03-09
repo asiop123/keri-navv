@@ -753,6 +753,25 @@ export default function RoutePlanning() {
                       {selectedLocation.category && (
                         <p className="text-[11px] text-muted-foreground mt-0.5">{selectedLocation.category}</p>
                       )}
+                      {/* Vehicle suitability badge */}
+                      {selectedLocation.suitability && (
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            selectedLocation.suitability === 'perfect' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' :
+                            selectedLocation.suitability === 'good' ? 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400' :
+                            selectedLocation.suitability === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400' :
+                            'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
+                          }`}>
+                            {selectedLocation.suitability === 'perfect' ? '✓ Perfekt' :
+                             selectedLocation.suitability === 'good' ? '👍 Bra' :
+                             selectedLocation.suitability === 'warning' ? '⚠ Varning' :
+                             '✗ Olämplig'}
+                          </span>
+                        </div>
+                      )}
+                      {selectedLocation.suitabilityNote && (
+                        <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{selectedLocation.suitabilityNote}</p>
+                      )}
                     </div>
                   </div>
 
