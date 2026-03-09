@@ -1,4 +1,4 @@
-import { TimelineEntry, RestStopInfo } from '@/types';
+import { TimelineEntry, RestStopInfo, RestStopSuitability } from '@/types';
 
 const API_KEY = 'MuNXa5wvdkAvcr10ExFWNBen06rcF3mT';
 const BASE_URL = 'https://api.tomtom.com';
