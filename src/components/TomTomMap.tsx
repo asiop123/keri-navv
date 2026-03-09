@@ -138,7 +138,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(({ route, timeline
     } else {
       map.on('load', addRoute);
     }
-  }, [route]);
+  }, [route, timeline]);
 
   return (
     <div
