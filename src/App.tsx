@@ -39,6 +39,7 @@ function AppRoutes() {
         <Route path="/skyltskanning" element={<SignScanning />} />
         <Route path="/ekonomi" element={<Economy />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/install" element={<Install />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>
