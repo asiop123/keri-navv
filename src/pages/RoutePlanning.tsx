@@ -11,11 +11,12 @@ import {
 import { mockVehicles, getVehicleById } from '@/data/mockData';
 import { BK_LIMITS, BKClass, TimelineEntry } from '@/types';
 import { toast } from 'sonner';
-import { geocode, calculateRoute, generateTimeline, RouteResult } from '@/services/tomtom';
+import { geocode, calculateRoute, generateTimeline, reverseGeocode, RouteResult, VehicleParams } from '@/services/tomtom';
 import { SavedTrip, getSavedTrips, saveTrip } from '@/services/tripStorage';
 import TomTomMap, { TomTomMapHandle } from '@/components/TomTomMap';
 import TripHistory from '@/components/TripHistory';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 export default function RoutePlanning() {
   const mapHandleRef = useRef<TomTomMapHandle>(null);
@@ -42,29 +43,45 @@ export default function RoutePlanning() {
   const [distanceToNext, setDistanceToNext] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [navStartTime, setNavStartTime] = useState<Date | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(true);
 
   useEffect(() => {
     setSavedTrips(getSavedTrips());
   }, []);
 
-  // Get initial GPS position
+  // Get initial GPS position and auto-set as start
   useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        async (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserPosition(coords);
           setGpsError(null);
+          setGpsLoading(false);
+
+          // Auto reverse geocode and set as start if empty
+          if (!start) {
+            try {
+              const name = await reverseGeocode(coords.lat, coords.lng);
+              setStart(name);
+              toast.success(`Startpunkt: ${name}`);
+            } catch {
+              setStart('Min position');
+            }
+          }
         },
         (err) => {
           console.log('GPS not available:', err.message);
           setGpsError('GPS ej tillgänglig');
+          setGpsLoading(false);
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
+    } else {
+      setGpsLoading(false);
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Distance calculation helper
   const haversineKm = useCallback((lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -76,23 +93,15 @@ export default function RoutePlanning() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }, []);
 
-  // Update distance to next waypoint during navigation
   useEffect(() => {
     if (!isNavigating || !userPosition || !routeResult) return;
-
     const nextWp = routeResult.waypoints[Math.min(currentStep + 1, routeResult.waypoints.length - 1)];
     const dist = haversineKm(userPosition.lat, userPosition.lng, nextWp.lat, nextWp.lng);
-
     if (dist < 0.5 && currentStep < routeResult.waypoints.length - 1) {
       setCurrentStep(prev => prev + 1);
       toast.success(`Passerade: ${nextWp.name}`);
     }
-
-    if (dist < 1) {
-      setDistanceToNext(`${Math.round(dist * 1000)} m`);
-    } else {
-      setDistanceToNext(`${dist.toFixed(1)} km`);
-    }
+    setDistanceToNext(dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`);
   }, [userPosition, isNavigating, routeResult, currentStep, haversineKm]);
 
   const startGpsTracking = useCallback(() => {
@@ -100,15 +109,12 @@ export default function RoutePlanning() {
       toast.error('GPS stöds inte i denna webbläsare');
       return;
     }
-
     const id = navigator.geolocation.watchPosition(
       (pos) => {
         setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setGpsError(null);
       },
-      (err) => {
-        setGpsError(`GPS-fel: ${err.message}`);
-      },
+      (err) => setGpsError(`GPS-fel: ${err.message}`),
       { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
     );
     setGpsWatchId(id);
@@ -140,15 +146,18 @@ export default function RoutePlanning() {
     toast.info('Navigation avslutad');
   }, [stopGpsTracking]);
 
-  const handleUseMyLocation = useCallback(() => {
+  const handleUseMyLocation = useCallback(async () => {
     if (userPosition) {
-      setStart('Min position');
+      const name = await reverseGeocode(userPosition.lat, userPosition.lng);
+      setStart(name);
       toast.success('Startpunkt satt till din position');
     } else {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          setStart('Min position');
+        async (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserPosition(coords);
+          const name = await reverseGeocode(coords.lat, coords.lng);
+          setStart(name);
           toast.success('Startpunkt satt till din position');
         },
         () => toast.error('Kunde inte hämta position')
@@ -156,12 +165,9 @@ export default function RoutePlanning() {
     }
   }, [userPosition]);
 
-  // Clean up GPS on unmount
   useEffect(() => {
     return () => {
-      if (gpsWatchId !== null) {
-        navigator.geolocation.clearWatch(gpsWatchId);
-      }
+      if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId);
     };
   }, [gpsWatchId]);
 
@@ -213,21 +219,25 @@ export default function RoutePlanning() {
     setIsSaved(false);
 
     try {
-      let startQuery = start;
-      // If using GPS position, geocode as coordinates
-      if (start === 'Min position' && userPosition) {
-        startQuery = `${userPosition.lat},${userPosition.lng}`;
-      }
-
       const [startCoord, endCoord, ...waypointCoords] = await Promise.all([
         start === 'Min position' && userPosition
           ? Promise.resolve({ lat: userPosition.lat, lng: userPosition.lng, name: 'Min position' })
-          : geocode(startQuery),
+          : geocode(start),
         geocode(end),
         ...waypoints.filter(w => w.trim()).map(w => geocode(w)),
       ]);
 
-      const result = await calculateRoute(startCoord, endCoord, waypointCoords);
+      // Build vehicle params from selected vehicle
+      const vehicleParams: VehicleParams | undefined = selectedVehicle
+        ? {
+            weightKg: totalWeight,
+            heightM: selectedVehicle.heightM,
+            widthM: selectedVehicle.widthM,
+            lengthM: selectedVehicle.lengthM,
+          }
+        : undefined;
+
+      const result = await calculateRoute(startCoord, endCoord, waypointCoords, undefined, vehicleParams);
 
       toast.info('Söker rastplatser längs rutten...');
       const tl = await generateTimeline(result, routeType);
@@ -306,10 +316,9 @@ export default function RoutePlanning() {
         className="absolute inset-0 z-0"
       />
 
-      {/* Navigation HUD - shown when navigating */}
+      {/* Navigation HUD */}
       {isNavigating && routeResult && (
         <div className="absolute top-0 left-0 right-0 z-30">
-          {/* Top bar */}
           <div className="bg-primary/95 backdrop-blur-sm text-primary-foreground p-4 shadow-xl">
             <div className="flex items-center justify-between max-w-3xl mx-auto">
               <div className="flex items-center gap-3">
@@ -325,8 +334,6 @@ export default function RoutePlanning() {
               </div>
             </div>
           </div>
-
-          {/* Info chips */}
           <div className="flex gap-2 p-3 justify-center">
             <div className="bg-card/90 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-medium shadow-lg border border-border flex items-center gap-1.5">
               <Route className="h-3.5 w-3.5 text-primary" />
@@ -346,9 +353,8 @@ export default function RoutePlanning() {
         </div>
       )}
 
-      {/* Map control buttons (right side) */}
+      {/* Map control buttons */}
       <div className="absolute right-4 bottom-8 z-20 flex flex-col gap-2">
-        {/* Center on user */}
         {userPosition && (
           <button
             onClick={() => mapHandleRef.current?.centerOnUser()}
@@ -358,8 +364,6 @@ export default function RoutePlanning() {
             <Locate className="h-5 w-5 text-primary" />
           </button>
         )}
-
-        {/* Start/Stop navigation */}
         {routeResult && !isNavigating && (
           <button
             onClick={handleStartNavigation}
@@ -380,7 +384,7 @@ export default function RoutePlanning() {
         )}
       </div>
 
-      {/* Panel toggle button */}
+      {/* Panel toggle */}
       {!isNavigating && (
         <button
           onClick={() => setPanelOpen(!panelOpen)}
@@ -399,20 +403,26 @@ export default function RoutePlanning() {
           transform: panelOpen && !isNavigating ? 'translateX(0)' : 'translateX(-100%)',
         }}
       >
-        {/* Panel header */}
+        {/* Header */}
         <div className="shrink-0 p-4 border-b border-border bg-primary text-primary-foreground">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Navigation className="h-5 w-5" />
               <h1 className="text-lg font-bold">Navigation</h1>
             </div>
-            {userPosition && (
+            {gpsLoading && (
+              <div className="flex items-center gap-1.5 text-xs opacity-70">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Söker GPS...
+              </div>
+            )}
+            {!gpsLoading && userPosition && (
               <div className="flex items-center gap-1.5 text-xs opacity-70">
                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 GPS
               </div>
             )}
-            {gpsError && (
+            {!gpsLoading && gpsError && (
               <div className="flex items-center gap-1.5 text-xs opacity-70">
                 <div className="w-2 h-2 rounded-full bg-red-400" />
                 Ingen GPS
@@ -445,7 +455,7 @@ export default function RoutePlanning() {
           </div>
         </div>
 
-        {/* Panel content */}
+        {/* Content */}
         <ScrollArea className="flex-1">
           {activeTab === 'history' && (
             <div className="p-4">
@@ -457,14 +467,15 @@ export default function RoutePlanning() {
             <div className="p-4 space-y-4">
               <form onSubmit={handleCreate} className="space-y-3">
                 <div className="relative space-y-2">
+                  {/* Start */}
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0 shadow-sm" />
-                    <Input
+                    <AddressAutocomplete
                       value={start}
-                      onChange={e => setStart(e.target.value)}
+                      onChange={setStart}
                       placeholder="Startpunkt"
-                      required
-                      className="h-10 text-sm"
+                      biasLat={userPosition?.lat}
+                      biasLng={userPosition?.lng}
                     />
                     <button
                       type="button"
@@ -476,18 +487,20 @@ export default function RoutePlanning() {
                     </button>
                   </div>
 
+                  {/* Waypoints */}
                   {waypoints.map((wp, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-amber-400 shrink-0 shadow-sm" />
-                      <Input
+                      <AddressAutocomplete
                         value={wp}
-                        onChange={e => {
+                        onChange={(val) => {
                           const newWp = [...waypoints];
-                          newWp[i] = e.target.value;
+                          newWp[i] = val;
                           setWaypoints(newWp);
                         }}
                         placeholder={`Stopp ${i + 1}`}
-                        className="h-10 text-sm"
+                        biasLat={userPosition?.lat}
+                        biasLng={userPosition?.lng}
                       />
                       <Button type="button" variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => setWaypoints(waypoints.filter((_, j) => j !== i))}>
                         <X className="h-3.5 w-3.5" />
@@ -495,14 +508,15 @@ export default function RoutePlanning() {
                     </div>
                   ))}
 
+                  {/* End */}
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-red-500 shrink-0 shadow-sm" />
-                    <Input
+                    <AddressAutocomplete
                       value={end}
-                      onChange={e => setEnd(e.target.value)}
+                      onChange={setEnd}
                       placeholder="Slutdestination"
-                      required
-                      className="h-10 text-sm"
+                      biasLat={userPosition?.lat}
+                      biasLng={userPosition?.lng}
                     />
                   </div>
                 </div>
@@ -518,7 +532,9 @@ export default function RoutePlanning() {
                       <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Välj fordon" /></SelectTrigger>
                       <SelectContent>
                         {mockVehicles.map(v => (
-                          <SelectItem key={v.id} value={v.id}>{v.brand} {v.model}</SelectItem>
+                          <SelectItem key={v.id} value={v.id}>
+                            {v.brand} {v.model} ({v.regNr})
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -528,6 +544,20 @@ export default function RoutePlanning() {
                     <Input type="number" value={loadWeight} onChange={e => setLoadWeight(e.target.value)} placeholder="20000" className="h-9 text-xs" required />
                   </div>
                 </div>
+
+                {/* Vehicle info */}
+                {selectedVehicle && (
+                  <div className="rounded-lg bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground space-y-0.5">
+                    <div className="font-medium text-foreground text-xs">{selectedVehicle.brand} {selectedVehicle.model}</div>
+                    <div className="flex flex-wrap gap-x-3">
+                      <span>Längd: {selectedVehicle.lengthM}m</span>
+                      {selectedVehicle.heightM && <span>Höjd: {selectedVehicle.heightM}m</span>}
+                      {selectedVehicle.widthM && <span>Bredd: {selectedVehicle.widthM}m</span>}
+                      <span>Vikt: {(selectedVehicle.weightKg / 1000).toFixed(1)}t</span>
+                    </div>
+                    <div className="text-[10px] italic">Rutten anpassas efter fordonets mått</div>
+                  </div>
+                )}
 
                 <div className="space-y-1">
                   <Label className="text-xs">Rutttyp</Label>
@@ -568,7 +598,7 @@ export default function RoutePlanning() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={isLoading}
+                  disabled={isLoading || !end}
                   className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold h-11"
                 >
                   {isLoading ? (
@@ -618,7 +648,6 @@ export default function RoutePlanning() {
                       {routeResult.waypoints.map(w => w.name).join(' → ')}
                     </div>
 
-                    {/* Start Navigation button */}
                     <Button
                       onClick={handleStartNavigation}
                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-11"
