@@ -475,6 +475,18 @@ export default function RoutePlanning() {
                 </div>
               </div>
 
+              {/* Departure/arrival date context */}
+              <div className="px-4 py-1.5 border-t border-border/30 flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>
+                  Avg: {new Date(routeResult.departureTime).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}{' '}
+                  {new Date(routeResult.departureTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span>
+                  Ank: {new Date(routeResult.arrivalTime).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}{' '}
+                  {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+
               {/* Stats */}
               <div className="grid grid-cols-3 border-t border-border/50">
                 <div className="text-center py-3 border-r border-border/50">
