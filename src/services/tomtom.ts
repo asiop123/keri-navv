@@ -3,6 +3,13 @@ import { TimelineEntry, RestStopInfo } from '@/types';
 const API_KEY = 'MuNXa5wvdkAvcr10ExFWNBen06rcF3mT';
 const BASE_URL = 'https://api.tomtom.com';
 
+export interface VehicleParams {
+  weightKg?: number;
+  heightM?: number;
+  widthM?: number;
+  lengthM?: number;
+}
+
 export interface RouteResult {
   distanceKm: number;
   travelTimeSeconds: number;
@@ -12,7 +19,7 @@ export interface RouteResult {
   geoJson: GeoJSON.FeatureCollection;
   bbox: [number, number, number, number];
   waypoints: { lat: number; lng: number; name: string }[];
-  routePoints: [number, number][]; // [lng, lat] coordinates along route
+  routePoints: [number, number][];
 }
 
 export interface RouteLeg {
@@ -42,18 +49,43 @@ export async function geocode(query: string): Promise<GeocodingResult> {
   };
 }
 
+export async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  const url = `${BASE_URL}/search/2/reverseGeocode/${lat},${lng}.json?key=${API_KEY}&language=sv-SE`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    const data = await res.json();
+    const addr = data.addresses?.[0]?.address;
+    if (!addr) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    return addr.municipality || addr.freeformAddress || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  } catch {
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }
+}
+
 export async function calculateRoute(
   startCoord: GeocodingResult,
   endCoord: GeocodingResult,
   waypointCoords: GeocodingResult[],
-  departAt?: string
+  departAt?: string,
+  vehicleParams?: VehicleParams
 ): Promise<RouteResult> {
   const locations = [startCoord, ...waypointCoords, endCoord]
     .map(c => `${c.lat},${c.lng}`)
     .join(':');
 
   const depart = departAt || new Date().toISOString();
-  const url = `${BASE_URL}/routing/1/calculateRoute/${locations}/json?key=${API_KEY}&travelMode=truck&vehicleWeight=40000&departAt=${depart}&routeRepresentation=polyline&computeTravelTimeFor=all`;
+  let url = `${BASE_URL}/routing/1/calculateRoute/${locations}/json?key=${API_KEY}&travelMode=truck&departAt=${depart}&routeRepresentation=polyline&computeTravelTimeFor=all`;
+
+  // Add vehicle-specific parameters for truck routing
+  if (vehicleParams) {
+    if (vehicleParams.weightKg) url += `&vehicleWeight=${vehicleParams.weightKg}`;
+    if (vehicleParams.heightM) url += `&vehicleHeight=${vehicleParams.heightM}`;
+    if (vehicleParams.widthM) url += `&vehicleWidth=${vehicleParams.widthM}`;
+    if (vehicleParams.lengthM) url += `&vehicleLength=${vehicleParams.lengthM}`;
+  } else {
+    url += `&vehicleWeight=40000`;
+  }
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Routing failed: ${res.status}`);
@@ -74,10 +106,7 @@ export async function calculateRoute(
     type: 'FeatureCollection',
     features: [{
       type: 'Feature',
-      geometry: {
-        type: 'LineString',
-        coordinates: allPoints,
-      },
+      geometry: { type: 'LineString', coordinates: allPoints },
       properties: {},
     }],
   };
@@ -106,9 +135,6 @@ export async function calculateRoute(
   };
 }
 
-/**
- * Get the coordinate along the route at a given fraction (0-1) of total distance.
- */
 function getPointAlongRoute(
   routePoints: [number, number][],
   fraction: number
@@ -120,7 +146,6 @@ function getPointAlongRoute(
     return { lng: last[0], lat: last[1] };
   }
 
-  // Calculate cumulative distances
   const distances: number[] = [0];
   let totalDist = 0;
   for (let i = 1; i < routePoints.length; i++) {
@@ -144,22 +169,17 @@ function getPointAlongRoute(
   return { lng: last[0], lat: last[1] };
 }
 
-/**
- * Search for rest stops / truck stops near a coordinate using TomTom POI search.
- */
 export async function searchRestStops(
   lat: number,
   lng: number,
-  radius: number = 15000 // 15km
+  radius: number = 15000
 ): Promise<RestStopInfo[]> {
-  // Category IDs: 7311 = petrol station, 7312 = rest area, 9352 = truck stop
   const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${lat}&lon=${lng}&radius=${radius}&categorySet=7312,9352,7311&limit=5&language=sv-SE`;
   
   try {
     const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
-    
     if (!data.results?.length) return [];
     
     return data.results.map((r: any) => {
@@ -177,19 +197,15 @@ export async function searchRestStops(
   }
 }
 
-/**
- * Generate EU driving/rest timeline from a route result.
- * Now also searches for actual rest stop locations along the route.
- */
 export async function generateTimeline(
   route: RouteResult,
   routeType: 'normal' | 'fastest'
 ): Promise<TimelineEntry[]> {
   const timeline: TimelineEntry[] = [];
-  const MAX_DRIVE_BEFORE_REST = 4.5 * 60; // 270 min
-  const REST_DURATION = 45; // min
-  const MAX_DAILY_DRIVE = (routeType === 'fastest' ? 10 : 9) * 60; // min
-  const OVERNIGHT_REST = 11 * 60; // min
+  const MAX_DRIVE_BEFORE_REST = 4.5 * 60;
+  const REST_DURATION = 45;
+  const MAX_DAILY_DRIVE = (routeType === 'fastest' ? 10 : 9) * 60;
+  const OVERNIGHT_REST = 11 * 60;
 
   let currentTime = new Date(route.departureTime);
   let drivingSinceRest = 0;
@@ -197,20 +213,12 @@ export async function generateTimeline(
   let totalDrivenMinutes = 0;
   const totalTravelMinutes = Math.round(route.travelTimeSeconds / 60);
 
-  // Collect rest break points (fraction of route) to search for stops
   const restBreakPoints: { index: number; fraction: number; type: 'rest' | 'overnight' }[] = [];
 
   const addEntry = (type: TimelineEntry['type'], label: string, durationMinutes: number, location?: string) => {
     const startTime = new Date(currentTime);
     const endTime = new Date(currentTime.getTime() + durationMinutes * 60000);
-    timeline.push({
-      type,
-      label,
-      startTime: startTime.toISOString(),
-      endTime: endTime.toISOString(),
-      durationMinutes,
-      location,
-    });
+    timeline.push({ type, label, startTime: startTime.toISOString(), endTime: endTime.toISOString(), durationMinutes, location });
     currentTime = endTime;
   };
 
@@ -218,9 +226,7 @@ export async function generateTimeline(
     const leg = route.legs[i];
     let remainingDriveMin = Math.round(leg.travelTimeSeconds / 60);
 
-    if (i > 0) {
-      addEntry('stop', `Stopp: ${leg.startLabel}`, 30, leg.startLabel);
-    }
+    if (i > 0) addEntry('stop', `Stopp: ${leg.startLabel}`, 30, leg.startLabel);
 
     while (remainingDriveMin > 0) {
       const driveUntilRest = MAX_DRIVE_BEFORE_REST - drivingSinceRest;
@@ -229,7 +235,6 @@ export async function generateTimeline(
       const driveChunk = Math.max(maxDrive, 1);
 
       addEntry('drive', `Körning ${leg.startLabel} → ${leg.endLabel}`, driveChunk);
-
       remainingDriveMin -= driveChunk;
       drivingSinceRest += driveChunk;
       dailyDriving += driveChunk;
@@ -254,22 +259,16 @@ export async function generateTimeline(
     }
   }
 
-  addEntry(
-    'arrival',
-    `Ankomst ${route.waypoints[route.waypoints.length - 1].name}`,
-    0,
-    route.waypoints[route.waypoints.length - 1].name
-  );
+  addEntry('arrival', `Ankomst ${route.waypoints[route.waypoints.length - 1].name}`, 0, route.waypoints[route.waypoints.length - 1].name);
 
-  // Search for rest stop locations at each break point
   if (restBreakPoints.length > 0 && route.routePoints.length > 0) {
-    const searches = restBreakPoints.map(async (bp) => {
-      const point = getPointAlongRoute(route.routePoints, bp.fraction);
-      const stops = await searchRestStops(point.lat, point.lng);
-      return { bp, stops, searchPoint: point };
-    });
-
-    const results = await Promise.all(searches);
+    const results = await Promise.all(
+      restBreakPoints.map(async (bp) => {
+        const point = getPointAlongRoute(route.routePoints, bp.fraction);
+        const stops = await searchRestStops(point.lat, point.lng);
+        return { bp, stops, searchPoint: point };
+      })
+    );
 
     for (const { bp, stops, searchPoint } of results) {
       const entry = timeline[bp.index];
@@ -281,13 +280,7 @@ export async function generateTimeline(
           ? `Dygnsvila (11h) – ${bestStop.name}`
           : `Rast (45 min) – ${bestStop.name}`;
       } else if (entry) {
-        // No POI found, use approximate location
-        entry.restStop = {
-          name: 'Längs rutten',
-          lat: searchPoint.lat,
-          lng: searchPoint.lng,
-          category: 'Rastplats',
-        };
+        entry.restStop = { name: 'Längs rutten', lat: searchPoint.lat, lng: searchPoint.lng, category: 'Rastplats' };
       }
     }
   }
