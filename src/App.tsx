@@ -18,6 +18,7 @@ import SignScanning from "@/pages/SignScanning";
 import Economy from "@/pages/Economy";
 import Community from "@/pages/Community";
 import NotFound from "@/pages/NotFound";
+import Install from "@/pages/Install";
 
 const queryClient = new QueryClient();
 
