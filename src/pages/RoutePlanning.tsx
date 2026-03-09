@@ -220,6 +220,41 @@ export default function RoutePlanning() {
     setRouteResult(null);
     setTimeline([]);
     setDestination('');
+    setSelectedLocation(null);
+  };
+
+  const handleTimelineEntryClick = (entry: TimelineEntry) => {
+    // Determine coordinates for this entry
+    let lat: number | undefined;
+    let lng: number | undefined;
+    let name = entry.location || entry.label;
+    let category = '';
+    let distance = '';
+
+    if (entry.restStop) {
+      lat = entry.restStop.lat;
+      lng = entry.restStop.lng;
+      name = entry.restStop.name;
+      category = entry.restStop.category || '';
+      distance = entry.restStop.distance || '';
+    } else if (entry.type === 'stop' || entry.type === 'arrival') {
+      // Match to a waypoint by name
+      const wp = routeResult?.waypoints.find(w => entry.label.includes(w.name) || entry.location === w.name);
+      if (wp) { lat = wp.lat; lng = wp.lng; name = wp.name; }
+    }
+
+    if (lat !== undefined && lng !== undefined) {
+      setSelectedLocation({
+        type: entry.type,
+        label: entry.label,
+        lat, lng, name,
+        category, distance,
+        startTime: entry.startTime,
+        endTime: entry.endTime,
+        durationMinutes: entry.durationMinutes,
+      });
+      mapHandleRef.current?.flyToLocation(lng, lat, 14);
+    }
   };
 
   const totalDriveTimeH = routeResult ? Math.round((routeResult.travelTimeSeconds / 3600) * 10) / 10 : 0;
