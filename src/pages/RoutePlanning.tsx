@@ -151,7 +151,7 @@ export default function RoutePlanning() {
   return (
     <div className="relative w-full -m-4 md:-m-6" style={{ height: 'calc(100vh - 3.5rem)' }}>
       {/* Full-screen map */}
-      <TomTomMap route={routeResult} className="absolute inset-0 z-0" />
+      <TomTomMap route={routeResult} timeline={timeline} className="absolute inset-0 z-0" />
 
       {/* Panel toggle button */}
       <button
