@@ -17,6 +17,8 @@ export interface Vehicle {
   brand: string;
   model: string;
   lengthM: number;
+  heightM?: number;
+  widthM?: number;
   weightKg: number;
   maxLoadKg: number;
   axleWeightKg: number;
@@ -92,6 +94,56 @@ export interface Reminder {
   relatedType: 'vehicle' | 'user';
   relatedId: string;
   status: 'active' | 'dismissed';
+}
+
+export interface SignScan {
+  id: string;
+  userId: string;
+  vehicleId: string;
+  manualText: string;
+  restriction: SignRestriction;
+  result: 'allowed' | 'denied';
+  resultMessage: string;
+  location?: string;
+  scannedAt: string;
+}
+
+export interface SignRestriction {
+  type: 'weight' | 'height' | 'length' | 'width' | 'no_entry' | 'no_parking' | 'other';
+  value?: number;
+  unit?: string;
+}
+
+export interface FuelLog {
+  id: string;
+  vehicleId: string;
+  userId: string;
+  date: string;
+  odometerKm: number;
+  liters: number;
+  pricePerLiter: number;
+  location?: string;
+}
+
+export interface CommunityWarning {
+  id: string;
+  type: 'roadwork' | 'accident' | 'police' | 'bad_restarea';
+  description: string;
+  lat: number;
+  lng: number;
+  userId: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface RestAreaReview {
+  id: string;
+  name: string;
+  rating: number;
+  comment: string;
+  userId: string;
+  maxLengthM?: number;
+  createdAt: string;
 }
 
 export type BKClass = 'BK1' | 'BK2' | 'BK3' | 'BK4';
