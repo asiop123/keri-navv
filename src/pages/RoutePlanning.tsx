@@ -182,7 +182,7 @@ export default function RoutePlanning() {
 
       const result = await calculateRoute(startCoord, endCoord, waypointCoords, new Date(departureTime).toISOString(), vehicleParams);
       const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
-      const tl = await generateTimeline(result, routeType, stopMinutes);
+      const tl = await generateTimeline(result, routeType, stopMinutes, vehicleParams);
 
       setRouteResult(result);
       setTimeline(tl);
