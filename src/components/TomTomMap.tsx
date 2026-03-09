@@ -93,7 +93,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(({ route, classNam
           [route.bbox[0], route.bbox[1]],
           [route.bbox[2], route.bbox[3]],
         ],
-        { padding: { top: 80, bottom: 80, left: 420, right: 80 }, duration: 1000 }
+        { padding: 80, duration: 1000 }
       );
     };
 
