@@ -287,7 +287,8 @@ export async function searchRestStops(
 export async function generateTimeline(
   route: RouteResult,
   routeType: 'normal' | 'fastest',
-  waypointStopMinutes?: number[]
+  waypointStopMinutes?: number[],
+  vehicle?: VehicleParams
 ): Promise<TimelineEntry[]> {
   const timeline: TimelineEntry[] = [];
   const SAFETY_MARGIN = 10; // 10 min margin before legal limit
