@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
   Navigation, Locate, Play, Square, Compass, ChevronUp, ChevronDown, Search,
-  Car, ArrowLeft,
+  Car, ArrowLeft, ExternalLink, Star, Info,
 } from 'lucide-react';
 import { mockVehicles, getVehicleById } from '@/data/mockData';
 import { BK_LIMITS, BKClass, TimelineEntry } from '@/types';
