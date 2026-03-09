@@ -14,6 +14,9 @@ import RoutePlanning from "@/pages/RoutePlanning";
 import Reminders from "@/pages/Reminders";
 import Documents from "@/pages/Documents";
 import Tasks from "@/pages/Tasks";
+import SignScanning from "@/pages/SignScanning";
+import Economy from "@/pages/Economy";
+import Community from "@/pages/Community";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +35,9 @@ function AppRoutes() {
         <Route path="/paminnelser" element={<Reminders />} />
         <Route path="/dokument" element={<Documents />} />
         <Route path="/uppgifter" element={<Tasks />} />
+        <Route path="/skyltskanning" element={<SignScanning />} />
+        <Route path="/ekonomi" element={<Economy />} />
+        <Route path="/community" element={<Community />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>
