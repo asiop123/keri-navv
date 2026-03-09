@@ -83,6 +83,15 @@ export interface TimelineEntry {
   endTime: string;
   durationMinutes: number;
   location?: string;
+  restStop?: RestStopInfo;
+}
+
+export interface RestStopInfo {
+  name: string;
+  lat: number;
+  lng: number;
+  distance?: string;
+  category?: string;
 }
 
 export interface Reminder {
