@@ -853,14 +853,24 @@ export default function RoutePlanning() {
                           <button
                             key={idx}
                             onClick={() => handleSwapRestStop(alt)}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/40 hover:bg-accent transition-colors text-left"
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-left ${
+                              alt.suitability === 'unsuitable' ? 'bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100/50' :
+                              alt.suitability === 'warning' ? 'bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50' :
+                              'bg-muted/40 hover:bg-accent'
+                            }`}
                           >
-                            <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <div className={`shrink-0 w-2 h-2 rounded-full ${
+                              alt.suitability === 'perfect' ? 'bg-emerald-500' :
+                              alt.suitability === 'good' ? 'bg-sky-500' :
+                              alt.suitability === 'warning' ? 'bg-amber-500' :
+                              alt.suitability === 'unsuitable' ? 'bg-red-500' : 'bg-muted-foreground'
+                            }`} />
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-medium truncate">{alt.name}</div>
                               <div className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                                 {alt.distance && <span>{alt.distance}</span>}
                                 {alt.category && <span>· {alt.category}</span>}
+                                {alt.suitabilityNote && <span>· {alt.suitabilityNote}</span>}
                               </div>
                             </div>
                             <span className="text-[10px] text-primary font-medium shrink-0">Byt</span>
