@@ -660,6 +660,121 @@ export default function RoutePlanning() {
             </div>
           </div>
 
+          {/* Location detail card - Google Maps style */}
+          {selectedLocation && (
+            <div className="absolute left-4 right-4 z-30 max-w-sm mx-auto animate-in slide-in-from-bottom-4 fade-in duration-300"
+              style={{ top: '50%', transform: 'translateY(-50%)' }}
+            >
+              <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
+                {/* Header with colored bar */}
+                <div className={`h-1.5 ${
+                  selectedLocation.type === 'rest' ? 'bg-amber-400' :
+                  selectedLocation.type === 'overnight' ? 'bg-indigo-500' :
+                  selectedLocation.type === 'stop' ? 'bg-orange-400' :
+                  selectedLocation.type === 'arrival' ? 'bg-emerald-500' :
+                  'bg-primary'
+                }`} />
+
+                <div className="p-4">
+                  {/* Close button */}
+                  <button
+                    onClick={() => setSelectedLocation(null)}
+                    className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-accent transition-colors"
+                  >
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </button>
+
+                  {/* Icon + Name */}
+                  <div className="flex items-start gap-3 pr-8">
+                    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
+                      selectedLocation.type === 'rest' ? 'bg-amber-100 dark:bg-amber-950' :
+                      selectedLocation.type === 'overnight' ? 'bg-indigo-100 dark:bg-indigo-950' :
+                      selectedLocation.type === 'stop' ? 'bg-orange-100 dark:bg-orange-950' :
+                      selectedLocation.type === 'arrival' ? 'bg-emerald-100 dark:bg-emerald-950' :
+                      'bg-primary/10'
+                    }`}>
+                      {selectedLocation.type === 'rest' ? '☕' :
+                       selectedLocation.type === 'overnight' ? '🌙' :
+                       selectedLocation.type === 'stop' ? '📦' :
+                       selectedLocation.type === 'arrival' ? '🏁' : '📍'}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground leading-tight">{selectedLocation.name}</h3>
+                      {selectedLocation.category && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{selectedLocation.category}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Details grid */}
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {selectedLocation.startTime && (
+                      <div className="bg-muted/50 rounded-lg px-3 py-2">
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Tid</div>
+                        <div className="text-xs font-medium mt-0.5">
+                          {new Date(selectedLocation.startTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                          {selectedLocation.endTime && ` – ${new Date(selectedLocation.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}`}
+                        </div>
+                      </div>
+                    )}
+                    {selectedLocation.durationMinutes !== undefined && selectedLocation.durationMinutes > 0 && (
+                      <div className="bg-muted/50 rounded-lg px-3 py-2">
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Varaktighet</div>
+                        <div className="text-xs font-medium mt-0.5">
+                          {selectedLocation.durationMinutes >= 60
+                            ? `${Math.floor(selectedLocation.durationMinutes / 60)}h ${selectedLocation.durationMinutes % 60}min`
+                            : `${selectedLocation.durationMinutes} min`}
+                        </div>
+                      </div>
+                    )}
+                    {selectedLocation.distance && (
+                      <div className="bg-muted/50 rounded-lg px-3 py-2">
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Avstånd från rutt</div>
+                        <div className="text-xs font-medium mt-0.5">{selectedLocation.distance}</div>
+                      </div>
+                    )}
+                    <div className="bg-muted/50 rounded-lg px-3 py-2">
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Datum</div>
+                      <div className="text-xs font-medium mt-0.5">
+                        {selectedLocation.startTime
+                          ? new Date(selectedLocation.startTime).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
+                          : '–'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Coordinates */}
+                  <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <MapPin className="h-3 w-3" />
+                    <span>{selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}</span>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="mt-3 flex gap-2">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${selectedLocation.lat},${selectedLocation.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground rounded-xl py-2 text-xs font-medium hover:opacity-90 transition-opacity"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Google Maps
+                    </a>
+                    <button
+                      onClick={() => {
+                        mapHandleRef.current?.flyToLocation(selectedLocation.lng, selectedLocation.lat, 16);
+                      }}
+                      className="flex items-center justify-center gap-1.5 bg-muted rounded-xl px-4 py-2 text-xs font-medium hover:bg-accent transition-colors"
+                    >
+                      <Locate className="h-3.5 w-3.5" />
+                      Zooma in
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Map controls */}
           <div className="absolute right-4 bottom-[180px] z-20 flex flex-col gap-2">
             {userPosition && (
