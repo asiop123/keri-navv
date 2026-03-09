@@ -61,6 +61,8 @@ export default function RoutePlanning() {
     startTime?: string;
     endTime?: string;
     durationMinutes?: number;
+    timelineIndex?: number;
+    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string }>;
   } | null>(null);
 
   useEffect(() => { setSavedTrips(getSavedTrips()); }, []);
@@ -223,13 +225,13 @@ export default function RoutePlanning() {
     setSelectedLocation(null);
   };
 
-  const handleTimelineEntryClick = (entry: TimelineEntry) => {
-    // Determine coordinates for this entry
+  const handleTimelineEntryClick = (entry: TimelineEntry, timelineIndex: number) => {
     let lat: number | undefined;
     let lng: number | undefined;
     let name = entry.location || entry.label;
     let category = '';
     let distance = '';
+    let alternatives: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string }> = [];
 
     if (entry.restStop) {
       lat = entry.restStop.lat;
@@ -237,8 +239,8 @@ export default function RoutePlanning() {
       name = entry.restStop.name;
       category = entry.restStop.category || '';
       distance = entry.restStop.distance || '';
+      alternatives = entry.restStop.alternatives || [];
     } else if (entry.type === 'stop' || entry.type === 'arrival') {
-      // Match to a waypoint by name
       const wp = routeResult?.waypoints.find(w => entry.label.includes(w.name) || entry.location === w.name);
       if (wp) { lat = wp.lat; lng = wp.lng; name = wp.name; }
     }
@@ -252,9 +254,51 @@ export default function RoutePlanning() {
         startTime: entry.startTime,
         endTime: entry.endTime,
         durationMinutes: entry.durationMinutes,
+        timelineIndex,
+        alternatives,
       });
       mapHandleRef.current?.flyToLocation(lng, lat, 14);
     }
+  };
+
+  const handleSwapRestStop = (alt: { name: string; lat: number; lng: number; distance?: string; category?: string }) => {
+    if (selectedLocation?.timelineIndex === undefined) return;
+    const idx = selectedLocation.timelineIndex;
+    const updated = [...timeline];
+    const entry = updated[idx];
+    if (!entry || !entry.restStop) return;
+
+    // Move current stop to alternatives, put selected alt as main
+    const currentStop = {
+      name: entry.restStop.name,
+      lat: entry.restStop.lat,
+      lng: entry.restStop.lng,
+      distance: entry.restStop.distance,
+      category: entry.restStop.category,
+    };
+    const otherAlts = (entry.restStop.alternatives || []).filter(a => a.name !== alt.name);
+    
+    entry.restStop = {
+      ...alt,
+      alternatives: [currentStop, ...otherAlts],
+    };
+    entry.location = alt.name;
+    entry.label = entry.type === 'overnight'
+      ? `Dygnsvila (11h) – ${alt.name}`
+      : `Rast (45 min) – ${alt.name}`;
+
+    setTimeline(updated);
+    setSelectedLocation(prev => prev ? {
+      ...prev,
+      name: alt.name,
+      lat: alt.lat,
+      lng: alt.lng,
+      category: alt.category || '',
+      distance: alt.distance || '',
+      alternatives: [currentStop, ...otherAlts],
+    } : null);
+    mapHandleRef.current?.flyToLocation(alt.lng, alt.lat, 14);
+    toast.success(`Bytte rastplats till ${alt.name}`);
   };
 
   const totalDriveTimeH = routeResult ? Math.round((routeResult.travelTimeSeconds / 3600) * 10) / 10 : 0;
@@ -611,7 +655,7 @@ export default function RoutePlanning() {
                               </div>
                             )}
                             <button
-                              onClick={() => handleTimelineEntryClick(entry)}
+                              onClick={() => handleTimelineEntryClick(entry, i)}
                               className={`w-full text-left rounded-lg px-3 py-2 transition-colors hover:ring-1 hover:ring-primary/30 cursor-pointer ${
                               entry.type === 'drive' ? 'border-l-4 border-l-primary/60' :
                               entry.type === 'rest' ? 'border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20' :
@@ -770,6 +814,36 @@ export default function RoutePlanning() {
                       Zooma in
                     </button>
                   </div>
+
+                  {/* Alternatives - swap rest stop */}
+                  {selectedLocation.alternatives && selectedLocation.alternatives.length > 0 && (
+                    selectedLocation.type === 'rest' || selectedLocation.type === 'overnight'
+                  ) && (
+                    <div className="mt-3 border-t border-border/50 pt-3">
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                        Alternativa rastplatser
+                      </div>
+                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                        {selectedLocation.alternatives.map((alt, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleSwapRestStop(alt)}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/40 hover:bg-accent transition-colors text-left"
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-medium truncate">{alt.name}</div>
+                              <div className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                                {alt.distance && <span>{alt.distance}</span>}
+                                {alt.category && <span>· {alt.category}</span>}
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-primary font-medium shrink-0">Byt</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

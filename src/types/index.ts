@@ -92,6 +92,7 @@ export interface RestStopInfo {
   lng: number;
   distance?: string;
   category?: string;
+  alternatives?: RestStopInfo[];
 }
 
 export interface Reminder {

@@ -172,9 +172,10 @@ function getPointAlongRoute(
 export async function searchRestStops(
   lat: number,
   lng: number,
-  radius: number = 15000
+  radius: number = 20000
 ): Promise<RestStopInfo[]> {
-  const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${lat}&lon=${lng}&radius=${radius}&categorySet=7312,9352,7311&limit=5&language=sv-SE`;
+  // 7369 = truck stop, 7311 = petrol/gas station, 9352 = rest area, 7312 = parking
+  const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${lat}&lon=${lng}&radius=${radius}&categorySet=7369,9352,7312,7311&limit=8&language=sv-SE`;
   
   try {
     const res = await fetch(url);
@@ -184,12 +185,14 @@ export async function searchRestStops(
     
     return data.results.map((r: any) => {
       const distKm = (r.dist / 1000).toFixed(1);
+      const cats = r.poi?.categories || [];
+      const isTruckStop = cats.some((c: string) => c.toLowerCase().includes('truck'));
       return {
         name: r.poi?.name || r.address?.freeformAddress || 'Rastplats',
         lat: r.position.lat,
         lng: r.position.lon,
         distance: `${distKm} km`,
-        category: r.poi?.categories?.[0] || 'Rastplats',
+        category: isTruckStop ? 'Lastbilsparkering' : (r.poi?.categories?.[0] || 'Rastplats'),
       };
     });
   } catch {
@@ -203,9 +206,10 @@ export async function generateTimeline(
   waypointStopMinutes?: number[]
 ): Promise<TimelineEntry[]> {
   const timeline: TimelineEntry[] = [];
-  const MAX_DRIVE_BEFORE_REST = 4.5 * 60;
+  const SAFETY_MARGIN = 10; // 10 min margin before legal limit
+  const MAX_DRIVE_BEFORE_REST = 4.5 * 60 - SAFETY_MARGIN; // 260 min instead of 270
   const REST_DURATION = 45;
-  const MAX_DAILY_DRIVE = (routeType === 'fastest' ? 10 : 9) * 60;
+  const MAX_DAILY_DRIVE = (routeType === 'fastest' ? 10 : 9) * 60 - SAFETY_MARGIN;
   const OVERNIGHT_REST = 11 * 60;
 
   let currentTime = new Date(route.departureTime);
@@ -277,14 +281,14 @@ export async function generateTimeline(
     for (const { bp, stops, searchPoint } of results) {
       const entry = timeline[bp.index];
       if (entry && stops.length > 0) {
-        const bestStop = stops[0];
+        const bestStop = { ...stops[0], alternatives: stops.slice(1) };
         entry.restStop = bestStop;
         entry.location = bestStop.name;
         entry.label = bp.type === 'overnight'
           ? `Dygnsvila (11h) – ${bestStop.name}`
           : `Rast (45 min) – ${bestStop.name}`;
       } else if (entry) {
-        entry.restStop = { name: 'Längs rutten', lat: searchPoint.lat, lng: searchPoint.lng, category: 'Rastplats' };
+        entry.restStop = { name: 'Längs rutten', lat: searchPoint.lat, lng: searchPoint.lng, category: 'Rastplats', alternatives: [] };
       }
     }
   }
