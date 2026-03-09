@@ -225,13 +225,13 @@ export default function RoutePlanning() {
     setSelectedLocation(null);
   };
 
-  const handleTimelineEntryClick = (entry: TimelineEntry) => {
-    // Determine coordinates for this entry
+  const handleTimelineEntryClick = (entry: TimelineEntry, timelineIndex: number) => {
     let lat: number | undefined;
     let lng: number | undefined;
     let name = entry.location || entry.label;
     let category = '';
     let distance = '';
+    let alternatives: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string }> = [];
 
     if (entry.restStop) {
       lat = entry.restStop.lat;
@@ -239,8 +239,8 @@ export default function RoutePlanning() {
       name = entry.restStop.name;
       category = entry.restStop.category || '';
       distance = entry.restStop.distance || '';
+      alternatives = entry.restStop.alternatives || [];
     } else if (entry.type === 'stop' || entry.type === 'arrival') {
-      // Match to a waypoint by name
       const wp = routeResult?.waypoints.find(w => entry.label.includes(w.name) || entry.location === w.name);
       if (wp) { lat = wp.lat; lng = wp.lng; name = wp.name; }
     }
@@ -254,9 +254,51 @@ export default function RoutePlanning() {
         startTime: entry.startTime,
         endTime: entry.endTime,
         durationMinutes: entry.durationMinutes,
+        timelineIndex,
+        alternatives,
       });
       mapHandleRef.current?.flyToLocation(lng, lat, 14);
     }
+  };
+
+  const handleSwapRestStop = (alt: { name: string; lat: number; lng: number; distance?: string; category?: string }) => {
+    if (selectedLocation?.timelineIndex === undefined) return;
+    const idx = selectedLocation.timelineIndex;
+    const updated = [...timeline];
+    const entry = updated[idx];
+    if (!entry || !entry.restStop) return;
+
+    // Move current stop to alternatives, put selected alt as main
+    const currentStop = {
+      name: entry.restStop.name,
+      lat: entry.restStop.lat,
+      lng: entry.restStop.lng,
+      distance: entry.restStop.distance,
+      category: entry.restStop.category,
+    };
+    const otherAlts = (entry.restStop.alternatives || []).filter(a => a.name !== alt.name);
+    
+    entry.restStop = {
+      ...alt,
+      alternatives: [currentStop, ...otherAlts],
+    };
+    entry.location = alt.name;
+    entry.label = entry.type === 'overnight'
+      ? `Dygnsvila (11h) – ${alt.name}`
+      : `Rast (45 min) – ${alt.name}`;
+
+    setTimeline(updated);
+    setSelectedLocation(prev => prev ? {
+      ...prev,
+      name: alt.name,
+      lat: alt.lat,
+      lng: alt.lng,
+      category: alt.category || '',
+      distance: alt.distance || '',
+      alternatives: [currentStop, ...otherAlts],
+    } : null);
+    mapHandleRef.current?.flyToLocation(alt.lng, alt.lat, 14);
+    toast.success(`Bytte rastplats till ${alt.name}`);
   };
 
   const totalDriveTimeH = routeResult ? Math.round((routeResult.travelTimeSeconds / 3600) * 10) / 10 : 0;
