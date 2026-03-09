@@ -533,36 +533,55 @@ export default function RoutePlanning() {
                 {showTimeline && (
                   <div className="max-h-[40vh] overflow-y-auto border-t border-border/30">
                     <div className="p-3 space-y-1">
-                      {timeline.map((entry, i) => (
-                        <div key={i} className={`rounded-lg px-3 py-2 ${
-                          entry.type === 'drive' ? 'border-l-4 border-l-primary/60' :
-                          entry.type === 'rest' ? 'border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20' :
-                          entry.type === 'overnight' ? 'border-l-4 border-l-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20' :
-                          entry.type === 'stop' ? 'border-l-4 border-l-orange-400 bg-orange-50/50 dark:bg-orange-950/20' :
-                          'border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
-                        }`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">{timelineIcon(entry.type)}</span>
-                              <span className="text-xs font-medium">{entry.label}</span>
-                            </div>
-                            {entry.durationMinutes > 0 && (
-                              <span className="text-[10px] text-muted-foreground">{entry.durationMinutes} min</span>
+                      {timeline.map((entry, i) => {
+                        // Show day header when date changes
+                        const entryDate = new Date(entry.startTime).toLocaleDateString('sv-SE');
+                        const prevDate = i > 0 ? new Date(timeline[i - 1].startTime).toLocaleDateString('sv-SE') : null;
+                        const showDayHeader = i === 0 || entryDate !== prevDate;
+                        const entryDay = new Date(entry.startTime);
+
+                        return (
+                          <div key={i}>
+                            {showDayHeader && (
+                              <div className="flex items-center gap-2 py-1.5 px-1 mt-1 mb-0.5">
+                                <div className="h-px flex-1 bg-border" />
+                                <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">
+                                  📅 {entryDay.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'short' })}
+                                </span>
+                                <div className="h-px flex-1 bg-border" />
+                              </div>
                             )}
-                          </div>
-                          <div className="ml-7 text-[10px] text-muted-foreground">
-                            {new Date(entry.startTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                            {' – '}
-                            {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                          {entry.restStop && (
-                            <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px]">
-                              <MapPin className="h-3 w-3 text-primary" />
-                              <span>{entry.restStop.name}</span>
+                            <div className={`rounded-lg px-3 py-2 ${
+                              entry.type === 'drive' ? 'border-l-4 border-l-primary/60' :
+                              entry.type === 'rest' ? 'border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20' :
+                              entry.type === 'overnight' ? 'border-l-4 border-l-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20' :
+                              entry.type === 'stop' ? 'border-l-4 border-l-orange-400 bg-orange-50/50 dark:bg-orange-950/20' :
+                              'border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
+                            }`}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm">{timelineIcon(entry.type)}</span>
+                                  <span className="text-xs font-medium">{entry.label}</span>
+                                </div>
+                                {entry.durationMinutes > 0 && (
+                                  <span className="text-[10px] text-muted-foreground">{entry.durationMinutes} min</span>
+                                )}
+                              </div>
+                              <div className="ml-7 text-[10px] text-muted-foreground">
+                                {new Date(entry.startTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                                {' – '}
+                                {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                              {entry.restStop && (
+                                <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px]">
+                                  <MapPin className="h-3 w-3 text-primary" />
+                                  <span>{entry.restStop.name}</span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      ))}
+                          </div>
+                        );
+                      })}
                     </div>
                     <div className="px-4 pb-3">
                       <div className="rounded-lg bg-muted/40 p-2.5 text-[10px] text-muted-foreground">
