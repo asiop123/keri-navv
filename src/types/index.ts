@@ -86,6 +86,8 @@ export interface TimelineEntry {
   restStop?: RestStopInfo;
 }
 
+export type RestStopSuitability = 'perfect' | 'good' | 'warning' | 'unsuitable';
+
 export interface RestStopInfo {
   name: string;
   lat: number;
@@ -93,6 +95,8 @@ export interface RestStopInfo {
   distance?: string;
   category?: string;
   alternatives?: RestStopInfo[];
+  suitability?: RestStopSuitability;
+  suitabilityNote?: string;
 }
 
 export interface Reminder {
