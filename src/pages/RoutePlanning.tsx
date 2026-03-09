@@ -90,7 +90,9 @@ export default function RoutePlanning() {
       ]);
 
       const result = await calculateRoute(startCoord, endCoord, waypointCoords);
-      const tl = generateTimeline(result, routeType);
+      
+      toast.info('Söker rastplatser längs rutten...');
+      const tl = await generateTimeline(result, routeType);
 
       setRouteResult(result);
       setTimeline(tl);
@@ -149,7 +151,7 @@ export default function RoutePlanning() {
   return (
     <div className="relative w-full -m-4 md:-m-6" style={{ height: 'calc(100vh - 3.5rem)' }}>
       {/* Full-screen map */}
-      <TomTomMap route={routeResult} className="absolute inset-0 z-0" />
+      <TomTomMap route={routeResult} timeline={timeline} className="absolute inset-0 z-0" />
 
       {/* Panel toggle button */}
       <button
@@ -394,10 +396,22 @@ export default function RoutePlanning() {
                               {' – '}
                               {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            {entry.location && (
+                            {entry.location && !entry.restStop && (
                               <span className="text-[10px] text-muted-foreground">· {entry.location}</span>
                             )}
                           </div>
+                          {entry.restStop && (
+                            <div className="ml-7 mt-1.5 rounded bg-card/80 px-2 py-1.5 text-[11px] space-y-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="h-3 w-3 text-primary shrink-0" />
+                                <span className="font-medium">{entry.restStop.name}</span>
+                              </div>
+                              <div className="flex items-center gap-3 text-muted-foreground">
+                                {entry.restStop.distance && <span>{entry.restStop.distance} från rutten</span>}
+                                {entry.restStop.category && <span>· {entry.restStop.category}</span>}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

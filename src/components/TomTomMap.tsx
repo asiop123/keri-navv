@@ -2,9 +2,11 @@ import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import tt from '@tomtom-international/web-sdk-maps';
 import '@tomtom-international/web-sdk-maps/dist/maps.css';
 import { getTomTomApiKey, RouteResult } from '@/services/tomtom';
+import { TimelineEntry } from '@/types';
 
 interface TomTomMapProps {
   route?: RouteResult | null;
+  timeline?: TimelineEntry[];
   className?: string;
 }
 
@@ -12,7 +14,7 @@ export interface TomTomMapHandle {
   getMap: () => tt.Map | null;
 }
 
-const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(({ route, className = '' }, ref) => {
+const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(({ route, timeline, className = '' }, ref) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<tt.Map | null>(null);
 
@@ -88,6 +90,40 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(({ route, classNam
           .addTo(map);
       });
 
+      // Add rest stop markers from timeline
+      if (timeline) {
+        const restEntries = timeline.filter(e => (e.type === 'rest' || e.type === 'overnight') && e.restStop);
+        restEntries.forEach((entry, i) => {
+          const stop = entry.restStop!;
+          const el = document.createElement('div');
+          el.className = 'tt-marker';
+          const isOvernight = entry.type === 'overnight';
+          el.style.cssText = `
+            width: 32px; height: 32px; border-radius: 8px;
+            background: ${isOvernight ? '#6366f1' : '#f59e0b'};
+            border: 2px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer;
+          `;
+          el.textContent = isOvernight ? '🌙' : '☕';
+
+          const popupHtml = `
+            <div style="padding: 4px; min-width: 150px;">
+              <strong style="font-size: 13px;">${isOvernight ? '🌙 Dygnsvila' : '☕ Rast'}</strong>
+              <p style="font-size: 12px; margin: 4px 0 0; color: #555;">${stop.name}</p>
+              ${stop.distance ? `<p style="font-size: 11px; margin: 2px 0 0; color: #888;">${stop.distance} från rutten</p>` : ''}
+              ${stop.category ? `<p style="font-size: 11px; margin: 2px 0 0; color: #888;">${stop.category}</p>` : ''}
+            </div>
+          `;
+
+          new tt.Marker({ element: el })
+            .setLngLat([stop.lng, stop.lat])
+            .setPopup(new tt.Popup().setHTML(popupHtml))
+            .addTo(map);
+        });
+      }
+
       map.fitBounds(
         [
           [route.bbox[0], route.bbox[1]],
@@ -102,7 +138,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(({ route, classNam
     } else {
       map.on('load', addRoute);
     }
-  }, [route]);
+  }, [route, timeline]);
 
   return (
     <div
