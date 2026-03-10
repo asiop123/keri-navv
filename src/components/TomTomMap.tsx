@@ -169,18 +169,17 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       if (alts && alts.length > 0) {
         alts.forEach((alt, i) => {
           map.addSource(`alt-route-${i}`, { type: 'geojson', data: alt.geoJson });
-          // Semi-transparent grey border
+          // Dark muted line for non-selected route — "off/dimmed"
           map.addLayer({
             id: `alt-route-line-bg-${i}`, type: 'line', source: `alt-route-${i}`,
-            paint: { 'line-color': '#4b5563', 'line-width': 8, 'line-opacity': 0.4, 'line-offset': 6 },
+            paint: { 'line-color': '#1f2937', 'line-width': 7, 'line-opacity': 0.5, 'line-offset': 6 },
           });
-          // Grey dashed line for non-selected route
           map.addLayer({
             id: `alt-route-line-${i}`, type: 'line', source: `alt-route-${i}`,
             paint: {
-              'line-color': '#6b7280',
-              'line-width': 5,
-              'line-opacity': 0.85,
+              'line-color': '#374151',
+              'line-width': 4,
+              'line-opacity': 0.6,
               'line-dasharray': [4, 3],
               'line-offset': 6,
             },
