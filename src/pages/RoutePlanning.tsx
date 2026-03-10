@@ -45,6 +45,8 @@ export default function RoutePlanning() {
   const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
+  const [alternativeRoutes, setAlternativeRoutes] = useState<RouteResult[]>([]);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
 
