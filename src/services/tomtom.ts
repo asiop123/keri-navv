@@ -37,30 +37,28 @@ interface GeocodingResult {
 }
 
 export async function geocode(query: string): Promise<GeocodingResult> {
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_KEY}&language=sv&region=se`;
+  const url = `${BASE_URL}/search/2/geocode/${encodeURIComponent(query)}.json?key=${API_KEY}&countrySet=SE&limit=1`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Geocoding failed for "${query}": ${res.status}`);
   const data = await res.json();
   if (!data.results?.length) throw new Error(`Ingen plats hittades för "${query}"`);
   const r = data.results[0];
   return {
-    lat: r.geometry.location.lat,
-    lng: r.geometry.location.lng,
-    name: r.formatted_address || query,
+    lat: r.position.lat,
+    lng: r.position.lon,
+    name: r.address?.freeformAddress || query,
   };
 }
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_KEY}&language=sv`;
+  const url = `${BASE_URL}/search/2/reverseGeocode/${lat},${lng}.json?key=${API_KEY}&language=sv-SE`;
   try {
     const res = await fetch(url);
     if (!res.ok) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     const data = await res.json();
-    if (!data.results?.length) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-    const locality = data.results.find((r: any) => r.types?.includes('locality'));
-    const route = data.results.find((r: any) => r.types?.includes('route'));
-    const best = route || locality || data.results[0];
-    return best.formatted_address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    const addr = data.addresses?.[0]?.address;
+    if (!addr) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    return addr.municipality || addr.freeformAddress || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   } catch {
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   }
