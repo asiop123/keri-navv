@@ -24,9 +24,9 @@ export default function TripHistory({ trips, onSelect, onDelete }: TripHistoryPr
     );
   }
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    deleteTrip(id);
+    await deleteTrip(id);
     onDelete(id);
     toast.success('Resa borttagen');
   };
