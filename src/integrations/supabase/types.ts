@@ -112,6 +112,57 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_trips: {
+        Row: {
+          created_at: string
+          distance_km: number
+          end_name: string
+          id: string
+          route: Json
+          route_type: string
+          start_name: string
+          timeline: Json
+          total_weight_kg: number
+          travel_time_seconds: number
+          user_id: string
+          vehicle_id: string
+          vehicle_label: string
+          waypoint_names: Json
+        }
+        Insert: {
+          created_at?: string
+          distance_km: number
+          end_name: string
+          id?: string
+          route?: Json
+          route_type?: string
+          start_name: string
+          timeline?: Json
+          total_weight_kg?: number
+          travel_time_seconds: number
+          user_id?: string
+          vehicle_id?: string
+          vehicle_label?: string
+          waypoint_names?: Json
+        }
+        Update: {
+          created_at?: string
+          distance_km?: number
+          end_name?: string
+          id?: string
+          route?: Json
+          route_type?: string
+          start_name?: string
+          timeline?: Json
+          total_weight_kg?: number
+          travel_time_seconds?: number
+          user_id?: string
+          vehicle_id?: string
+          vehicle_label?: string
+          waypoint_names?: Json
+        }
+        Relationships: []
+      }
       vehicle_positions: {
         Row: {
           accuracy_m: number | null

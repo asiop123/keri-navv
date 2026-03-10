@@ -72,7 +72,7 @@ export default function RoutePlanning() {
     suitabilityNote?: string;
   } | null>(null);
 
-  useEffect(() => { setSavedTrips(getSavedTrips()); }, []);
+  useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
 
   // Get GPS
   useEffect(() => {
@@ -215,7 +215,7 @@ export default function RoutePlanning() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!routeResult) return;
     const vehicle = selectedVehicle;
     const trip: SavedTrip = {
@@ -228,8 +228,9 @@ export default function RoutePlanning() {
       vehicleLabel: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.regNr})` : 'Okänt',
       routeType, timeline, route: routeResult,
     };
-    saveTrip(trip);
-    setSavedTrips(getSavedTrips());
+    await saveTrip(trip);
+    const updated = await getSavedTrips();
+    setSavedTrips(updated);
     setIsSaved(true);
     toast.success('Resa sparad!');
   };
