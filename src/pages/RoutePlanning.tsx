@@ -309,7 +309,8 @@ export default function RoutePlanning() {
     toast.success(`Bytte rastplats till ${alt.name}`);
   };
 
-  const totalDriveTimeH = routeResult ? Math.round((routeResult.travelTimeSeconds / 3600) * 10) / 10 : 0;
+  const totalDriveTimeH = routeResult ? Math.floor(routeResult.travelTimeSeconds / 3600) : 0;
+  const totalDriveTimeMin = routeResult ? Math.round((routeResult.travelTimeSeconds % 3600) / 60) : 0;
   const nextWaypoint = routeResult ? routeResult.waypoints[Math.min(currentStep + 1, routeResult.waypoints.length - 1)] : null;
   const elapsedMin = navStartTime ? Math.round((Date.now() - navStartTime.getTime()) / 60000) : 0;
 
