@@ -246,9 +246,36 @@ export default function RoutePlanning() {
   const handleBack = () => {
     setViewState('search');
     setRouteResult(null);
+    setAlternativeRoutes([]);
+    setSelectedRouteIndex(0);
     setTimeline([]);
     setDestination('');
     setSelectedLocation(null);
+  };
+
+  const handleSwitchRoute = async (index: number) => {
+    if (index === selectedRouteIndex) return;
+    
+    // Collect all routes: [current main, ...alternatives]
+    const allRoutes = [routeResult!, ...alternativeRoutes];
+    const newMain = allRoutes[index];
+    const newAlts = allRoutes.filter((_, i) => i !== index);
+    
+    const vehicleParams: VehicleParams | undefined = selectedVehicle
+      ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
+      : undefined;
+    const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
+    const tl = await generateTimeline(newMain, routeType, stopMinutes, vehicleParams);
+    
+    setRouteResult(newMain);
+    setAlternativeRoutes(newAlts);
+    setSelectedRouteIndex(0);
+    setTimeline(tl);
+    setIsSaved(false);
+    
+    const hours = Math.floor(newMain.travelTimeSeconds / 3600);
+    const mins = Math.round((newMain.travelTimeSeconds % 3600) / 60);
+    toast.success(`Bytte rutt: ${newMain.distanceKm} km · ${hours}h ${mins}min`);
   };
 
   const handleTimelineEntryClick = (entry: TimelineEntry, timelineIndex: number) => {
