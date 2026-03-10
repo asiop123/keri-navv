@@ -147,13 +147,42 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     }, []);
 
     // Add route helper
-    const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[]) => {
+    const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[], alts?: RouteResult[]) => {
+      // Remove old layers/sources
+      const layersToRemove = ['route-line', 'route-line-bg'];
+      const sourcesToRemove = ['route'];
+      // Remove alt layers
+      for (let i = 0; i < 3; i++) {
+        layersToRemove.push(`alt-route-line-${i}`, `alt-route-line-bg-${i}`);
+        sourcesToRemove.push(`alt-route-${i}`);
+      }
       try {
-        if (map.getLayer('route-line')) map.removeLayer('route-line');
-        if (map.getLayer('route-line-bg')) map.removeLayer('route-line-bg');
-        if (map.getSource('route')) map.removeSource('route');
+        layersToRemove.forEach(l => { if (map.getLayer(l)) map.removeLayer(l); });
+        sourcesToRemove.forEach(s => { if (map.getSource(s)) map.removeSource(s); });
       } catch {}
 
+      // Draw alternative routes first (behind main route)
+      if (alts && alts.length > 0) {
+        alts.forEach((alt, i) => {
+          map.addSource(`alt-route-${i}`, { type: 'geojson', data: alt.geoJson });
+          map.addLayer({
+            id: `alt-route-line-bg-${i}`, type: 'line', source: `alt-route-${i}`,
+            paint: { 'line-color': '#94a3b8', 'line-width': 6, 'line-opacity': 0.4 },
+          });
+          map.addLayer({
+            id: `alt-route-line-${i}`, type: 'line', source: `alt-route-${i}`,
+            paint: { 'line-color': '#94a3b8', 'line-width': 4, 'line-opacity': 0.7 },
+          });
+          // Click on alt route to select it
+          map.on('click', `alt-route-line-${i}`, () => {
+            if (onAlternativeClickRef.current) onAlternativeClickRef.current(i);
+          });
+          map.on('mouseenter', `alt-route-line-${i}`, () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', `alt-route-line-${i}`, () => { map.getCanvas().style.cursor = ''; });
+        });
+      }
+
+      // Draw main route on top
       map.addSource('route', { type: 'geojson', data: route.geoJson });
       map.addLayer({
         id: 'route-line-bg', type: 'line', source: 'route',
