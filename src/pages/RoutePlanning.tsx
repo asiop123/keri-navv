@@ -206,9 +206,7 @@ export default function RoutePlanning() {
       // Clean alternatives from the selected route object
       delete bestRoute.alternatives;
 
-      // For round trips (same start and end), skip alternatives — use same road back
-      const isRoundTrip = Math.abs(startCoord.lat - endCoord.lat) < 0.01 && Math.abs(startCoord.lng - endCoord.lng) < 0.01;
-      const otherRoutes = isRoundTrip ? [] : allRoutes.slice(1);
+      const otherRoutes = allRoutes.slice(1);
       otherRoutes.forEach(r => delete r.alternatives);
 
       const tl = await generateTimeline(bestRoute, routeType, stopMinutes, vehicleParams);
