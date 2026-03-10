@@ -43,12 +43,14 @@ const MAP_STYLES: MapStyle[] = [
 
 interface TomTomMapProps {
   route?: RouteResult | null;
+  alternativeRoutes?: RouteResult[];
   timeline?: TimelineEntry[];
   userPosition?: { lat: number; lng: number } | null;
   isNavigating?: boolean;
   className?: string;
   defaultStyle?: string;
   onMapClick?: (lat: number, lng: number) => void;
+  onAlternativeClick?: (index: number) => void;
 }
 
 export interface TomTomMapHandle {
