@@ -135,31 +135,60 @@ export default function FleetTracker() {
     });
 
     map.on('load', () => {
-      // Add Google Maps satellite raster source
-      try {
-        map.addSource('google-satellite', {
-          type: 'raster',
-          tiles: [
-            `https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_KEY}`,
-            `https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_KEY}`,
-          ],
-          tileSize: 256,
-        });
-        map.addLayer({
-          id: 'google-satellite-layer',
-          type: 'raster',
-          source: 'google-satellite',
-          minzoom: 0,
-          maxzoom: 20,
-        }, map.getStyle().layers?.[0]?.id); // Insert below all other layers
-      } catch (e) {
-        console.warn('Could not add Google satellite tiles:', e);
+      addSatelliteLayer(map);
+    });
+
+    // Also handle style reloads
+    map.on('styledata', () => {
+      if (!map.getSource('google-satellite')) {
+        addSatelliteLayer(map);
       }
     });
 
     mapInstance.current = map;
     return () => { map.remove(); mapInstance.current = null; markersRef.current = {}; };
   }, []);
+
+  const addSatelliteLayer = (map: tt.Map) => {
+    try {
+      if (map.getSource('google-satellite')) return;
+      map.addSource('google-satellite', {
+        type: 'raster',
+        tiles: [
+          `https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}`,
+          `https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}`,
+          `https://mt2.google.com/vt/lyrs=s&x={x}&y={y}&z={z}`,
+          `https://mt3.google.com/vt/lyrs=s&x={x}&y={y}&z={z}`,
+        ],
+        tileSize: 256,
+      });
+
+      // Find the first symbol/label layer to insert satellite below roads/labels
+      const layers = map.getStyle().layers || [];
+      let firstSymbolId: string | undefined;
+      for (const layer of layers) {
+        if (layer.type === 'symbol' || layer.type === 'line') {
+          firstSymbolId = layer.id;
+          break;
+        }
+      }
+
+      map.addLayer({
+        id: 'google-satellite-layer',
+        type: 'raster',
+        source: 'google-satellite',
+        minzoom: 0,
+        maxzoom: 21,
+        paint: { 'raster-opacity': 1 },
+      }, firstSymbolId);
+
+      // Set visibility based on current style
+      const visibility = mapStyle === 'map' ? 'none' : 'visible';
+      map.setLayoutProperty('google-satellite-layer', 'visibility', visibility);
+    } catch (e) {
+      console.warn('Could not add satellite layer:', e);
+    }
+  };
 
   // Toggle map style
   const cycleMapStyle = useCallback(() => {
@@ -170,13 +199,22 @@ export default function FleetTracker() {
     setMapStyle(next);
 
     try {
-      const satLayer = map.getLayer('google-satellite-layer');
+      const hasLayer = map.getLayer('google-satellite-layer');
+      if (!hasLayer) return;
+
       if (next === 'map') {
-        if (satLayer) map.setLayoutProperty('google-satellite-layer', 'visibility', 'none');
+        map.setLayoutProperty('google-satellite-layer', 'visibility', 'none');
+        map.setPaintProperty('google-satellite-layer', 'raster-opacity', 0);
+      } else if (next === 'hybrid') {
+        map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
+        map.setPaintProperty('google-satellite-layer', 'raster-opacity', 0.7);
       } else {
-        if (satLayer) map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
+        map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
+        map.setPaintProperty('google-satellite-layer', 'raster-opacity', 1);
       }
-    } catch {}
+    } catch (e) {
+      console.warn('Style toggle error:', e);
+    }
   }, [mapStyle]);
 
   // Update markers
@@ -241,7 +279,7 @@ export default function FleetTracker() {
     if (!map || positions.length === 0) return;
     const bounds = new tt.LngLatBounds();
     positions.forEach((p) => bounds.extend([p.lng, p.lat]));
-    map.fitBounds(bounds, { padding: 60, duration: 800 });
+    map.fitBounds(bounds, { padding: 80, duration: 1000, maxZoom: 16 });
     setSelectedVehicle(null);
   }, [positions]);
 
