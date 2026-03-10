@@ -313,10 +313,11 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
           font-size: 15px; font-weight: bold; color: white;
         `;
         el.textContent = isStart ? 'A' : isEnd ? 'B' : String(i);
-        new tt.Marker({ element: el })
+        const wpMarker = new tt.Marker({ element: el })
           .setLngLat([wp.lng, wp.lat])
           .setPopup(new tt.Popup().setHTML(`<strong>${wp.name}</strong>`))
           .addTo(map);
+        routeMarkersRef.current.push(wpMarker);
       });
 
       // Rest stop markers
