@@ -47,6 +47,8 @@ interface TomTomMapProps {
   userPosition?: { lat: number; lng: number } | null;
   isNavigating?: boolean;
   className?: string;
+  defaultStyle?: string;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
 export interface TomTomMapHandle {
