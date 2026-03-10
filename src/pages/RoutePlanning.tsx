@@ -373,12 +373,14 @@ export default function RoutePlanning() {
       <TomTomMap
         ref={mapHandleRef}
         route={routeResult}
+        alternativeRoutes={alternativeRoutes}
         timeline={timeline}
         userPosition={userPosition}
         isNavigating={isNavigating}
         className="absolute inset-0 z-0"
         defaultStyle="satellite"
         onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
+        onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
       {/* Fullscreen Street View on double-click */}
