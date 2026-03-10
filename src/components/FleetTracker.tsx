@@ -122,25 +122,38 @@ export default function FleetTracker() {
     return unsubscribe;
   }, []);
 
-  // Initialize map with satellite style
+  // Initialize map with Google Maps satellite tiles
   useEffect(() => {
     if (!mapRef.current) return;
 
     const map = tt.map({
-      key: API_KEY,
+      key: TOMTOM_KEY,
       container: mapRef.current,
       center: [15.5, 58.5],
       zoom: 6,
       language: 'sv-SE',
-      style: `https://api.tomtom.com/style/2/custom/style/dG9tdG9tQEBAYW55dGltZTtRRlhDUTVxdzd1dWxiTW50.json?key=${API_KEY}`,
     });
 
-    // Set satellite layer
     map.on('load', () => {
+      // Add Google Maps satellite raster source
       try {
-        map.setStyle(`https://api.tomtom.com/style/2/custom/style/dG9tdG9tQEBAYW55dGltZTtRRlhDUTVxdzd1dWxiTW50.json?key=${API_KEY}`);
+        map.addSource('google-satellite', {
+          type: 'raster',
+          tiles: [
+            `https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_KEY}`,
+            `https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_KEY}`,
+          ],
+          tileSize: 256,
+        });
+        map.addLayer({
+          id: 'google-satellite-layer',
+          type: 'raster',
+          source: 'google-satellite',
+          minzoom: 0,
+          maxzoom: 20,
+        }, map.getStyle().layers?.[0]?.id); // Insert below all other layers
       } catch (e) {
-        // Fallback - satellite may not be available, use default
+        console.warn('Could not add Google satellite tiles:', e);
       }
     });
 
