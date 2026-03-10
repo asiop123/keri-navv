@@ -343,8 +343,10 @@ export default function RoutePlanning() {
                 <AddressAutocomplete
                   value={destination}
                   onChange={setDestination}
-                  onSelect={() => {
-                    // Auto-search when a suggestion is selected
+                  onSelect={(suggestion) => {
+                    if (suggestion.lat && suggestion.lng) {
+                      setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
+                    }
                     setTimeout(() => handleSearch(), 100);
                   }}
                   placeholder="Vart vill du åka?"
