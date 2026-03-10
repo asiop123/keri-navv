@@ -345,22 +345,29 @@ export default function RoutePlanning() {
         onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
       />
 
-      {/* Street View popup on map click */}
+      {/* Fullscreen Street View on double-click */}
       {mapClickCoords && (
-        <div className="absolute bottom-20 right-4 z-30 w-72 bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-            <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Eye className="h-3.5 w-3.5" /> Street View
-            </span>
-            <button onClick={() => setMapClickCoords(null)} className="text-muted-foreground hover:text-foreground">
-              <X className="h-4 w-4" />
-            </button>
+        <div className="absolute inset-0 z-40 bg-background">
+          <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setMapClickCoords(null)}
+              className="gap-1.5 bg-background/90 backdrop-blur shadow-lg"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Tillbaka till kartan
+            </Button>
+            <Badge variant="outline" className="bg-background/90 backdrop-blur text-xs">
+              <Eye className="h-3 w-3 mr-1" />
+              {mapClickCoords.lat.toFixed(5)}, {mapClickCoords.lng.toFixed(5)}
+            </Badge>
           </div>
           <StreetViewPanorama
             lat={mapClickCoords.lat}
             lng={mapClickCoords.lng}
-            className="w-full h-[180px]"
-            showExpandButton={true}
+            className="w-full h-full"
+            showExpandButton={false}
           />
         </div>
       )}
