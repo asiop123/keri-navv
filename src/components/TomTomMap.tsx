@@ -336,7 +336,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
               font-size: 16px; cursor: pointer;
             `;
             el.textContent = isOvernight ? '🌙' : '☕';
-            new tt.Marker({ element: el })
+            const restMarker = new tt.Marker({ element: el })
               .setLngLat([stop.lng, stop.lat])
               .setPopup(new tt.Popup().setHTML(`
                 <div style="padding:4px;min-width:150px">
@@ -346,6 +346,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
                 </div>
               `))
               .addTo(map);
+            routeMarkersRef.current.push(restMarker);
           });
       }
 
