@@ -200,16 +200,22 @@ export default function RoutePlanning() {
       const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
       const tl = await generateTimeline(result, routeType, stopMinutes, vehicleParams);
 
+      // Store alternatives separately, remove from main result
+      const alts = result.alternatives || [];
+      delete result.alternatives;
+      setAlternativeRoutes(alts);
+      setSelectedRouteIndex(0);
+
       setRouteResult(result);
       setTimeline(tl);
       setViewState('details');
-      // Store destination coords for 3D view
       const destWp = result.waypoints[result.waypoints.length - 1];
       setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
 
       const hours = Math.floor(result.travelTimeSeconds / 3600);
       const mins = Math.round((result.travelTimeSeconds % 3600) / 60);
-      toast.success(`${result.distanceKm} km · ${hours}h ${mins}min`);
+      const altInfo = alts.length > 0 ? ` · ${alts.length + 1} rutter` : '';
+      toast.success(`${result.distanceKm} km · ${hours}h ${mins}min${altInfo}`);
     } catch (err: any) {
       toast.error(err.message || 'Kunde inte beräkna rutt');
     } finally {
