@@ -1,8 +1,39 @@
+/// <reference types="google.maps" />
 import { useState, useRef, useEffect, useCallback } from 'react';
+
+declare global {
+  interface Window {
+    google?: typeof google;
+  }
+}
 import { Input } from '@/components/ui/input';
 import { MapPin, Loader2 } from 'lucide-react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
+
+// Load Google Maps JS SDK once
+let googleMapsLoaded = false;
+let googleMapsPromise: Promise<void> | null = null;
+
+function loadGoogleMaps(): Promise<void> {
+  if (googleMapsLoaded && window.google?.maps?.places) return Promise.resolve();
+  if (googleMapsPromise) return googleMapsPromise;
+
+  googleMapsPromise = new Promise((resolve, reject) => {
+    if (window.google?.maps?.places) {
+      googleMapsLoaded = true;
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&language=sv&region=SE`;
+    script.async = true;
+    script.onload = () => { googleMapsLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error('Failed to load Google Maps'));
+    document.head.appendChild(script);
+  });
+  return googleMapsPromise;
+}
 
 interface Suggestion {
   id: string;
@@ -10,15 +41,6 @@ interface Suggestion {
   address: string;
   lat: number;
   lng: number;
-}
-
-interface PlacePrediction {
-  place_id: string;
-  description: string;
-  structured_formatting?: {
-    main_text: string;
-    secondary_text: string;
-  };
 }
 
 interface AddressAutocompleteProps {
@@ -44,10 +66,28 @@ export default function AddressAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [sdkReady, setSdkReady] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const containerRef = useRef<HTMLDivElement>(null);
   const suppressSearch = useRef(false);
-  const sessionTokenRef = useRef(crypto.randomUUID());
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const dummyDivRef = useRef<HTMLDivElement | null>(null);
+
+  // Load Google Maps SDK
+  useEffect(() => {
+    loadGoogleMaps().then(() => {
+      autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+      // PlacesService needs a DOM element or map
+      if (!dummyDivRef.current) {
+        dummyDivRef.current = document.createElement('div');
+      }
+      placesServiceRef.current = new google.maps.places.PlacesService(dummyDivRef.current);
+      setSdkReady(true);
+    }).catch(() => {
+      console.warn('Google Maps SDK failed to load, using TomTom fallback');
+    });
+  }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -60,21 +100,66 @@ export default function AddressAutocomplete({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const getPlaceDetails = useCallback(async (placeId: string): Promise<{ lat: number; lng: number } | null> => {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?place_id=${placeId}&key=${GOOGLE_MAPS_KEY}&language=sv`;
-      const res = await fetch(url);
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (data.results?.[0]?.geometry?.location) {
-        const loc = data.results[0].geometry.location;
-        return { lat: loc.lat, lng: loc.lng };
+  const searchGoogle = useCallback(async (query: string) => {
+    if (!autocompleteServiceRef.current) return false;
+
+    return new Promise<boolean>((resolve) => {
+      const request: google.maps.places.AutocompletionRequest = {
+        input: query,
+        componentRestrictions: { country: 'se' },
+      };
+
+      if (biasLat && biasLng) {
+        request.location = new google.maps.LatLng(biasLat, biasLng);
+        request.radius = 500000;
       }
-      return null;
+
+      autocompleteServiceRef.current!.getPlacePredictions(request, (predictions, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+          const results: Suggestion[] = predictions.map((p) => ({
+            id: p.place_id,
+            name: p.structured_formatting?.main_text || p.description.split(',')[0],
+            address: p.description,
+            lat: 0,
+            lng: 0,
+          }));
+          setSuggestions(results);
+          setIsOpen(results.length > 0);
+          setSelectedIndex(-1);
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      });
+    });
+  }, [biasLat, biasLng]);
+
+  // TomTom fallback
+  const searchTomTom = useCallback(async (query: string) => {
+    try {
+      const { getTomTomApiKey } = await import('@/services/tomtom');
+      const key = getTomTomApiKey();
+      let url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(query)}.json?key=${key}&countrySet=SE&limit=5&language=sv-SE&typeahead=true`;
+      if (biasLat && biasLng) {
+        url += `&lat=${biasLat}&lon=${biasLng}&radius=500000`;
+      }
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      const results: Suggestion[] = (data.results || []).map((r: any) => ({
+        id: r.id,
+        name: r.poi?.name || r.address?.municipality || r.address?.freeformAddress || query,
+        address: r.address?.freeformAddress || '',
+        lat: r.position.lat,
+        lng: r.position.lon,
+      }));
+      setSuggestions(results);
+      setIsOpen(results.length > 0);
+      setSelectedIndex(-1);
     } catch {
-      return null;
+      // silent
     }
-  }, []);
+  }, [biasLat, biasLng]);
 
   const search = useCallback(async (query: string) => {
     if (query.length < 2) {
@@ -85,66 +170,31 @@ export default function AddressAutocomplete({
 
     setIsLoading(true);
     try {
-      let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_KEY}&language=sv&components=country:se&sessiontoken=${sessionTokenRef.current}`;
-      
-      if (biasLat && biasLng) {
-        url += `&location=${biasLat},${biasLng}&radius=500000`;
+      if (sdkReady) {
+        const ok = await searchGoogle(query);
+        if (!ok) await searchTomTom(query);
+      } else {
+        await searchTomTom(query);
       }
-
-      const res = await fetch(url);
-      if (!res.ok) {
-        // Fallback: use Google Geocoding API for search
-        await searchFallback(query);
-        return;
-      }
-      const data = await res.json();
-
-      if (data.status === 'REQUEST_DENIED' || data.status === 'OVER_QUERY_LIMIT') {
-        await searchFallback(query);
-        return;
-      }
-
-      const predictions: PlacePrediction[] = data.predictions || [];
-      const results: Suggestion[] = predictions.map((p) => ({
-        id: p.place_id,
-        name: p.structured_formatting?.main_text || p.description.split(',')[0],
-        address: p.description,
-        lat: 0, // Will be resolved on select
-        lng: 0,
-      }));
-
-      setSuggestions(results);
-      setIsOpen(results.length > 0);
-      setSelectedIndex(-1);
-    } catch {
-      await searchFallback(query);
     } finally {
       setIsLoading(false);
     }
-  }, [biasLat, biasLng]);
+  }, [sdkReady, searchGoogle, searchTomTom]);
 
-  // Fallback using Google Geocoding API
-  const searchFallback = useCallback(async (query: string) => {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_KEY}&language=sv&region=se`;
-      const res = await fetch(url);
-      if (!res.ok) return;
-      const data = await res.json();
-      
-      const results: Suggestion[] = (data.results || []).slice(0, 5).map((r: any) => ({
-        id: r.place_id,
-        name: r.address_components?.[0]?.long_name || r.formatted_address?.split(',')[0] || query,
-        address: r.formatted_address || '',
-        lat: r.geometry.location.lat,
-        lng: r.geometry.location.lng,
-      }));
-
-      setSuggestions(results);
-      setIsOpen(results.length > 0);
-      setSelectedIndex(-1);
-    } catch {
-      // silent
-    }
+  const resolvePlace = useCallback((placeId: string): Promise<{ lat: number; lng: number } | null> => {
+    return new Promise((resolve) => {
+      if (!placesServiceRef.current) { resolve(null); return; }
+      placesServiceRef.current.getDetails(
+        { placeId, fields: ['geometry'] },
+        (place, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+            resolve({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
+          } else {
+            resolve(null);
+          }
+        }
+      );
+    });
   }, []);
 
   const handleChange = (newValue: string) => {
@@ -160,20 +210,18 @@ export default function AddressAutocomplete({
   const handleSelect = async (suggestion: Suggestion) => {
     suppressSearch.current = true;
     onChange(suggestion.address || suggestion.name);
-    
-    // If lat/lng are 0, resolve from place_id
+
+    // Resolve coordinates if needed
     if (suggestion.lat === 0 && suggestion.lng === 0) {
-      const coords = await getPlaceDetails(suggestion.id);
+      const coords = await resolvePlace(suggestion.id);
       if (coords) {
         suggestion = { ...suggestion, ...coords };
       }
     }
-    
+
     onSelect?.(suggestion);
     setIsOpen(false);
     setSuggestions([]);
-    // Generate new session token for next search session
-    sessionTokenRef.current = crypto.randomUUID();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -213,7 +261,7 @@ export default function AddressAutocomplete({
         <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden max-h-[240px] overflow-y-auto">
           {suggestions.map((s, i) => (
             <button
-              key={s.id}
+              key={s.id + i}
               type="button"
               onClick={() => handleSelect(s)}
               className={`w-full text-left px-3 py-2.5 flex items-start gap-2.5 hover:bg-accent transition-colors text-sm ${
