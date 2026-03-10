@@ -106,7 +106,8 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         style: initStyle?.style,
       });
 
-      map.on('click', (e: any) => {
+      map.on('dblclick', (e: any) => {
+        e.preventDefault();
         if (onMapClickRef.current) {
           onMapClickRef.current(e.lngLat.lat, e.lngLat.lng);
         }
