@@ -165,27 +165,73 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         sourcesToRemove.forEach(s => { if (map.getSource(s)) map.removeSource(s); });
       } catch {}
 
-      // Only draw the selected/main route — no alternative lines on the map
+      // Draw alternative routes FIRST (underneath)
+      if (alts && alts.length > 0) {
+        alts.forEach((alt, i) => {
+          const srcId = `alt-route-${i}`;
+          const layerBgId = `alt-route-line-bg-${i}`;
+          const layerId = `alt-route-line-${i}`;
 
-      // Draw main/selected route on top - BLUE
+          map.addSource(srcId, { type: 'geojson', data: alt.geoJson });
+          map.addLayer({
+            id: layerBgId, type: 'line', source: srcId,
+            paint: { 'line-color': '#94a3b8', 'line-width': 7, 'line-opacity': 0.3 },
+          });
+          map.addLayer({
+            id: layerId, type: 'line', source: srcId,
+            paint: { 'line-color': '#93c5fd', 'line-width': 5, 'line-opacity': 0.6 },
+          });
+
+          // Make clickable
+          map.on('click', layerId, () => {
+            if (onAlternativeClickRef.current) onAlternativeClickRef.current(i);
+          });
+          map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+
+          // Alt route label
+          if (alt.routePoints.length > 0) {
+            const midIdx = Math.floor(alt.routePoints.length * 0.45);
+            const midPoint = alt.routePoints[midIdx];
+            const h = Math.floor(alt.travelTimeSeconds / 3600);
+            const m = Math.round((alt.travelTimeSeconds % 3600) / 60);
+            const el = document.createElement('div');
+            el.style.cssText = `
+              background: #e2e8f0; color: #475569; font-size: 11px; font-weight: 600;
+              padding: 5px 10px; border-radius: 10px; white-space: nowrap;
+              box-shadow: 0 1px 6px rgba(0,0,0,0.15); border: 1.5px solid #cbd5e1;
+              cursor: pointer; user-select: none; text-align: center; line-height: 1.3;
+            `;
+            el.textContent = `${h}h ${m}m · ${alt.distanceKm} km`;
+            el.addEventListener('click', () => {
+              if (onAlternativeClickRef.current) onAlternativeClickRef.current(i);
+            });
+            const marker = new tt.Marker({ element: el, anchor: 'center' })
+              .setLngLat([midPoint[0], midPoint[1]])
+              .addTo(map);
+            routeMarkersRef.current.push(marker);
+          }
+        });
+      }
+
+      // Draw main/selected route on top - DARK BLUE
       map.addSource('route', { type: 'geojson', data: route.geoJson });
       map.addLayer({
         id: 'route-line-bg', type: 'line', source: 'route',
-        paint: { 'line-color': '#1e3a5f', 'line-width': 9, 'line-opacity': 0.4 },
+        paint: { 'line-color': '#1e3a5f', 'line-width': 10, 'line-opacity': 0.4 },
       });
       map.addLayer({
         id: 'route-line', type: 'line', source: 'route',
-        paint: { 'line-color': '#2563eb', 'line-width': 5, 'line-opacity': 0.95 },
+        paint: { 'line-color': '#2563eb', 'line-width': 6, 'line-opacity': 1 },
       });
 
-      // Main route label - blue bubble
+      // Main route label
       if (route.routePoints.length > 0) {
         const midIdx = Math.floor(route.routePoints.length * 0.45);
         const midPoint = route.routePoints[midIdx];
         const mainH = Math.floor(route.travelTimeSeconds / 3600);
         const mainM = Math.round((route.travelTimeSeconds % 3600) / 60);
         const mainLabel = document.createElement('div');
-        mainLabel.className = 'tt-marker tt-main-label';
         mainLabel.style.cssText = `
           background: #2563eb; color: white; font-size: 11px; font-weight: 600;
           padding: 6px 12px; border-radius: 12px; white-space: nowrap;
@@ -197,11 +243,6 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         l1.style.cssText = 'font-size: 12px; font-weight: 700;';
         l1.textContent = `${mainH}h ${mainM}m · ${route.distanceKm} km`;
         mainLabel.appendChild(l1);
-
-        const l2 = document.createElement('span');
-        l2.style.cssText = 'font-size: 10px; opacity: 0.85;';
-        l2.textContent = 'Snabbaste rutten';
-        mainLabel.appendChild(l2);
 
         const mainMarker = new tt.Marker({ element: mainLabel, anchor: 'center' })
           .setLngLat([midPoint[0], midPoint[1]])
