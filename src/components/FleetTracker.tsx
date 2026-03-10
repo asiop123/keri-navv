@@ -274,9 +274,9 @@ export default function FleetTracker() {
             )}
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={toggleMapStyle} className="text-xs gap-1 h-8">
+            <Button variant="outline" size="sm" onClick={cycleMapStyle} className="text-xs gap-1 h-8">
               <Layers className="h-3.5 w-3.5" />
-              {mapStyle === 'satellite' ? 'Karta' : 'Satellit'}
+              {mapStyle === 'satellite' ? 'Satellit' : mapStyle === 'hybrid' ? 'Hybrid' : 'Karta'}
             </Button>
             <Button variant="outline" size="sm" onClick={fitAll} className="text-xs gap-1 h-8">
               <LocateFixed className="h-3.5 w-3.5" />
