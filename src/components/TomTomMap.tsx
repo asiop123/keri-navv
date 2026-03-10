@@ -169,16 +169,16 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       if (alts && alts.length > 0) {
         alts.forEach((alt, i) => {
           map.addSource(`alt-route-${i}`, { type: 'geojson', data: alt.geoJson });
-          // White outer border for high visibility
+          // Dark semi-transparent border for contrast
           map.addLayer({
             id: `alt-route-line-bg-${i}`, type: 'line', source: `alt-route-${i}`,
-            paint: { 'line-color': '#000000', 'line-width': 10, 'line-opacity': 0.25, 'line-offset': 6 },
+            paint: { 'line-color': '#78350f', 'line-width': 10, 'line-opacity': 0.3, 'line-offset': 6 },
           });
-          // Bright white dashed inner line — clearly NOT blue
+          // Orange dashed line — unmistakably different from blue
           map.addLayer({
             id: `alt-route-line-${i}`, type: 'line', source: `alt-route-${i}`,
             paint: {
-              'line-color': '#ffffff',
+              'line-color': '#f97316',
               'line-width': 5,
               'line-opacity': 0.95,
               'line-dasharray': [4, 3],
