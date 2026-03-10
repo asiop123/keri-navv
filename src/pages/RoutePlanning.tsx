@@ -727,7 +727,21 @@ export default function RoutePlanning() {
                   'bg-primary'
                 }`} />
 
-                <div className="p-4">
+                {/* Street View preview */}
+                <div className="relative w-full h-[160px] bg-muted">
+                  <img
+                    src={`https://maps.googleapis.com/maps/api/streetview?size=600x160&location=${selectedLocation.lat},${selectedLocation.lng}&fov=100&pitch=5&key=${GOOGLE_MAPS_KEY}`}
+                    alt={`Street View – ${selectedLocation.name}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  <div className="absolute bottom-2 left-2 bg-background/80 backdrop-blur rounded px-2 py-0.5 text-[10px] font-medium flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    Street View
+                  </div>
+                </div>
                   {/* Close button */}
                   <button
                     onClick={() => setSelectedLocation(null)}
