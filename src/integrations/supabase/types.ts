@@ -14,7 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chef_notifications: {
+        Row: {
+          chef_id: string
+          created_at: string
+          driver_id: string
+          event_id: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          notification_type: string
+          title: string
+          vehicle_id: string
+        }
+        Insert: {
+          chef_id: string
+          created_at?: string
+          driver_id: string
+          event_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          notification_type: string
+          title: string
+          vehicle_id: string
+        }
+        Update: {
+          chef_id?: string
+          created_at?: string
+          driver_id?: string
+          event_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          notification_type?: string
+          title?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chef_notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "driver_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          driver_id: string
+          duration_seconds: number | null
+          event_type: string
+          id: string
+          lat: number | null
+          lng: number | null
+          notified: boolean | null
+          recorded_at: string
+          severity: string
+          speed_after: number | null
+          speed_before: number | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          driver_id: string
+          duration_seconds?: number | null
+          event_type: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          notified?: boolean | null
+          recorded_at?: string
+          severity?: string
+          speed_after?: number | null
+          speed_before?: number | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          driver_id?: string
+          duration_seconds?: number | null
+          event_type?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          notified?: boolean | null
+          recorded_at?: string
+          severity?: string
+          speed_after?: number | null
+          speed_before?: number | null
+          vehicle_id?: string
+        }
+        Relationships: []
+      }
+      vehicle_positions: {
+        Row: {
+          accuracy_m: number | null
+          created_at: string
+          driver_id: string
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          recorded_at: string
+          speed_kmh: number | null
+          vehicle_id: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          created_at?: string
+          driver_id: string
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          recorded_at?: string
+          speed_kmh?: number | null
+          vehicle_id: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          created_at?: string
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          speed_kmh?: number | null
+          vehicle_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
