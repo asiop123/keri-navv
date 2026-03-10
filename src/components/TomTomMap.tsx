@@ -64,6 +64,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<tt.Map | null>(null);
     const userMarkerRef = useRef<tt.Marker | null>(null);
+    const routeMarkersRef = useRef<tt.Marker[]>([]);
     const [currentStyle, setCurrentStyle] = useState(defaultStyle);
     const [showStylePicker, setShowStylePicker] = useState(false);
     const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[]; alternativeRoutes?: RouteResult[] }>({});
