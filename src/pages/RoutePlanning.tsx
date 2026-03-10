@@ -198,24 +198,31 @@ export default function RoutePlanning() {
 
       const result = await calculateRoute(startCoord, endCoord, waypointCoords, new Date(departureTime).toISOString(), vehicleParams);
       const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
-      const tl = await generateTimeline(result, routeType, stopMinutes, vehicleParams);
 
-      // Store alternatives separately, remove from main result
-      const alts = result.alternatives || [];
-      delete result.alternatives;
-      setAlternativeRoutes(alts);
+      // Pick the fastest route as the main one
+      const allRoutes = [result, ...(result.alternatives || [])];
+      allRoutes.sort((a, b) => a.travelTimeSeconds - b.travelTimeSeconds);
+      const bestRoute = allRoutes[0];
+      const otherRoutes = allRoutes.slice(1);
+      // Clean alternatives from the selected route object
+      delete bestRoute.alternatives;
+      otherRoutes.forEach(r => delete r.alternatives);
+
+      const tl = await generateTimeline(bestRoute, routeType, stopMinutes, vehicleParams);
+
+      setAlternativeRoutes(otherRoutes);
       setSelectedRouteIndex(0);
 
-      setRouteResult(result);
+      setRouteResult(bestRoute);
       setTimeline(tl);
       setViewState('details');
-      const destWp = result.waypoints[result.waypoints.length - 1];
+      const destWp = bestRoute.waypoints[bestRoute.waypoints.length - 1];
       setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
 
-      const hours = Math.floor(result.travelTimeSeconds / 3600);
-      const mins = Math.round((result.travelTimeSeconds % 3600) / 60);
-      const altInfo = alts.length > 0 ? ` · ${alts.length + 1} rutter` : '';
-      toast.success(`${result.distanceKm} km · ${hours}h ${mins}min${altInfo}`);
+      const hours = Math.floor(bestRoute.travelTimeSeconds / 3600);
+      const mins = Math.round((bestRoute.travelTimeSeconds % 3600) / 60);
+      const altInfo = otherRoutes.length > 0 ? ` · ${otherRoutes.length + 1} rutter` : '';
+      toast.success(`${bestRoute.distanceKm} km · ${hours}h ${mins}min${altInfo}`);
     } catch (err: any) {
       toast.error(err.message || 'Kunde inte beräkna rutt');
     } finally {
