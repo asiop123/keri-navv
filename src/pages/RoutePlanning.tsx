@@ -42,6 +42,7 @@ export default function RoutePlanning() {
   const [showOptions, setShowOptions] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
@@ -340,7 +341,29 @@ export default function RoutePlanning() {
         userPosition={userPosition}
         isNavigating={isNavigating}
         className="absolute inset-0 z-0"
+        defaultStyle="satellite"
+        onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
       />
+
+      {/* Street View popup on map click */}
+      {mapClickCoords && (
+        <div className="absolute bottom-20 right-4 z-30 w-72 bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+            <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <Eye className="h-3.5 w-3.5" /> Street View
+            </span>
+            <button onClick={() => setMapClickCoords(null)} className="text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <StreetViewPanorama
+            lat={mapClickCoords.lat}
+            lng={mapClickCoords.lng}
+            className="w-full h-[180px]"
+            showExpandButton={true}
+          />
+        </div>
+      )}
 
       {/* ===== SEARCH VIEW ===== */}
       {viewState === 'search' && (

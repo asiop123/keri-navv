@@ -47,6 +47,8 @@ interface TomTomMapProps {
   userPosition?: { lat: number; lng: number } | null;
   isNavigating?: boolean;
   className?: string;
+  defaultStyle?: string;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
 export interface TomTomMapHandle {
@@ -56,13 +58,15 @@ export interface TomTomMapHandle {
 }
 
 const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
-  ({ route, timeline, userPosition, isNavigating, className = '' }, ref) => {
+  ({ route, timeline, userPosition, isNavigating, className = '', defaultStyle = 'basic', onMapClick }, ref) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<tt.Map | null>(null);
     const userMarkerRef = useRef<tt.Marker | null>(null);
-    const [currentStyle, setCurrentStyle] = useState('basic');
+    const [currentStyle, setCurrentStyle] = useState(defaultStyle);
     const [showStylePicker, setShowStylePicker] = useState(false);
     const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[] }>({});
+    const onMapClickRef = useRef(onMapClick);
+    onMapClickRef.current = onMapClick;
 
     // Keep route data in ref for re-adding after style change
     routeDataRef.current = { route, timeline };
@@ -91,12 +95,21 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     useEffect(() => {
       if (!mapRef.current) return;
 
+      const initStyle = MAP_STYLES.find(s => s.id === defaultStyle);
+
       const map = tt.map({
         key: API_KEY,
         container: mapRef.current,
         center: [15.6, 59.3],
         zoom: 5,
         language: 'sv-SE',
+        style: initStyle?.style,
+      });
+
+      map.on('click', (e: any) => {
+        if (onMapClickRef.current) {
+          onMapClickRef.current(e.lngLat.lat, e.lngLat.lng);
+        }
       });
 
       mapInstance.current = map;
