@@ -293,8 +293,8 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
           .addTo(map);
       }
 
-      // Remove old markers (except user marker)
-      document.querySelectorAll('.tt-marker').forEach(m => m.remove());
+      // Remove old waypoint/rest markers (keep route labels)
+      document.querySelectorAll('.tt-marker:not(.tt-alt-label):not(.tt-main-label)').forEach(m => m.remove());
 
       // Waypoint markers
       route.waypoints.forEach((wp, i) => {
