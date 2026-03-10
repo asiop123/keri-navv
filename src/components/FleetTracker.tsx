@@ -7,11 +7,12 @@ import { Vehicle } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, LocateFixed, Navigation, Clock, Weight, AlertTriangle, Layers } from 'lucide-react';
+import { MapPin, LocateFixed, Navigation, Clock, Weight, AlertTriangle, Layers, Eye } from 'lucide-react';
 import { subscribeToPositions } from '@/services/gpsTracking';
 import { supabase } from '@/integrations/supabase/client';
 
-const API_KEY = getTomTomApiKey();
+const TOMTOM_KEY = getTomTomApiKey();
+const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 
 interface VehiclePosition {
   vehicleId: string;
@@ -58,7 +59,7 @@ const statusVariant: Record<string, string> = {
   parked: 'bg-muted text-muted-foreground',
 };
 
-type MapStyle = 'satellite' | 'map';
+type MapStyle = 'satellite' | 'map' | 'hybrid';
 
 export default function FleetTracker() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -68,6 +69,7 @@ export default function FleetTracker() {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   const [mapStyle, setMapStyle] = useState<MapStyle>('satellite');
   const [recentEvents, setRecentEvents] = useState<any[]>([]);
+  const [streetViewVehicle, setStreetViewVehicle] = useState<string | null>(null);
   const [useRealData, setUseRealData] = useState(false);
 
   // Fetch recent driver events
@@ -120,25 +122,38 @@ export default function FleetTracker() {
     return unsubscribe;
   }, []);
 
-  // Initialize map with satellite style
+  // Initialize map with Google Maps satellite tiles
   useEffect(() => {
     if (!mapRef.current) return;
 
     const map = tt.map({
-      key: API_KEY,
+      key: TOMTOM_KEY,
       container: mapRef.current,
       center: [15.5, 58.5],
       zoom: 6,
       language: 'sv-SE',
-      style: `https://api.tomtom.com/style/2/custom/style/dG9tdG9tQEBAYW55dGltZTtRRlhDUTVxdzd1dWxiTW50.json?key=${API_KEY}`,
     });
 
-    // Set satellite layer
     map.on('load', () => {
+      // Add Google Maps satellite raster source
       try {
-        map.setStyle(`https://api.tomtom.com/style/2/custom/style/dG9tdG9tQEBAYW55dGltZTtRRlhDUTVxdzd1dWxiTW50.json?key=${API_KEY}`);
+        map.addSource('google-satellite', {
+          type: 'raster',
+          tiles: [
+            `https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_KEY}`,
+            `https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_KEY}`,
+          ],
+          tileSize: 256,
+        });
+        map.addLayer({
+          id: 'google-satellite-layer',
+          type: 'raster',
+          source: 'google-satellite',
+          minzoom: 0,
+          maxzoom: 20,
+        }, map.getStyle().layers?.[0]?.id); // Insert below all other layers
       } catch (e) {
-        // Fallback - satellite may not be available, use default
+        console.warn('Could not add Google satellite tiles:', e);
       }
     });
 
@@ -147,17 +162,21 @@ export default function FleetTracker() {
   }, []);
 
   // Toggle map style
-  const toggleMapStyle = useCallback(() => {
+  const cycleMapStyle = useCallback(() => {
     const map = mapInstance.current;
     if (!map) return;
-    const newStyle = mapStyle === 'satellite' ? 'map' : 'satellite';
-    setMapStyle(newStyle);
+    const styles: MapStyle[] = ['satellite', 'hybrid', 'map'];
+    const next = styles[(styles.indexOf(mapStyle) + 1) % styles.length];
+    setMapStyle(next);
 
-    if (newStyle === 'map') {
-      map.setStyle(`https://api.tomtom.com/style/1/style/22.2.1-*?map=2/basic_street-light&poi=2/poi_light&key=${API_KEY}`);
-    } else {
-      map.setStyle(`https://api.tomtom.com/style/2/custom/style/dG9tdG9tQEBAYW55dGltZTtRRlhDUTVxdzd1dWxiTW50.json?key=${API_KEY}`);
-    }
+    try {
+      const satLayer = map.getLayer('google-satellite-layer');
+      if (next === 'map') {
+        if (satLayer) map.setLayoutProperty('google-satellite-layer', 'visibility', 'none');
+      } else {
+        if (satLayer) map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
+      }
+    } catch {}
   }, [mapStyle]);
 
   // Update markers
@@ -255,9 +274,9 @@ export default function FleetTracker() {
             )}
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={toggleMapStyle} className="text-xs gap-1 h-8">
+            <Button variant="outline" size="sm" onClick={cycleMapStyle} className="text-xs gap-1 h-8">
               <Layers className="h-3.5 w-3.5" />
-              {mapStyle === 'satellite' ? 'Karta' : 'Satellit'}
+              {mapStyle === 'satellite' ? 'Satellit' : mapStyle === 'hybrid' ? 'Hybrid' : 'Karta'}
             </Button>
             <Button variant="outline" size="sm" onClick={fitAll} className="text-xs gap-1 h-8">
               <LocateFixed className="h-3.5 w-3.5" />
@@ -267,6 +286,32 @@ export default function FleetTracker() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
+        {/* Street View panel */}
+        {streetViewVehicle && (() => {
+          const pos = positions.find(p => p.vehicleId === streetViewVehicle);
+          if (!pos) return null;
+          return (
+            <div className="relative w-full h-[250px] border-b border-border">
+              <img
+                src={`https://maps.googleapis.com/maps/api/streetview?size=948x250&location=${pos.lat},${pos.lng}&heading=${pos.heading}&pitch=5&fov=100&key=${GOOGLE_MAPS_KEY}`}
+                alt="Street View"
+                className="w-full h-full object-cover"
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                className="absolute top-2 right-2 text-xs"
+                onClick={() => setStreetViewVehicle(null)}
+              >
+                Stäng
+              </Button>
+              <div className="absolute bottom-2 left-2 bg-background/80 backdrop-blur rounded px-2 py-1 text-xs font-medium">
+                📍 Street View – {mockVehicles.find(v => v.id === streetViewVehicle)?.regNr}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Map */}
         <div ref={mapRef} className="w-full h-[350px] md:h-[450px]" />
 
@@ -322,9 +367,20 @@ export default function FleetTracker() {
                   <Badge className={statusVariant[pos.status]}>
                     {statusLabel[pos.status]}
                   </Badge>
-                  {pos.status === 'driving' && (
-                    <span className="text-xs font-mono text-muted-foreground">{pos.speed} km/h</span>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {pos.status === 'driving' && (
+                      <span className="text-xs font-mono text-muted-foreground">{pos.speed} km/h</span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={(e) => { e.stopPropagation(); setStreetViewVehicle(pos.vehicleId); }}
+                      title="Street View"
+                    >
+                      <MapPin className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
