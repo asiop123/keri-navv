@@ -43,12 +43,14 @@ const MAP_STYLES: MapStyle[] = [
 
 interface TomTomMapProps {
   route?: RouteResult | null;
+  alternativeRoutes?: RouteResult[];
   timeline?: TimelineEntry[];
   userPosition?: { lat: number; lng: number } | null;
   isNavigating?: boolean;
   className?: string;
   defaultStyle?: string;
   onMapClick?: (lat: number, lng: number) => void;
+  onAlternativeClick?: (index: number) => void;
 }
 
 export interface TomTomMapHandle {
@@ -58,18 +60,19 @@ export interface TomTomMapHandle {
 }
 
 const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
-  ({ route, timeline, userPosition, isNavigating, className = '', defaultStyle = 'basic', onMapClick }, ref) => {
+  ({ route, alternativeRoutes = [], timeline, userPosition, isNavigating, className = '', defaultStyle = 'basic', onMapClick, onAlternativeClick }, ref) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<tt.Map | null>(null);
     const userMarkerRef = useRef<tt.Marker | null>(null);
     const [currentStyle, setCurrentStyle] = useState(defaultStyle);
     const [showStylePicker, setShowStylePicker] = useState(false);
-    const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[] }>({});
+    const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[]; alternativeRoutes?: RouteResult[] }>({});
     const onMapClickRef = useRef(onMapClick);
+    const onAlternativeClickRef = useRef(onAlternativeClick);
     onMapClickRef.current = onMapClick;
+    onAlternativeClickRef.current = onAlternativeClick;
 
-    // Keep route data in ref for re-adding after style change
-    routeDataRef.current = { route, timeline };
+    routeDataRef.current = { route, timeline, alternativeRoutes };
 
     const centerOnUser = useCallback(() => {
       const map = mapInstance.current;
@@ -136,21 +139,50 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
 
       // Re-add route after style loads
       map.once('styledata', () => {
-        const { route: r, timeline: tl } = routeDataRef.current;
+        const { route: r, timeline: tl, alternativeRoutes: alts } = routeDataRef.current;
         if (r) {
-          addRouteToMap(map, r, tl);
+          addRouteToMap(map, r, tl, alts);
         }
       });
     }, []);
 
     // Add route helper
-    const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[]) => {
+    const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[], alts?: RouteResult[]) => {
+      // Remove old layers/sources
+      const layersToRemove = ['route-line', 'route-line-bg'];
+      const sourcesToRemove = ['route'];
+      // Remove alt layers
+      for (let i = 0; i < 3; i++) {
+        layersToRemove.push(`alt-route-line-${i}`, `alt-route-line-bg-${i}`);
+        sourcesToRemove.push(`alt-route-${i}`);
+      }
       try {
-        if (map.getLayer('route-line')) map.removeLayer('route-line');
-        if (map.getLayer('route-line-bg')) map.removeLayer('route-line-bg');
-        if (map.getSource('route')) map.removeSource('route');
+        layersToRemove.forEach(l => { if (map.getLayer(l)) map.removeLayer(l); });
+        sourcesToRemove.forEach(s => { if (map.getSource(s)) map.removeSource(s); });
       } catch {}
 
+      // Draw alternative routes first (behind main route)
+      if (alts && alts.length > 0) {
+        alts.forEach((alt, i) => {
+          map.addSource(`alt-route-${i}`, { type: 'geojson', data: alt.geoJson });
+          map.addLayer({
+            id: `alt-route-line-bg-${i}`, type: 'line', source: `alt-route-${i}`,
+            paint: { 'line-color': '#94a3b8', 'line-width': 6, 'line-opacity': 0.4 },
+          });
+          map.addLayer({
+            id: `alt-route-line-${i}`, type: 'line', source: `alt-route-${i}`,
+            paint: { 'line-color': '#94a3b8', 'line-width': 4, 'line-opacity': 0.7 },
+          });
+          // Click on alt route to select it
+          map.on('click', `alt-route-line-${i}`, () => {
+            if (onAlternativeClickRef.current) onAlternativeClickRef.current(i);
+          });
+          map.on('mouseenter', `alt-route-line-${i}`, () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', `alt-route-line-${i}`, () => { map.getCanvas().style.cursor = ''; });
+        });
+      }
+
+      // Draw main route on top
       map.addSource('route', { type: 'geojson', data: route.geoJson });
       map.addLayer({
         id: 'route-line-bg', type: 'line', source: 'route',
@@ -263,14 +295,14 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       const map = mapInstance.current;
       if (!map || !route) return;
 
-      const draw = () => addRouteToMap(map, route, timeline);
+      const draw = () => addRouteToMap(map, route, timeline, alternativeRoutes);
 
       if (map.isStyleLoaded()) {
         draw();
       } else {
         map.on('load', draw);
       }
-    }, [route, timeline]);
+    }, [route, timeline, alternativeRoutes]);
 
     return (
       <>

@@ -45,6 +45,8 @@ export default function RoutePlanning() {
   const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
+  const [alternativeRoutes, setAlternativeRoutes] = useState<RouteResult[]>([]);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
 
@@ -198,16 +200,22 @@ export default function RoutePlanning() {
       const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
       const tl = await generateTimeline(result, routeType, stopMinutes, vehicleParams);
 
+      // Store alternatives separately, remove from main result
+      const alts = result.alternatives || [];
+      delete result.alternatives;
+      setAlternativeRoutes(alts);
+      setSelectedRouteIndex(0);
+
       setRouteResult(result);
       setTimeline(tl);
       setViewState('details');
-      // Store destination coords for 3D view
       const destWp = result.waypoints[result.waypoints.length - 1];
       setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
 
       const hours = Math.floor(result.travelTimeSeconds / 3600);
       const mins = Math.round((result.travelTimeSeconds % 3600) / 60);
-      toast.success(`${result.distanceKm} km · ${hours}h ${mins}min`);
+      const altInfo = alts.length > 0 ? ` · ${alts.length + 1} rutter` : '';
+      toast.success(`${result.distanceKm} km · ${hours}h ${mins}min${altInfo}`);
     } catch (err: any) {
       toast.error(err.message || 'Kunde inte beräkna rutt');
     } finally {
@@ -238,9 +246,36 @@ export default function RoutePlanning() {
   const handleBack = () => {
     setViewState('search');
     setRouteResult(null);
+    setAlternativeRoutes([]);
+    setSelectedRouteIndex(0);
     setTimeline([]);
     setDestination('');
     setSelectedLocation(null);
+  };
+
+  const handleSwitchRoute = async (index: number) => {
+    if (index === selectedRouteIndex) return;
+    
+    // Collect all routes: [current main, ...alternatives]
+    const allRoutes = [routeResult!, ...alternativeRoutes];
+    const newMain = allRoutes[index];
+    const newAlts = allRoutes.filter((_, i) => i !== index);
+    
+    const vehicleParams: VehicleParams | undefined = selectedVehicle
+      ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
+      : undefined;
+    const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
+    const tl = await generateTimeline(newMain, routeType, stopMinutes, vehicleParams);
+    
+    setRouteResult(newMain);
+    setAlternativeRoutes(newAlts);
+    setSelectedRouteIndex(0);
+    setTimeline(tl);
+    setIsSaved(false);
+    
+    const hours = Math.floor(newMain.travelTimeSeconds / 3600);
+    const mins = Math.round((newMain.travelTimeSeconds % 3600) / 60);
+    toast.success(`Bytte rutt: ${newMain.distanceKm} km · ${hours}h ${mins}min`);
   };
 
   const handleTimelineEntryClick = (entry: TimelineEntry, timelineIndex: number) => {
@@ -338,12 +373,14 @@ export default function RoutePlanning() {
       <TomTomMap
         ref={mapHandleRef}
         route={routeResult}
+        alternativeRoutes={alternativeRoutes}
         timeline={timeline}
         userPosition={userPosition}
         isNavigating={isNavigating}
         className="absolute inset-0 z-0"
         defaultStyle="satellite"
         onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
+        onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
       {/* Fullscreen Street View on double-click */}
@@ -686,6 +723,50 @@ export default function RoutePlanning() {
                   <div className="text-[10px] text-muted-foreground">ankomst</div>
                 </div>
               </div>
+
+              {/* Route alternatives selector */}
+              {alternativeRoutes.length > 0 && (
+                <div className="border-t border-border/50 px-4 py-2.5">
+                  <div className="text-[10px] text-muted-foreground mb-1.5 font-medium">Välj rutt</div>
+                  <div className="flex gap-2">
+                    {/* Current/selected route */}
+                    <button
+                      className="flex-1 rounded-lg px-3 py-2 text-left border-2 border-primary bg-primary/10 transition-colors"
+                    >
+                      <div className="text-xs font-semibold text-foreground">Rutt 1 <span className="text-primary">(vald)</span></div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {routeResult.distanceKm} km · {Math.floor(routeResult.travelTimeSeconds / 3600)}h {Math.round((routeResult.travelTimeSeconds % 3600) / 60)}min
+                      </div>
+                    </button>
+                    {/* Alternative routes */}
+                    {alternativeRoutes.map((alt, i) => {
+                      const diffKm = alt.distanceKm - routeResult.distanceKm;
+                      const diffMin = Math.round((alt.travelTimeSeconds - routeResult.travelTimeSeconds) / 60);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => handleSwitchRoute(i + 1)}
+                          className="flex-1 rounded-lg px-3 py-2 text-left border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors"
+                        >
+                          <div className="text-xs font-semibold text-foreground">Rutt {i + 2}</div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {alt.distanceKm} km · {Math.floor(alt.travelTimeSeconds / 3600)}h {Math.round((alt.travelTimeSeconds % 3600) / 60)}min
+                          </div>
+                          <div className="text-[10px] mt-0.5">
+                            <span className={diffMin > 0 ? 'text-destructive' : 'text-emerald-600'}>
+                              {diffMin > 0 ? '+' : ''}{diffMin} min
+                            </span>
+                            <span className="text-muted-foreground ml-1">
+                              {diffKm > 0 ? '+' : ''}{diffKm} km
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* 3D Street View of destination */}
               {destinationCoords && (
                 <div className="relative border-t border-border/50 overflow-hidden">

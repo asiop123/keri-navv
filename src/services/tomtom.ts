@@ -21,6 +21,7 @@ export interface RouteResult {
   bbox: [number, number, number, number];
   waypoints: { lat: number; lng: number; name: string }[];
   routePoints: [number, number][];
+  alternatives?: RouteResult[];
 }
 
 export interface RouteLeg {
@@ -64,40 +65,14 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string> 
   }
 }
 
-export async function calculateRoute(
-  startCoord: GeocodingResult,
-  endCoord: GeocodingResult,
-  waypointCoords: GeocodingResult[],
-  departAt?: string,
-  vehicleParams?: VehicleParams
-): Promise<RouteResult> {
-  const locations = [startCoord, ...waypointCoords, endCoord]
-    .map(c => `${c.lat},${c.lng}`)
-    .join(':');
-
-  const depart = departAt || new Date().toISOString();
-  let url = `${BASE_URL}/routing/1/calculateRoute/${locations}/json?key=${API_KEY}&travelMode=truck&departAt=${depart}&routeRepresentation=polyline&computeTravelTimeFor=all`;
-
-  // Add vehicle-specific parameters for truck routing
-  if (vehicleParams) {
-    if (vehicleParams.weightKg) url += `&vehicleWeight=${vehicleParams.weightKg}`;
-    if (vehicleParams.heightM) url += `&vehicleHeight=${vehicleParams.heightM}`;
-    if (vehicleParams.widthM) url += `&vehicleWidth=${vehicleParams.widthM}`;
-    if (vehicleParams.lengthM) url += `&vehicleLength=${vehicleParams.lengthM}`;
-  } else {
-    url += `&vehicleWeight=40000`;
-  }
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Routing failed: ${res.status}`);
-  const data = await res.json();
-
-  if (!data.routes?.length) throw new Error('Ingen rutt hittades');
-  const route = data.routes[0];
-  const summary = route.summary;
+function parseRoute(
+  routeData: any,
+  allCoords: GeocodingResult[]
+): RouteResult {
+  const summary = routeData.summary;
 
   const allPoints: [number, number][] = [];
-  for (const leg of route.legs) {
+  for (const leg of routeData.legs) {
     for (const point of leg.points) {
       allPoints.push([point.longitude, point.latitude]);
     }
@@ -112,8 +87,7 @@ export async function calculateRoute(
     }],
   };
 
-  const allCoords = [startCoord, ...waypointCoords, endCoord];
-  const legs: RouteLeg[] = route.legs.map((leg: any, i: number) => ({
+  const legs: RouteLeg[] = routeData.legs.map((leg: any, i: number) => ({
     distanceKm: Math.round(leg.summary.lengthInMeters / 1000),
     travelTimeSeconds: leg.summary.travelTimeInSeconds,
     startLabel: allCoords[i].name,
@@ -134,6 +108,46 @@ export async function calculateRoute(
     waypoints: allCoords.map(c => ({ lat: c.lat, lng: c.lng, name: c.name })),
     routePoints: allPoints,
   };
+}
+
+export async function calculateRoute(
+  startCoord: GeocodingResult,
+  endCoord: GeocodingResult,
+  waypointCoords: GeocodingResult[],
+  departAt?: string,
+  vehicleParams?: VehicleParams
+): Promise<RouteResult> {
+  const locations = [startCoord, ...waypointCoords, endCoord]
+    .map(c => `${c.lat},${c.lng}`)
+    .join(':');
+
+  const depart = departAt || new Date().toISOString();
+  let url = `${BASE_URL}/routing/1/calculateRoute/${locations}/json?key=${API_KEY}&travelMode=truck&departAt=${depart}&routeRepresentation=polyline&computeTravelTimeFor=all&maxAlternatives=1`;
+
+  if (vehicleParams) {
+    if (vehicleParams.weightKg) url += `&vehicleWeight=${vehicleParams.weightKg}`;
+    if (vehicleParams.heightM) url += `&vehicleHeight=${vehicleParams.heightM}`;
+    if (vehicleParams.widthM) url += `&vehicleWidth=${vehicleParams.widthM}`;
+    if (vehicleParams.lengthM) url += `&vehicleLength=${vehicleParams.lengthM}`;
+  } else {
+    url += `&vehicleWeight=40000`;
+  }
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Routing failed: ${res.status}`);
+  const data = await res.json();
+
+  if (!data.routes?.length) throw new Error('Ingen rutt hittades');
+
+  const allCoords = [startCoord, ...waypointCoords, endCoord];
+  const result = parseRoute(data.routes[0], allCoords);
+
+  // Parse alternatives if available
+  if (data.routes.length > 1) {
+    result.alternatives = data.routes.slice(1).map((r: any) => parseRoute(r, allCoords));
+  }
+
+  return result;
 }
 
 function getPointAlongRoute(
