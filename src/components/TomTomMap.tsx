@@ -168,16 +168,17 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
           // White outer glow for visibility on satellite
           map.addLayer({
             id: `alt-route-line-bg-${i}`, type: 'line', source: `alt-route-${i}`,
-            paint: { 'line-color': '#ffffff', 'line-width': 10, 'line-opacity': 0.5 },
+            paint: { 'line-color': '#ffffff', 'line-width': 10, 'line-opacity': 0.5, 'line-offset': 6 },
           });
           // Grey dashed inner line
           map.addLayer({
             id: `alt-route-line-${i}`, type: 'line', source: `alt-route-${i}`,
             paint: {
-              'line-color': '#6b7280',
+              'line-color': '#9ca3af',
               'line-width': 5,
-              'line-opacity': 0.85,
+              'line-opacity': 0.9,
               'line-dasharray': [4, 3],
+              'line-offset': 6,
             },
           });
 
