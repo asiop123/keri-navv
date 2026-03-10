@@ -723,6 +723,50 @@ export default function RoutePlanning() {
                   <div className="text-[10px] text-muted-foreground">ankomst</div>
                 </div>
               </div>
+
+              {/* Route alternatives selector */}
+              {alternativeRoutes.length > 0 && (
+                <div className="border-t border-border/50 px-4 py-2.5">
+                  <div className="text-[10px] text-muted-foreground mb-1.5 font-medium">Välj rutt</div>
+                  <div className="flex gap-2">
+                    {/* Current/selected route */}
+                    <button
+                      className="flex-1 rounded-lg px-3 py-2 text-left border-2 border-primary bg-primary/10 transition-colors"
+                    >
+                      <div className="text-xs font-semibold text-foreground">Rutt 1 <span className="text-primary">(vald)</span></div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {routeResult.distanceKm} km · {Math.floor(routeResult.travelTimeSeconds / 3600)}h {Math.round((routeResult.travelTimeSeconds % 3600) / 60)}min
+                      </div>
+                    </button>
+                    {/* Alternative routes */}
+                    {alternativeRoutes.map((alt, i) => {
+                      const diffKm = alt.distanceKm - routeResult.distanceKm;
+                      const diffMin = Math.round((alt.travelTimeSeconds - routeResult.travelTimeSeconds) / 60);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => handleSwitchRoute(i + 1)}
+                          className="flex-1 rounded-lg px-3 py-2 text-left border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors"
+                        >
+                          <div className="text-xs font-semibold text-foreground">Rutt {i + 2}</div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {alt.distanceKm} km · {Math.floor(alt.travelTimeSeconds / 3600)}h {Math.round((alt.travelTimeSeconds % 3600) / 60)}min
+                          </div>
+                          <div className="text-[10px] mt-0.5">
+                            <span className={diffMin > 0 ? 'text-destructive' : 'text-emerald-600'}>
+                              {diffMin > 0 ? '+' : ''}{diffMin} min
+                            </span>
+                            <span className="text-muted-foreground ml-1">
+                              {diffKm > 0 ? '+' : ''}{diffKm} km
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* 3D Street View of destination */}
               {destinationCoords && (
                 <div className="relative border-t border-border/50 overflow-hidden">
