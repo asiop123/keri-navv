@@ -169,18 +169,18 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       if (alts && alts.length > 0) {
         alts.forEach((alt, i) => {
           map.addSource(`alt-route-${i}`, { type: 'geojson', data: alt.geoJson });
-          // Dark semi-transparent border for contrast
+          // Semi-transparent grey border
           map.addLayer({
             id: `alt-route-line-bg-${i}`, type: 'line', source: `alt-route-${i}`,
-            paint: { 'line-color': '#78350f', 'line-width': 10, 'line-opacity': 0.3, 'line-offset': 6 },
+            paint: { 'line-color': '#4b5563', 'line-width': 8, 'line-opacity': 0.4, 'line-offset': 6 },
           });
-          // Orange dashed line — unmistakably different from blue
+          // Grey dashed line for non-selected route
           map.addLayer({
             id: `alt-route-line-${i}`, type: 'line', source: `alt-route-${i}`,
             paint: {
-              'line-color': '#f97316',
+              'line-color': '#6b7280',
               'line-width': 5,
-              'line-opacity': 0.95,
+              'line-opacity': 0.85,
               'line-dasharray': [4, 3],
               'line-offset': 6,
             },
@@ -261,11 +261,11 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       map.addSource('route', { type: 'geojson', data: route.geoJson });
       map.addLayer({
         id: 'route-line-bg', type: 'line', source: 'route',
-        paint: { 'line-color': '#1e40af', 'line-width': 9, 'line-opacity': 0.35 },
+        paint: { 'line-color': '#3b82f6', 'line-width': 9, 'line-opacity': 0.3 },
       });
       map.addLayer({
         id: 'route-line', type: 'line', source: 'route',
-        paint: { 'line-color': '#2563eb', 'line-width': 5, 'line-opacity': 0.95 },
+        paint: { 'line-color': '#60a5fa', 'line-width': 5, 'line-opacity': 0.95 },
       });
 
       // Main route label - blue bubble
