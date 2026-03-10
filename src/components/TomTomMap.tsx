@@ -249,9 +249,10 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
               e.stopPropagation();
               handleAltClick();
             });
-            new tt.Marker({ element: labelEl, anchor: 'center' })
+            const altMarker = new tt.Marker({ element: labelEl, anchor: 'center' })
               .setLngLat([midPoint[0], midPoint[1]])
               .addTo(map);
+            routeMarkersRef.current.push(altMarker);
           }
         });
       }
