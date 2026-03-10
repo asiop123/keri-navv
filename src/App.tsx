@@ -17,6 +17,8 @@ import Tasks from "@/pages/Tasks";
 import SignScanning from "@/pages/SignScanning";
 import Economy from "@/pages/Economy";
 import Community from "@/pages/Community";
+import Besiktning from "@/pages/Besiktning";
+import Lastsäkring from "@/pages/Lastsäkring";
 import NotFound from "@/pages/NotFound";
 import Install from "@/pages/Install";
 
@@ -39,6 +41,8 @@ function AppRoutes() {
         <Route path="/skyltskanning" element={<SignScanning />} />
         <Route path="/ekonomi" element={<Economy />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/besiktning" element={<Besiktning />} />
+        <Route path="/lastsäkring" element={<Lastsäkring />} />
         <Route path="/install" element={<Install />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
