@@ -679,105 +679,24 @@ export default function RoutePlanning() {
       {/* ===== DETAILS VIEW ===== */}
       {viewState === 'details' && routeResult && (
         <>
-          {/* Top bar */}
+          {/* Top bar - compact */}
           <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
             <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3">
+              <div className="flex items-center gap-3 px-4 py-2.5">
                 <button onClick={handleBack} className="shrink-0 p-1 hover:bg-accent rounded-lg">
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold truncate">{destination}</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {routeResult.waypoints.map(w => w.name).join(' → ')}
+                  <div className="text-[10px] text-muted-foreground flex items-center gap-2">
+                    <span className="font-bold text-primary">{routeResult.distanceKm} km</span>
+                    <span>·</span>
+                    <span className="font-bold text-primary">{totalDriveTimeH}h {totalDriveTimeMin}min</span>
+                    <span>·</span>
+                    <span>ank {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
               </div>
-
-              {/* Departure/arrival date context */}
-              <div className="px-4 py-1.5 border-t border-border/30 flex items-center justify-between text-[10px] text-muted-foreground">
-                <span>
-                  Avg: {new Date(routeResult.departureTime).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}{' '}
-                  {new Date(routeResult.departureTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-                <span>
-                  Ank: {new Date(routeResult.arrivalTime).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}{' '}
-                  {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 border-t border-border/50">
-                <div className="text-center py-3 border-r border-border/50">
-                  <div className="text-lg font-bold text-primary">{routeResult.distanceKm}</div>
-                  <div className="text-[10px] text-muted-foreground">km</div>
-                </div>
-                <div className="text-center py-3 border-r border-border/50">
-                  <div className="text-lg font-bold text-primary">{totalDriveTimeH}h {totalDriveTimeMin}min</div>
-                  <div className="text-[10px] text-muted-foreground">restid</div>
-                </div>
-                <div className="text-center py-3">
-                  <div className="text-lg font-bold text-primary">
-                    {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">ankomst</div>
-                </div>
-              </div>
-
-              {/* Route alternatives selector */}
-              {alternativeRoutes.length > 0 && (
-                <div className="border-t border-border/50 px-4 py-2.5">
-                  <div className="text-[10px] text-muted-foreground mb-1.5 font-medium">Välj rutt</div>
-                  <div className="flex gap-2">
-                    {/* Current/selected route */}
-                    <button
-                      className="flex-1 rounded-lg px-3 py-2 text-left border-2 border-primary bg-primary/10 transition-colors"
-                    >
-                      <div className="text-xs font-semibold text-foreground">Rutt 1 <span className="text-primary">(vald)</span></div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {routeResult.distanceKm} km · {Math.floor(routeResult.travelTimeSeconds / 3600)}h {Math.round((routeResult.travelTimeSeconds % 3600) / 60)}min
-                      </div>
-                    </button>
-                    {/* Alternative routes */}
-                    {alternativeRoutes.map((alt, i) => {
-                      const diffKm = alt.distanceKm - routeResult.distanceKm;
-                      const diffMin = Math.round((alt.travelTimeSeconds - routeResult.travelTimeSeconds) / 60);
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => handleSwitchRoute(i + 1)}
-                          className="flex-1 rounded-lg px-3 py-2 text-left border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors"
-                        >
-                          <div className="text-xs font-semibold text-foreground">Rutt {i + 2}</div>
-                          <div className="text-[10px] text-muted-foreground">
-                            {alt.distanceKm} km · {Math.floor(alt.travelTimeSeconds / 3600)}h {Math.round((alt.travelTimeSeconds % 3600) / 60)}min
-                          </div>
-                          <div className="text-[10px] mt-0.5">
-                            <span className={diffMin > 0 ? 'text-destructive' : 'text-emerald-600'}>
-                              {diffMin > 0 ? '+' : ''}{diffMin} min
-                            </span>
-                            <span className="text-muted-foreground ml-1">
-                              {diffKm > 0 ? '+' : ''}{diffKm} km
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* 3D Street View of destination */}
-              {destinationCoords && (
-                <div className="relative border-t border-border/50 overflow-hidden">
-                  <StreetViewPanorama
-                    lat={destinationCoords.lat}
-                    lng={destinationCoords.lng}
-                    className="w-full h-[140px]"
-                    label={`Street View · ${routeResult.waypoints[routeResult.waypoints.length - 1].name}`}
-                  />
-                </div>
-              )}
             </div>
           </div>
 
