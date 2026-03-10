@@ -166,6 +166,8 @@ export default function RoutePlanning() {
     return 'bg-success text-success-foreground';
   };
 
+  const pendingDestCoordsRef = useRef<{ lat: number; lng: number; name: string } | null>(null);
+
   const handleSearch = async () => {
     if (!destination.trim()) return;
     setIsLoading(true);
@@ -173,11 +175,16 @@ export default function RoutePlanning() {
 
     try {
       const startQuery = start || 'Stockholm';
+      const destFromSelection = pendingDestCoordsRef.current;
+      pendingDestCoordsRef.current = null;
+
       const [startCoord, endCoord, ...waypointCoords] = await Promise.all([
         userPosition && (!start || start === 'Min position')
           ? Promise.resolve({ lat: userPosition.lat, lng: userPosition.lng, name: start || 'Min position' })
           : geocode(startQuery),
-        geocode(destination),
+        destFromSelection
+          ? Promise.resolve(destFromSelection)
+          : geocode(destination),
         ...waypoints.filter(w => w.address.trim()).map(w => geocode(w.address)),
       ]);
 
