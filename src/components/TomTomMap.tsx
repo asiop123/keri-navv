@@ -161,17 +161,24 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         sourcesToRemove.forEach(s => { if (map.getSource(s)) map.removeSource(s); });
       } catch {}
 
-      // Draw alternative routes first (behind main) - GREY
+      // Draw alternative routes first (behind main) - clearly GREY/WHITE, high contrast
       if (alts && alts.length > 0) {
         alts.forEach((alt, i) => {
           map.addSource(`alt-route-${i}`, { type: 'geojson', data: alt.geoJson });
+          // White outer glow for visibility on satellite
           map.addLayer({
             id: `alt-route-line-bg-${i}`, type: 'line', source: `alt-route-${i}`,
-            paint: { 'line-color': '#9ca3af', 'line-width': 10, 'line-opacity': 0.2 },
+            paint: { 'line-color': '#ffffff', 'line-width': 10, 'line-opacity': 0.5 },
           });
+          // Grey dashed inner line
           map.addLayer({
             id: `alt-route-line-${i}`, type: 'line', source: `alt-route-${i}`,
-            paint: { 'line-color': '#9ca3af', 'line-width': 5, 'line-opacity': 0.6 },
+            paint: {
+              'line-color': '#6b7280',
+              'line-width': 5,
+              'line-opacity': 0.85,
+              'line-dasharray': [4, 3],
+            },
           });
 
           // Click handlers
