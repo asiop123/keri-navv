@@ -17,6 +17,8 @@ import Tasks from "@/pages/Tasks";
 import SignScanning from "@/pages/SignScanning";
 import Economy from "@/pages/Economy";
 import Community from "@/pages/Community";
+import Besiktning from "@/pages/Besiktning";
+import Lastsäkring from "@/pages/Lastsäkring";
 import NotFound from "@/pages/NotFound";
 import Install from "@/pages/Install";
 
