@@ -59,7 +59,7 @@ const statusVariant: Record<string, string> = {
   parked: 'bg-muted text-muted-foreground',
 };
 
-type MapStyle = 'satellite' | 'map';
+type MapStyle = 'satellite' | 'map' | 'hybrid';
 
 export default function FleetTracker() {
   const mapRef = useRef<HTMLDivElement>(null);
