@@ -22,7 +22,6 @@ export default function ChauffeurMyDay() {
     (t) => t.assignedTo === currentUser.id && t.status !== 'completed'
   );
 
-  // Check inspection-related reminders for warnings
   const vehicleIds = myVehicles.map((v) => v.id);
   const inspectionReminders = mockReminders.filter(
     (r) =>
@@ -38,38 +37,24 @@ export default function ChauffeurMyDay() {
     return worst;
   }, 'green');
 
-  const statusBadge = (status: string) => {
-    if (status === 'red')
-      return (
-        <Badge className="bg-destructive text-destructive-foreground text-xs">
-          <AlertTriangle className="h-3 w-3 mr-1" />
-          Brådskande
-        </Badge>
-      );
-    if (status === 'yellow')
-      return (
-        <Badge className="bg-warning text-warning-foreground text-xs">
-          <AlertTriangle className="h-3 w-3 mr-1" />
-          Snart
-        </Badge>
-      );
-    return null;
-  };
-
   const quickActions = [
     {
       id: 'besiktning',
       label: 'Besiktning',
       description: 'Kontroller & datum',
       icon: ShieldCheck,
+      color: 'from-blue-500 to-blue-600',
+      shadowColor: 'shadow-blue-500/30',
       warning: worstInspectionStatus,
       onClick: () => navigate('/besiktning'),
     },
     {
       id: 'gps',
-      label: 'GPS & Navigation',
-      description: 'Starta navigation',
+      label: 'Navigation',
+      description: 'GPS & ruttplanering',
       icon: Navigation,
+      color: 'from-emerald-500 to-emerald-600',
+      shadowColor: 'shadow-emerald-500/30',
       onClick: () => navigate('/ruttplanering'),
     },
     {
@@ -77,22 +62,26 @@ export default function ChauffeurMyDay() {
       label: 'Lastsäkring',
       description: 'Kalkylator',
       icon: Weight,
+      color: 'from-amber-500 to-orange-500',
+      shadowColor: 'shadow-amber-500/30',
       onClick: () => navigate('/lastsäkring'),
     },
     {
       id: 'skylt',
-      label: 'Skyltigenkänning',
-      description: 'Fotografera skylt',
+      label: 'Skyltar',
+      description: 'Fotografera & tolka',
       icon: Camera,
+      color: 'from-purple-500 to-purple-600',
+      shadowColor: 'shadow-purple-500/30',
       onClick: () => navigate('/skyltskanning'),
     },
   ];
 
   return (
-    <div className="space-y-5 max-w-lg mx-auto pb-8">
-      {/* Greeting */}
+    <div className="space-y-6 max-w-lg mx-auto pb-8">
+      {/* Header */}
       <div className="pt-1">
-        <h1 className="text-xl font-bold text-foreground">
+        <h1 className="text-2xl font-bold text-foreground">
           Hej {currentUser.name.split(' ')[0]}!
         </h1>
         {myVehicles[0] && (
@@ -102,32 +91,25 @@ export default function ChauffeurMyDay() {
         )}
       </div>
 
-      {/* Tasks section */}
-      <section>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Dagens uppgifter
-        </h2>
-        {myTasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-4 text-center">
-              <ClipboardCheck className="h-8 w-8 text-success mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Inga uppgifter idag!</p>
-            </CardContent>
-          </Card>
-        ) : (
+      {/* Tasks */}
+      {myTasks.length > 0 && (
+        <section>
+          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+            Dagens uppgifter
+          </h2>
           <div className="space-y-2">
             {myTasks.map((t) => (
               <Card
                 key={t.id}
-                className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+                className="cursor-pointer hover:shadow-lg transition-all active:scale-[0.98] border-l-4 border-l-secondary"
                 onClick={() => navigate('/uppgifter')}
               >
                 <CardContent className="p-4 flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-secondary/20 flex items-center justify-center shrink-0">
-                    <ClipboardCheck className="h-5 w-5 text-secondary" />
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-amber-500 flex items-center justify-center shrink-0 shadow-md shadow-secondary/25">
+                    <ClipboardCheck className="h-5 w-5 text-secondary-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{t.title}</p>
+                    <p className="font-semibold text-sm">{t.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{t.description}</p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -135,54 +117,73 @@ export default function ChauffeurMyDay() {
               </Card>
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      {/* Quick action grid */}
+      {myTasks.length === 0 && (
+        <Card className="border-dashed">
+          <CardContent className="p-5 text-center">
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center mx-auto mb-2 shadow-md shadow-emerald-500/25">
+              <ClipboardCheck className="h-6 w-6 text-white" />
+            </div>
+            <p className="text-sm font-medium text-foreground">Inga uppgifter!</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Du har inga uppgifter idag</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick actions */}
       <section>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
           Verktyg
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {quickActions.map((action) => {
             const Icon = action.icon;
             const hasWarning = action.warning && action.warning !== 'green';
             return (
               <Card
                 key={action.id}
-                className="cursor-pointer hover:shadow-md transition-all active:scale-[0.97] relative overflow-hidden"
+                className="cursor-pointer hover:shadow-lg transition-all active:scale-[0.97] relative overflow-hidden group"
                 onClick={action.onClick}
               >
-                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                <CardContent className="p-6 flex flex-col items-center text-center gap-3">
+                  {/* Warning badge */}
+                  {hasWarning && (
+                    <div className="absolute top-2.5 right-2.5">
+                      <span className={`flex h-3 w-3 relative`}>
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${action.warning === 'red' ? 'bg-destructive' : 'bg-warning'}`} />
+                        <span className={`relative inline-flex rounded-full h-3 w-3 ${action.warning === 'red' ? 'bg-destructive' : 'bg-warning'}`} />
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Icon circle */}
                   <div
-                    className={`h-14 w-14 rounded-2xl flex items-center justify-center ${
-                      hasWarning
-                        ? action.warning === 'red'
-                          ? 'bg-destructive/15'
-                          : 'bg-warning/20'
-                        : 'bg-primary/10'
-                    }`}
+                    className={`h-16 w-16 rounded-full bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg ${action.shadowColor} group-hover:scale-105 transition-transform`}
                   >
-                    <Icon
-                      className={`h-7 w-7 ${
-                        hasWarning
-                          ? action.warning === 'red'
-                            ? 'text-destructive'
-                            : 'text-warning'
-                          : 'text-primary'
-                      }`}
-                    />
+                    <Icon className="h-8 w-8 text-white" />
                   </div>
+
                   <div>
-                    <p className="font-semibold text-sm">{action.label}</p>
+                    <p className="font-bold text-sm">{action.label}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {action.description}
                     </p>
                   </div>
+
                   {hasWarning && (
-                    <div className="absolute top-2 right-2">
-                      {statusBadge(action.warning!)}
-                    </div>
+                    <Badge
+                      className={`text-[10px] px-2 py-0.5 ${
+                        action.warning === 'red'
+                          ? 'bg-destructive/10 text-destructive border-destructive/20'
+                          : 'bg-warning/10 text-warning border-warning/20'
+                      }`}
+                      variant="outline"
+                    >
+                      <AlertTriangle className="h-2.5 w-2.5 mr-1" />
+                      {action.warning === 'red' ? 'Brådskande' : 'Snart'}
+                    </Badge>
                   )}
                 </CardContent>
               </Card>
