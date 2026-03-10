@@ -742,6 +742,8 @@ export default function RoutePlanning() {
                     Street View
                   </div>
                 </div>
+
+                <div className="p-4">
                   {/* Close button */}
                   <button
                     onClick={() => setSelectedLocation(null)}
