@@ -149,11 +149,14 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
 
     // Add route helper
     const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[], alts?: RouteResult[]) => {
+      // Remove ALL old route markers (labels, waypoints, rest stops)
+      routeMarkersRef.current.forEach(m => m.remove());
+      routeMarkersRef.current = [];
+
       // Remove old layers/sources
       const layersToRemove = ['route-line', 'route-line-bg'];
       const sourcesToRemove = ['route'];
-      // Remove alt layers
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 5; i++) {
         layersToRemove.push(`alt-route-line-${i}`, `alt-route-line-bg-${i}`);
         sourcesToRemove.push(`alt-route-${i}`);
       }
