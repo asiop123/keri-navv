@@ -1,4 +1,11 @@
+/// <reference types="google.maps" />
 import { useState, useRef, useEffect, useCallback } from 'react';
+
+declare global {
+  interface Window {
+    google?: typeof google;
+  }
+}
 import { Input } from '@/components/ui/input';
 import { MapPin, Loader2 } from 'lucide-react';
 
