@@ -367,9 +367,20 @@ export default function FleetTracker() {
                   <Badge className={statusVariant[pos.status]}>
                     {statusLabel[pos.status]}
                   </Badge>
-                  {pos.status === 'driving' && (
-                    <span className="text-xs font-mono text-muted-foreground">{pos.speed} km/h</span>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {pos.status === 'driving' && (
+                      <span className="text-xs font-mono text-muted-foreground">{pos.speed} km/h</span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={(e) => { e.stopPropagation(); setStreetViewVehicle(pos.vehicleId); }}
+                      title="Street View"
+                    >
+                      <MapPin className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
