@@ -279,7 +279,7 @@ export default function FleetTracker() {
     if (!map || positions.length === 0) return;
     const bounds = new tt.LngLatBounds();
     positions.forEach((p) => bounds.extend([p.lng, p.lat]));
-    map.fitBounds(bounds, { padding: 60, duration: 800 });
+    map.fitBounds(bounds, { padding: 80, duration: 1000, maxZoom: 16 });
     setSelectedVehicle(null);
   }, [positions]);
 
