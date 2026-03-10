@@ -72,7 +72,7 @@ export default function RoutePlanning() {
     suitabilityNote?: string;
   } | null>(null);
 
-  useEffect(() => { setSavedTrips(getSavedTrips()); }, []);
+  useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
 
   // Get GPS
   useEffect(() => {
