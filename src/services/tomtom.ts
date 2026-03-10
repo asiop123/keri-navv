@@ -21,6 +21,7 @@ export interface RouteResult {
   bbox: [number, number, number, number];
   waypoints: { lat: number; lng: number; name: string }[];
   routePoints: [number, number][];
+  alternatives?: RouteResult[];
 }
 
 export interface RouteLeg {
