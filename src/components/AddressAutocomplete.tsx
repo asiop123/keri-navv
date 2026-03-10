@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
-import { MapPin, Loader2, Navigation } from 'lucide-react';
-import { getTomTomApiKey } from '@/services/tomtom';
+import { MapPin, Loader2 } from 'lucide-react';
+
+const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 
 interface Suggestion {
   id: string;
@@ -9,6 +10,15 @@ interface Suggestion {
   address: string;
   lat: number;
   lng: number;
+}
+
+interface PlacePrediction {
+  place_id: string;
+  description: string;
+  structured_formatting?: {
+    main_text: string;
+    secondary_text: string;
+  };
 }
 
 interface AddressAutocompleteProps {
@@ -37,6 +47,7 @@ export default function AddressAutocomplete({
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const containerRef = useRef<HTMLDivElement>(null);
   const suppressSearch = useRef(false);
+  const sessionTokenRef = useRef(crypto.randomUUID());
 
   // Close on outside click
   useEffect(() => {
@@ -49,6 +60,22 @@ export default function AddressAutocomplete({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const getPlaceDetails = useCallback(async (placeId: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?place_id=${placeId}&key=${GOOGLE_MAPS_KEY}&language=sv`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.results?.[0]?.geometry?.location) {
+        const loc = data.results[0].geometry.location;
+        return { lat: loc.lat, lng: loc.lng };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
+
   const search = useCallback(async (query: string) => {
     if (query.length < 2) {
       setSuggestions([]);
@@ -58,34 +85,67 @@ export default function AddressAutocomplete({
 
     setIsLoading(true);
     try {
-      const key = getTomTomApiKey();
-      let url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(query)}.json?key=${key}&countrySet=SE&limit=5&language=sv-SE&typeahead=true`;
+      let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_KEY}&language=sv&components=country:se&sessiontoken=${sessionTokenRef.current}`;
       
       if (biasLat && biasLng) {
-        url += `&lat=${biasLat}&lon=${biasLng}&radius=500000`;
+        url += `&location=${biasLat},${biasLng}&radius=500000`;
       }
 
       const res = await fetch(url);
-      if (!res.ok) return;
+      if (!res.ok) {
+        // Fallback: use Google Geocoding API for search
+        await searchFallback(query);
+        return;
+      }
       const data = await res.json();
 
-      const results: Suggestion[] = (data.results || []).map((r: any) => ({
-        id: r.id,
-        name: r.poi?.name || r.address?.municipality || r.address?.freeformAddress || query,
-        address: r.address?.freeformAddress || '',
-        lat: r.position.lat,
-        lng: r.position.lon,
+      if (data.status === 'REQUEST_DENIED' || data.status === 'OVER_QUERY_LIMIT') {
+        await searchFallback(query);
+        return;
+      }
+
+      const predictions: PlacePrediction[] = data.predictions || [];
+      const results: Suggestion[] = predictions.map((p) => ({
+        id: p.place_id,
+        name: p.structured_formatting?.main_text || p.description.split(',')[0],
+        address: p.description,
+        lat: 0, // Will be resolved on select
+        lng: 0,
       }));
 
       setSuggestions(results);
       setIsOpen(results.length > 0);
       setSelectedIndex(-1);
     } catch {
-      // silent fail
+      await searchFallback(query);
     } finally {
       setIsLoading(false);
     }
   }, [biasLat, biasLng]);
+
+  // Fallback using Google Geocoding API
+  const searchFallback = useCallback(async (query: string) => {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_KEY}&language=sv&region=se`;
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      
+      const results: Suggestion[] = (data.results || []).slice(0, 5).map((r: any) => ({
+        id: r.place_id,
+        name: r.address_components?.[0]?.long_name || r.formatted_address?.split(',')[0] || query,
+        address: r.formatted_address || '',
+        lat: r.geometry.location.lat,
+        lng: r.geometry.location.lng,
+      }));
+
+      setSuggestions(results);
+      setIsOpen(results.length > 0);
+      setSelectedIndex(-1);
+    } catch {
+      // silent
+    }
+  }, []);
 
   const handleChange = (newValue: string) => {
     onChange(newValue);
@@ -97,12 +157,23 @@ export default function AddressAutocomplete({
     debounceRef.current = setTimeout(() => search(newValue), 300);
   };
 
-  const handleSelect = (suggestion: Suggestion) => {
+  const handleSelect = async (suggestion: Suggestion) => {
     suppressSearch.current = true;
     onChange(suggestion.address || suggestion.name);
+    
+    // If lat/lng are 0, resolve from place_id
+    if (suggestion.lat === 0 && suggestion.lng === 0) {
+      const coords = await getPlaceDetails(suggestion.id);
+      if (coords) {
+        suggestion = { ...suggestion, ...coords };
+      }
+    }
+    
     onSelect?.(suggestion);
     setIsOpen(false);
     setSuggestions([]);
+    // Generate new session token for next search session
+    sessionTokenRef.current = crypto.randomUUID();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -158,6 +229,9 @@ export default function AddressAutocomplete({
               </div>
             </button>
           ))}
+          <div className="px-3 py-1.5 text-[9px] text-muted-foreground/60 text-right border-t border-border/30">
+            Powered by Google
+          </div>
         </div>
       )}
     </div>

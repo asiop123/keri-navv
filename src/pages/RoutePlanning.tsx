@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
   Navigation, Locate, Play, Square, Compass, ChevronUp, ChevronDown, Search,
-  Car, ArrowLeft, ExternalLink, Star, Info,
+  Car, ArrowLeft, ExternalLink, Star, Info, Eye,
 } from 'lucide-react';
+
+const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 import { mockVehicles, getVehicleById } from '@/data/mockData';
 import { BK_LIMITS, BKClass, TimelineEntry } from '@/types';
 import { toast } from 'sonner';
@@ -724,6 +726,22 @@ export default function RoutePlanning() {
                   selectedLocation.type === 'arrival' ? 'bg-emerald-500' :
                   'bg-primary'
                 }`} />
+
+                {/* Street View preview */}
+                <div className="relative w-full h-[160px] bg-muted">
+                  <img
+                    src={`https://maps.googleapis.com/maps/api/streetview?size=600x160&location=${selectedLocation.lat},${selectedLocation.lng}&fov=100&pitch=5&key=${GOOGLE_MAPS_KEY}`}
+                    alt={`Street View – ${selectedLocation.name}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  <div className="absolute bottom-2 left-2 bg-background/80 backdrop-blur rounded px-2 py-0.5 text-[10px] font-medium flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    Street View
+                  </div>
+                </div>
 
                 <div className="p-4">
                   {/* Close button */}
