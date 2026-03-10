@@ -165,18 +165,18 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       if (alts && alts.length > 0) {
         alts.forEach((alt, i) => {
           map.addSource(`alt-route-${i}`, { type: 'geojson', data: alt.geoJson });
-          // White outer glow for visibility on satellite
+          // White outer border for high visibility
           map.addLayer({
             id: `alt-route-line-bg-${i}`, type: 'line', source: `alt-route-${i}`,
-            paint: { 'line-color': '#ffffff', 'line-width': 10, 'line-opacity': 0.5, 'line-offset': 6 },
+            paint: { 'line-color': '#000000', 'line-width': 10, 'line-opacity': 0.25, 'line-offset': 6 },
           });
-          // Grey dashed inner line
+          // Bright white dashed inner line — clearly NOT blue
           map.addLayer({
             id: `alt-route-line-${i}`, type: 'line', source: `alt-route-${i}`,
             paint: {
-              'line-color': '#9ca3af',
+              'line-color': '#ffffff',
               'line-width': 5,
-              'line-opacity': 0.9,
+              'line-opacity': 0.95,
               'line-dasharray': [4, 3],
               'line-offset': 6,
             },
