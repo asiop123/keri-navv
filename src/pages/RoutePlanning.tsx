@@ -192,6 +192,9 @@ export default function RoutePlanning() {
       setRouteResult(result);
       setTimeline(tl);
       setViewState('details');
+      // Store destination coords for 3D view
+      const destWp = result.waypoints[result.waypoints.length - 1];
+      setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
 
       const hours = Math.floor(result.travelTimeSeconds / 3600);
       const mins = Math.round((result.travelTimeSeconds % 3600) / 60);
