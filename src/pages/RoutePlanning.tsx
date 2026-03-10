@@ -40,6 +40,7 @@ export default function RoutePlanning() {
   const [isSaved, setIsSaved] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
