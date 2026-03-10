@@ -199,13 +199,22 @@ export default function FleetTracker() {
     setMapStyle(next);
 
     try {
-      const satLayer = map.getLayer('google-satellite-layer');
+      const hasLayer = map.getLayer('google-satellite-layer');
+      if (!hasLayer) return;
+
       if (next === 'map') {
-        if (satLayer) map.setLayoutProperty('google-satellite-layer', 'visibility', 'none');
+        map.setLayoutProperty('google-satellite-layer', 'visibility', 'none');
+        map.setPaintProperty('google-satellite-layer', 'raster-opacity', 0);
+      } else if (next === 'hybrid') {
+        map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
+        map.setPaintProperty('google-satellite-layer', 'raster-opacity', 0.7);
       } else {
-        if (satLayer) map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
+        map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
+        map.setPaintProperty('google-satellite-layer', 'raster-opacity', 1);
       }
-    } catch {}
+    } catch (e) {
+      console.warn('Style toggle error:', e);
+    }
   }, [mapStyle]);
 
   // Update markers
