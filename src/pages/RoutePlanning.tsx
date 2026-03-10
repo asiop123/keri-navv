@@ -40,6 +40,7 @@ export default function RoutePlanning() {
   const [isSaved, setIsSaved] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
@@ -191,6 +192,9 @@ export default function RoutePlanning() {
       setRouteResult(result);
       setTimeline(tl);
       setViewState('details');
+      // Store destination coords for 3D view
+      const destWp = result.waypoints[result.waypoints.length - 1];
+      setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
 
       const hours = Math.floor(result.travelTimeSeconds / 3600);
       const mins = Math.round((result.travelTimeSeconds % 3600) / 60);
@@ -309,7 +313,8 @@ export default function RoutePlanning() {
     toast.success(`Bytte rastplats till ${alt.name}`);
   };
 
-  const totalDriveTimeH = routeResult ? Math.round((routeResult.travelTimeSeconds / 3600) * 10) / 10 : 0;
+  const totalDriveTimeH = routeResult ? Math.floor(routeResult.travelTimeSeconds / 3600) : 0;
+  const totalDriveTimeMin = routeResult ? Math.round((routeResult.travelTimeSeconds % 3600) / 60) : 0;
   const nextWaypoint = routeResult ? routeResult.waypoints[Math.min(currentStep + 1, routeResult.waypoints.length - 1)] : null;
   const elapsedMin = navStartTime ? Math.round((Date.now() - navStartTime.getTime()) / 60000) : 0;
 
@@ -341,8 +346,10 @@ export default function RoutePlanning() {
                 <AddressAutocomplete
                   value={destination}
                   onChange={setDestination}
-                  onSelect={() => {
-                    // Auto-search when a suggestion is selected
+                  onSelect={(suggestion) => {
+                    if (suggestion.lat && suggestion.lng) {
+                      setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
+                    }
                     setTimeout(() => handleSearch(), 100);
                   }}
                   placeholder="Vart vill du åka?"
@@ -593,7 +600,7 @@ export default function RoutePlanning() {
                   <div className="text-[10px] text-muted-foreground">km</div>
                 </div>
                 <div className="text-center py-3 border-r border-border/50">
-                  <div className="text-lg font-bold text-primary">{totalDriveTimeH}h</div>
+                  <div className="text-lg font-bold text-primary">{totalDriveTimeH}h {totalDriveTimeMin}min</div>
                   <div className="text-[10px] text-muted-foreground">restid</div>
                 </div>
                 <div className="text-center py-3">
@@ -603,6 +610,21 @@ export default function RoutePlanning() {
                   <div className="text-[10px] text-muted-foreground">ankomst</div>
                 </div>
               </div>
+              {/* 3D Street View of destination */}
+              {destinationCoords && (
+                <div className="relative border-t border-border/50 overflow-hidden">
+                  <img
+                    src={`https://maps.googleapis.com/maps/api/streetview?size=800x200&location=${destinationCoords.lat},${destinationCoords.lng}&fov=110&pitch=10&key=${GOOGLE_MAPS_KEY}`}
+                    alt="3D-vy av destinationen"
+                    className="w-full h-[140px] object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
+                  />
+                  <div className="absolute bottom-2 left-2 bg-background/80 backdrop-blur rounded px-2 py-0.5 text-[10px] font-medium flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    3D-vy · {routeResult.waypoints[routeResult.waypoints.length - 1].name}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
