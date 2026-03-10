@@ -4,6 +4,7 @@ import { Truck, ClipboardList, Bell, Users } from 'lucide-react';
 import { mockVehicles, mockTasks, mockReminders, mockUsers, getDriverForVehicle } from '@/data/mockData';
 import { getReminderStatus, getDaysUntil } from '@/types';
 import { useNavigate } from 'react-router-dom';
+import FleetTracker from '@/components/FleetTracker';
 
 export default function ChefDashboard() {
   const navigate = useNavigate();
@@ -76,6 +77,8 @@ export default function ChefDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <FleetTracker />
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
