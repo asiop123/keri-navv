@@ -597,7 +597,7 @@ export default function RoutePlanning() {
                   <div className="text-[10px] text-muted-foreground">km</div>
                 </div>
                 <div className="text-center py-3 border-r border-border/50">
-                  <div className="text-lg font-bold text-primary">{totalDriveTimeH}h</div>
+                  <div className="text-lg font-bold text-primary">{totalDriveTimeH}h {totalDriveTimeMin}min</div>
                   <div className="text-[10px] text-muted-foreground">restid</div>
                 </div>
                 <div className="text-center py-3">
