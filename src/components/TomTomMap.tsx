@@ -161,62 +161,81 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         sourcesToRemove.forEach(s => { if (map.getSource(s)) map.removeSource(s); });
       } catch {}
 
-      // Draw alternative routes first (behind main route) - wider & more visible for clicking
+      // Draw alternative routes first (behind main) - GREY
       if (alts && alts.length > 0) {
         alts.forEach((alt, i) => {
           map.addSource(`alt-route-${i}`, { type: 'geojson', data: alt.geoJson });
-          // Wider hit area (invisible)
           map.addLayer({
             id: `alt-route-line-bg-${i}`, type: 'line', source: `alt-route-${i}`,
-            paint: { 'line-color': '#64748b', 'line-width': 10, 'line-opacity': 0.25 },
+            paint: { 'line-color': '#9ca3af', 'line-width': 10, 'line-opacity': 0.2 },
           });
-          // Visible alt route line
           map.addLayer({
             id: `alt-route-line-${i}`, type: 'line', source: `alt-route-${i}`,
-            paint: { 'line-color': '#64748b', 'line-width': 6, 'line-opacity': 0.65 },
+            paint: { 'line-color': '#9ca3af', 'line-width': 5, 'line-opacity': 0.6 },
           });
 
-          // Click on alt route to select it
-          map.on('click', `alt-route-line-bg-${i}`, () => {
-            if (onAlternativeClickRef.current) onAlternativeClickRef.current(i);
-          });
-          map.on('click', `alt-route-line-${i}`, () => {
-            if (onAlternativeClickRef.current) onAlternativeClickRef.current(i);
-          });
+          // Click handlers
+          const handleAltClick = () => { if (onAlternativeClickRef.current) onAlternativeClickRef.current(i); };
+          map.on('click', `alt-route-line-bg-${i}`, handleAltClick);
+          map.on('click', `alt-route-line-${i}`, handleAltClick);
           map.on('mouseenter', `alt-route-line-${i}`, () => { map.getCanvas().style.cursor = 'pointer'; });
           map.on('mouseleave', `alt-route-line-${i}`, () => { map.getCanvas().style.cursor = ''; });
           map.on('mouseenter', `alt-route-line-bg-${i}`, () => { map.getCanvas().style.cursor = 'pointer'; });
           map.on('mouseleave', `alt-route-line-bg-${i}`, () => { map.getCanvas().style.cursor = ''; });
 
-          // Add a label bubble on the alt route (midpoint) showing time like Google Maps
-          const midIdx = Math.floor(alt.routePoints.length / 2);
+          // Alt route label - grey bubble with time diff info
+          const midIdx = Math.floor(alt.routePoints.length * 0.45);
           if (alt.routePoints[midIdx]) {
             const midPoint = alt.routePoints[midIdx];
+            const diffMin = Math.round((alt.travelTimeSeconds - route.travelTimeSeconds) / 60);
+            const diffKm = alt.distanceKm - route.distanceKm;
             const altH = Math.floor(alt.travelTimeSeconds / 3600);
             const altM = Math.round((alt.travelTimeSeconds % 3600) / 60);
+
+            // Build label text
+            let diffText = '';
+            if (diffMin > 0) diffText = `+${diffMin} min`;
+            else if (diffMin < 0) diffText = `${diffMin} min`;
+            else diffText = 'Samma tid';
+
+            let reasonText = '';
+            if (diffKm > 5) reasonText = 'Längre väg';
+            else if (diffKm < -5) reasonText = 'Kortare väg';
+            else if (diffMin > 10) reasonText = 'Ev. trafik/omväg';
+            else if (diffMin < -5) reasonText = 'Snabbare väg';
+
             const labelEl = document.createElement('div');
             labelEl.className = 'tt-marker tt-alt-label';
             labelEl.style.cssText = `
-              background: white; color: #475569; font-size: 12px; font-weight: 600;
-              padding: 4px 10px; border-radius: 16px; white-space: nowrap;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 2px solid #94a3b8;
+              background: white; color: #6b7280; font-size: 11px; font-weight: 600;
+              padding: 6px 12px; border-radius: 12px; white-space: nowrap;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 2px solid #d1d5db;
               cursor: pointer; user-select: none; transition: all 0.15s;
+              display: flex; flex-direction: column; align-items: center; gap: 1px;
+              max-width: 160px; line-height: 1.3;
             `;
-            labelEl.textContent = `${altH}h ${altM}m`;
-            labelEl.title = `${alt.distanceKm} km – Klicka för att välja denna rutt`;
+            const line1 = document.createElement('span');
+            line1.style.cssText = 'font-size: 12px; font-weight: 700; color: #374151;';
+            line1.textContent = `${altH}h ${altM}m · ${alt.distanceKm} km`;
+            labelEl.appendChild(line1);
+
+            const line2 = document.createElement('span');
+            line2.style.cssText = `font-size: 10px; font-weight: 600; color: ${diffMin > 0 ? '#dc2626' : diffMin < 0 ? '#16a34a' : '#6b7280'};`;
+            line2.textContent = diffText + (reasonText ? ` · ${reasonText}` : '');
+            labelEl.appendChild(line2);
+
+            labelEl.title = 'Klicka för att välja denna rutt';
             labelEl.addEventListener('mouseenter', () => {
-              labelEl.style.background = '#2563eb';
-              labelEl.style.color = 'white';
               labelEl.style.borderColor = '#2563eb';
+              labelEl.style.boxShadow = '0 2px 12px rgba(37,99,235,0.3)';
             });
             labelEl.addEventListener('mouseleave', () => {
-              labelEl.style.background = 'white';
-              labelEl.style.color = '#475569';
-              labelEl.style.borderColor = '#94a3b8';
+              labelEl.style.borderColor = '#d1d5db';
+              labelEl.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
             });
             labelEl.addEventListener('click', (e) => {
               e.stopPropagation();
-              if (onAlternativeClickRef.current) onAlternativeClickRef.current(i);
+              handleAltClick();
             });
             new tt.Marker({ element: labelEl, anchor: 'center' })
               .setLngLat([midPoint[0], midPoint[1]])
@@ -225,37 +244,46 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         });
       }
 
-      // Add label on selected route too
+      // Draw main/selected route on top - BLUE
+      map.addSource('route', { type: 'geojson', data: route.geoJson });
+      map.addLayer({
+        id: 'route-line-bg', type: 'line', source: 'route',
+        paint: { 'line-color': '#1e40af', 'line-width': 9, 'line-opacity': 0.35 },
+      });
+      map.addLayer({
+        id: 'route-line', type: 'line', source: 'route',
+        paint: { 'line-color': '#2563eb', 'line-width': 5, 'line-opacity': 0.95 },
+      });
+
+      // Main route label - blue bubble
       if (route.routePoints.length > 0) {
-        const midIdx = Math.floor(route.routePoints.length / 2);
+        const midIdx = Math.floor(route.routePoints.length * 0.45);
         const midPoint = route.routePoints[midIdx];
         const mainH = Math.floor(route.travelTimeSeconds / 3600);
         const mainM = Math.round((route.travelTimeSeconds % 3600) / 60);
         const mainLabel = document.createElement('div');
         mainLabel.className = 'tt-marker tt-main-label';
         mainLabel.style.cssText = `
-          background: #2563eb; color: white; font-size: 12px; font-weight: 600;
-          padding: 4px 10px; border-radius: 16px; white-space: nowrap;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 2px solid #1d4ed8;
-          user-select: none;
+          background: #2563eb; color: white; font-size: 11px; font-weight: 600;
+          padding: 6px 12px; border-radius: 12px; white-space: nowrap;
+          box-shadow: 0 2px 10px rgba(37,99,235,0.4); border: 2px solid #1d4ed8;
+          user-select: none; display: flex; flex-direction: column; align-items: center; gap: 1px;
+          line-height: 1.3;
         `;
-        mainLabel.textContent = `${mainH}h ${mainM}m`;
-        mainLabel.title = `${route.distanceKm} km – Vald rutt`;
+        const l1 = document.createElement('span');
+        l1.style.cssText = 'font-size: 12px; font-weight: 700;';
+        l1.textContent = `${mainH}h ${mainM}m · ${route.distanceKm} km`;
+        mainLabel.appendChild(l1);
+
+        const l2 = document.createElement('span');
+        l2.style.cssText = 'font-size: 10px; opacity: 0.85;';
+        l2.textContent = 'Snabbaste rutten';
+        mainLabel.appendChild(l2);
+
         new tt.Marker({ element: mainLabel, anchor: 'center' })
           .setLngLat([midPoint[0], midPoint[1]])
           .addTo(map);
       }
-
-      // Draw main route on top
-      map.addSource('route', { type: 'geojson', data: route.geoJson });
-      map.addLayer({
-        id: 'route-line-bg', type: 'line', source: 'route',
-        paint: { 'line-color': '#0f2942', 'line-width': 8, 'line-opacity': 0.4 },
-      });
-      map.addLayer({
-        id: 'route-line', type: 'line', source: 'route',
-        paint: { 'line-color': '#2563eb', 'line-width': 5, 'line-opacity': 0.9 },
-      });
 
       // Remove old markers (except user marker)
       document.querySelectorAll('.tt-marker').forEach(m => m.remove());
