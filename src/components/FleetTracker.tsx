@@ -286,6 +286,32 @@ export default function FleetTracker() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
+        {/* Street View panel */}
+        {streetViewVehicle && (() => {
+          const pos = positions.find(p => p.vehicleId === streetViewVehicle);
+          if (!pos) return null;
+          return (
+            <div className="relative w-full h-[250px] border-b border-border">
+              <img
+                src={`https://maps.googleapis.com/maps/api/streetview?size=948x250&location=${pos.lat},${pos.lng}&heading=${pos.heading}&pitch=5&fov=100&key=${GOOGLE_MAPS_KEY}`}
+                alt="Street View"
+                className="w-full h-full object-cover"
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                className="absolute top-2 right-2 text-xs"
+                onClick={() => setStreetViewVehicle(null)}
+              >
+                Stäng
+              </Button>
+              <div className="absolute bottom-2 left-2 bg-background/80 backdrop-blur rounded px-2 py-1 text-xs font-medium">
+                📍 Street View – {mockVehicles.find(v => v.id === streetViewVehicle)?.regNr}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Map */}
         <div ref={mapRef} className="w-full h-[350px] md:h-[450px]" />
 
