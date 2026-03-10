@@ -120,7 +120,7 @@ export default function ChauffeurMyDay() {
           onClick={toggleTracking}
           className={`gap-1.5 h-9 ${trackingActive ? 'bg-success hover:bg-success/90 text-success-foreground' : ''}`}
         >
-          {trackingActive ? <Radio className="h-4 w-4 animate-pulse" /> : <RadioOff className="h-4 w-4" />}
+          {trackingActive ? <Radio className="h-4 w-4 animate-pulse" /> : <CircleOff className="h-4 w-4" />}
           {trackingActive ? 'GPS På' : 'GPS Av'}
         </Button>
       </div>
