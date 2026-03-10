@@ -162,17 +162,21 @@ export default function FleetTracker() {
   }, []);
 
   // Toggle map style
-  const toggleMapStyle = useCallback(() => {
+  const cycleMapStyle = useCallback(() => {
     const map = mapInstance.current;
     if (!map) return;
-    const newStyle = mapStyle === 'satellite' ? 'map' : 'satellite';
-    setMapStyle(newStyle);
+    const styles: MapStyle[] = ['satellite', 'hybrid', 'map'];
+    const next = styles[(styles.indexOf(mapStyle) + 1) % styles.length];
+    setMapStyle(next);
 
-    if (newStyle === 'map') {
-      map.setStyle(`https://api.tomtom.com/style/1/style/22.2.1-*?map=2/basic_street-light&poi=2/poi_light&key=${API_KEY}`);
-    } else {
-      map.setStyle(`https://api.tomtom.com/style/2/custom/style/dG9tdG9tQEBAYW55dGltZTtRRlhDUTVxdzd1dWxiTW50.json?key=${API_KEY}`);
-    }
+    try {
+      const satLayer = map.getLayer('google-satellite-layer');
+      if (next === 'map') {
+        if (satLayer) map.setLayoutProperty('google-satellite-layer', 'visibility', 'none');
+      } else {
+        if (satLayer) map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
+      }
+    } catch {}
   }, [mapStyle]);
 
   // Update markers
