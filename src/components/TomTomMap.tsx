@@ -64,6 +64,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<tt.Map | null>(null);
     const userMarkerRef = useRef<tt.Marker | null>(null);
+    const routeMarkersRef = useRef<tt.Marker[]>([]);
     const [currentStyle, setCurrentStyle] = useState(defaultStyle);
     const [showStylePicker, setShowStylePicker] = useState(false);
     const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[]; alternativeRoutes?: RouteResult[] }>({});
@@ -148,11 +149,14 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
 
     // Add route helper
     const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[], alts?: RouteResult[]) => {
+      // Remove ALL old route markers (labels, waypoints, rest stops)
+      routeMarkersRef.current.forEach(m => m.remove());
+      routeMarkersRef.current = [];
+
       // Remove old layers/sources
       const layersToRemove = ['route-line', 'route-line-bg'];
       const sourcesToRemove = ['route'];
-      // Remove alt layers
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 5; i++) {
         layersToRemove.push(`alt-route-line-${i}`, `alt-route-line-bg-${i}`);
         sourcesToRemove.push(`alt-route-${i}`);
       }
@@ -245,9 +249,10 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
               e.stopPropagation();
               handleAltClick();
             });
-            new tt.Marker({ element: labelEl, anchor: 'center' })
+            const altMarker = new tt.Marker({ element: labelEl, anchor: 'center' })
               .setLngLat([midPoint[0], midPoint[1]])
               .addTo(map);
+            routeMarkersRef.current.push(altMarker);
           }
         });
       }
@@ -288,13 +293,11 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         l2.textContent = 'Snabbaste rutten';
         mainLabel.appendChild(l2);
 
-        new tt.Marker({ element: mainLabel, anchor: 'center' })
+        const mainMarker = new tt.Marker({ element: mainLabel, anchor: 'center' })
           .setLngLat([midPoint[0], midPoint[1]])
           .addTo(map);
+        routeMarkersRef.current.push(mainMarker);
       }
-
-      // Remove old waypoint/rest markers (keep route labels)
-      document.querySelectorAll('.tt-marker:not(.tt-alt-label):not(.tt-main-label)').forEach(m => m.remove());
 
       // Waypoint markers
       route.waypoints.forEach((wp, i) => {
@@ -310,10 +313,11 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
           font-size: 15px; font-weight: bold; color: white;
         `;
         el.textContent = isStart ? 'A' : isEnd ? 'B' : String(i);
-        new tt.Marker({ element: el })
+        const wpMarker = new tt.Marker({ element: el })
           .setLngLat([wp.lng, wp.lat])
           .setPopup(new tt.Popup().setHTML(`<strong>${wp.name}</strong>`))
           .addTo(map);
+        routeMarkersRef.current.push(wpMarker);
       });
 
       // Rest stop markers
@@ -332,7 +336,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
               font-size: 16px; cursor: pointer;
             `;
             el.textContent = isOvernight ? '🌙' : '☕';
-            new tt.Marker({ element: el })
+            const restMarker = new tt.Marker({ element: el })
               .setLngLat([stop.lng, stop.lat])
               .setPopup(new tt.Popup().setHTML(`
                 <div style="padding:4px;min-width:150px">
@@ -342,6 +346,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
                 </div>
               `))
               .addTo(map);
+            routeMarkersRef.current.push(restMarker);
           });
       }
 
