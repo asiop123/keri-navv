@@ -610,6 +610,21 @@ export default function RoutePlanning() {
                   <div className="text-[10px] text-muted-foreground">ankomst</div>
                 </div>
               </div>
+              {/* 3D Street View of destination */}
+              {destinationCoords && (
+                <div className="relative border-t border-border/50 overflow-hidden">
+                  <img
+                    src={`https://maps.googleapis.com/maps/api/streetview?size=800x200&location=${destinationCoords.lat},${destinationCoords.lng}&fov=110&pitch=10&key=${GOOGLE_MAPS_KEY}`}
+                    alt="3D-vy av destinationen"
+                    className="w-full h-[140px] object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
+                  />
+                  <div className="absolute bottom-2 left-2 bg-background/80 backdrop-blur rounded px-2 py-0.5 text-[10px] font-medium flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    3D-vy · {routeResult.waypoints[routeResult.waypoints.length - 1].name}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
