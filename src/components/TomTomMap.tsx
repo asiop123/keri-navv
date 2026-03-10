@@ -95,12 +95,21 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     useEffect(() => {
       if (!mapRef.current) return;
 
+      const initStyle = MAP_STYLES.find(s => s.id === defaultStyle);
+
       const map = tt.map({
         key: API_KEY,
         container: mapRef.current,
         center: [15.6, 59.3],
         zoom: 5,
         language: 'sv-SE',
+        style: initStyle?.style,
+      });
+
+      map.on('click', (e: any) => {
+        if (onMapClickRef.current) {
+          onMapClickRef.current(e.lngLat.lat, e.lngLat.lng);
+        }
       });
 
       mapInstance.current = map;
