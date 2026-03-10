@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
   Navigation, Locate, Play, Square, Compass, ChevronUp, ChevronDown, Search,
-  Car, ArrowLeft, ExternalLink, Star, Info,
+  Car, ArrowLeft, ExternalLink, Star, Info, Eye,
 } from 'lucide-react';
+
+const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 import { mockVehicles, getVehicleById } from '@/data/mockData';
 import { BK_LIMITS, BKClass, TimelineEntry } from '@/types';
 import { toast } from 'sonner';
