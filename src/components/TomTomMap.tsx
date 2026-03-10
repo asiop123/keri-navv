@@ -60,18 +60,19 @@ export interface TomTomMapHandle {
 }
 
 const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
-  ({ route, timeline, userPosition, isNavigating, className = '', defaultStyle = 'basic', onMapClick }, ref) => {
+  ({ route, alternativeRoutes = [], timeline, userPosition, isNavigating, className = '', defaultStyle = 'basic', onMapClick, onAlternativeClick }, ref) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<tt.Map | null>(null);
     const userMarkerRef = useRef<tt.Marker | null>(null);
     const [currentStyle, setCurrentStyle] = useState(defaultStyle);
     const [showStylePicker, setShowStylePicker] = useState(false);
-    const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[] }>({});
+    const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[]; alternativeRoutes?: RouteResult[] }>({});
     const onMapClickRef = useRef(onMapClick);
+    const onAlternativeClickRef = useRef(onAlternativeClick);
     onMapClickRef.current = onMapClick;
+    onAlternativeClickRef.current = onAlternativeClick;
 
-    // Keep route data in ref for re-adding after style change
-    routeDataRef.current = { route, timeline };
+    routeDataRef.current = { route, timeline, alternativeRoutes };
 
     const centerOnUser = useCallback(() => {
       const map = mapInstance.current;
