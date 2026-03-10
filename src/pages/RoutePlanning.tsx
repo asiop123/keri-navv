@@ -705,8 +705,48 @@ export default function RoutePlanning() {
             <div className="max-w-lg mx-auto">
               {/* Expand/collapse timeline */}
               <div className="bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden">
+                {/* Route alternatives selector */}
+                {alternativeRoutes.length > 0 && (
+                  <div className="px-4 pt-3 pb-2">
+                    <div className="flex gap-2">
+                      <button
+                        className="flex-1 rounded-lg px-3 py-2 text-left border-2 border-primary bg-primary/10 transition-colors"
+                      >
+                        <div className="text-xs font-semibold text-foreground">Rutt 1 <span className="text-primary">(vald)</span></div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {routeResult.distanceKm} km · {Math.floor(routeResult.travelTimeSeconds / 3600)}h {Math.round((routeResult.travelTimeSeconds % 3600) / 60)}min
+                        </div>
+                      </button>
+                      {alternativeRoutes.map((alt, i) => {
+                        const diffKm = alt.distanceKm - routeResult.distanceKm;
+                        const diffMin = Math.round((alt.travelTimeSeconds - routeResult.travelTimeSeconds) / 60);
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => handleSwitchRoute(i + 1)}
+                            className="flex-1 rounded-lg px-3 py-2 text-left border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors"
+                          >
+                            <div className="text-xs font-semibold text-foreground">Rutt {i + 2}</div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {alt.distanceKm} km · {Math.floor(alt.travelTimeSeconds / 3600)}h {Math.round((alt.travelTimeSeconds % 3600) / 60)}min
+                            </div>
+                            <div className="text-[10px] mt-0.5">
+                              <span className={diffMin > 0 ? 'text-destructive' : 'text-emerald-600'}>
+                                {diffMin > 0 ? '+' : ''}{diffMin} min
+                              </span>
+                              <span className="text-muted-foreground ml-1">
+                                {diffKm > 0 ? '+' : ''}{diffKm} km
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Action buttons */}
-                <div className="p-4 flex gap-2">
+                <div className="p-4 pt-2 flex gap-2">
                   <Button
                     onClick={handleStartNavigation}
                     className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-base"
