@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, LocateFixed, Navigation, Clock, Weight, AlertTriangle, Layers, Eye } from 'lucide-react';
 import { subscribeToPositions } from '@/services/gpsTracking';
 import { supabase } from '@/integrations/supabase/client';
+import StreetViewPanorama from '@/components/StreetViewPanorama';
 
 const TOMTOM_KEY = getTomTomApiKey();
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
@@ -330,10 +331,12 @@ export default function FleetTracker() {
           if (!pos) return null;
           return (
             <div className="relative w-full h-[250px] border-b border-border">
-              <img
-                src={`https://maps.googleapis.com/maps/api/streetview?size=948x250&location=${pos.lat},${pos.lng}&heading=${pos.heading}&pitch=5&fov=100&key=${GOOGLE_MAPS_KEY}`}
-                alt="Street View"
-                className="w-full h-full object-cover"
+              <StreetViewPanorama
+                lat={pos.lat}
+                lng={pos.lng}
+                heading={pos.heading}
+                className="w-full h-[250px]"
+                label={`Street View – ${mockVehicles.find(v => v.id === streetViewVehicle)?.regNr}`}
               />
               <Button
                 size="sm"
