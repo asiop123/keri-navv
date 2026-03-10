@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   ChevronRight,
   Radio,
-  Radio,
+  CircleOff,
 } from 'lucide-react';
 import { mockTasks, mockReminders, getVehiclesForDriver } from '@/data/mockData';
 import { useRole } from '@/context/RoleContext';
