@@ -69,6 +69,7 @@ export default function FleetTracker() {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   const [mapStyle, setMapStyle] = useState<MapStyle>('satellite');
   const [recentEvents, setRecentEvents] = useState<any[]>([]);
+  const [streetViewVehicle, setStreetViewVehicle] = useState<string | null>(null);
   const [useRealData, setUseRealData] = useState(false);
 
   // Fetch recent driver events
