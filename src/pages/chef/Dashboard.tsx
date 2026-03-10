@@ -78,6 +78,8 @@ export default function ChefDashboard() {
         </Card>
       </div>
 
+      <FleetTracker />
+
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3">
