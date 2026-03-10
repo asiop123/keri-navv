@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   ClipboardCheck,
   ShieldCheck,
@@ -8,11 +10,15 @@ import {
   Camera,
   AlertTriangle,
   ChevronRight,
+  Radio,
+  RadioOff,
 } from 'lucide-react';
 import { mockTasks, mockReminders, getVehiclesForDriver } from '@/data/mockData';
 import { useRole } from '@/context/RoleContext';
-import { getReminderStatus, getDaysUntil } from '@/types';
+import { getReminderStatus } from '@/types';
 import { useNavigate } from 'react-router-dom';
+import { startGpsTracking, stopGpsTracking } from '@/services/gpsTracking';
+import { toast } from 'sonner';
 
 export default function ChauffeurMyDay() {
   const { currentUser } = useRole();
@@ -21,6 +27,7 @@ export default function ChauffeurMyDay() {
   const myTasks = mockTasks.filter(
     (t) => t.assignedTo === currentUser.id && t.status !== 'completed'
   );
+  const [trackingActive, setTrackingActive] = useState(false);
 
   const vehicleIds = myVehicles.map((v) => v.id);
   const inspectionReminders = mockReminders.filter(
@@ -36,6 +43,22 @@ export default function ChauffeurMyDay() {
     if (s === 'yellow' && worst !== 'red') return 'yellow';
     return worst;
   }, 'green');
+
+  const toggleTracking = () => {
+    if (trackingActive) {
+      stopGpsTracking();
+      setTrackingActive(false);
+      toast.info('GPS-spårning stoppad');
+    } else if (myVehicles[0]) {
+      startGpsTracking(myVehicles[0].id, currentUser.id);
+      setTrackingActive(true);
+      toast.success('GPS-spårning aktiverad');
+    }
+  };
+
+  useEffect(() => {
+    return () => { stopGpsTracking(); };
+  }, []);
 
   const quickActions = [
     {
@@ -79,20 +102,31 @@ export default function ChauffeurMyDay() {
 
   return (
     <div className="space-y-6 max-w-lg mx-auto pb-8">
-      {/* Header */}
-      <div className="pt-1">
-        <h1 className="text-2xl font-bold text-foreground">
-          Hej {currentUser.name.split(' ')[0]}!
-        </h1>
-        {myVehicles[0] && (
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {myVehicles[0].brand} {myVehicles[0].model} · {myVehicles[0].regNr}
-          </p>
-        )}
+      {/* Header + GPS toggle */}
+      <div className="flex items-start justify-between pt-1">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            Hej {currentUser.name.split(' ')[0]}!
+          </h1>
+          {myVehicles[0] && (
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {myVehicles[0].brand} {myVehicles[0].model} · {myVehicles[0].regNr}
+            </p>
+          )}
+        </div>
+        <Button
+          variant={trackingActive ? 'default' : 'outline'}
+          size="sm"
+          onClick={toggleTracking}
+          className={`gap-1.5 h-9 ${trackingActive ? 'bg-success hover:bg-success/90 text-success-foreground' : ''}`}
+        >
+          {trackingActive ? <Radio className="h-4 w-4 animate-pulse" /> : <RadioOff className="h-4 w-4" />}
+          {trackingActive ? 'GPS På' : 'GPS Av'}
+        </Button>
       </div>
 
       {/* Tasks */}
-      {myTasks.length > 0 && (
+      {myTasks.length > 0 ? (
         <section>
           <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
             Dagens uppgifter
@@ -118,9 +152,7 @@ export default function ChauffeurMyDay() {
             ))}
           </div>
         </section>
-      )}
-
-      {myTasks.length === 0 && (
+      ) : (
         <Card className="border-dashed">
           <CardContent className="p-5 text-center">
             <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center mx-auto mb-2 shadow-md shadow-emerald-500/25">
@@ -148,30 +180,21 @@ export default function ChauffeurMyDay() {
                 onClick={action.onClick}
               >
                 <CardContent className="p-6 flex flex-col items-center text-center gap-3">
-                  {/* Warning badge */}
                   {hasWarning && (
                     <div className="absolute top-2.5 right-2.5">
-                      <span className={`flex h-3 w-3 relative`}>
+                      <span className="flex h-3 w-3 relative">
                         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${action.warning === 'red' ? 'bg-destructive' : 'bg-warning'}`} />
                         <span className={`relative inline-flex rounded-full h-3 w-3 ${action.warning === 'red' ? 'bg-destructive' : 'bg-warning'}`} />
                       </span>
                     </div>
                   )}
-
-                  {/* Icon circle */}
-                  <div
-                    className={`h-16 w-16 rounded-full bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg ${action.shadowColor} group-hover:scale-105 transition-transform`}
-                  >
+                  <div className={`h-16 w-16 rounded-full bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg ${action.shadowColor} group-hover:scale-105 transition-transform`}>
                     <Icon className="h-8 w-8 text-white" />
                   </div>
-
                   <div>
                     <p className="font-bold text-sm">{action.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {action.description}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
                   </div>
-
                   {hasWarning && (
                     <Badge
                       className={`text-[10px] px-2 py-0.5 ${
