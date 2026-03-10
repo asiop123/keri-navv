@@ -356,6 +356,7 @@ export default function RoutePlanning() {
                   onSelect={(suggestion) => {
                     if (suggestion.lat && suggestion.lng) {
                       setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
+                      pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
                     }
                     setTimeout(() => handleSearch(), 100);
                   }}
