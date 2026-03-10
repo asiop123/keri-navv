@@ -7,7 +7,7 @@ import { Vehicle } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, LocateFixed, Navigation, Clock, Weight, AlertTriangle, Layers, StreetView } from 'lucide-react';
+import { MapPin, LocateFixed, Navigation, Clock, Weight, AlertTriangle, Layers, Eye } from 'lucide-react';
 import { subscribeToPositions } from '@/services/gpsTracking';
 import { supabase } from '@/integrations/supabase/client';
 
