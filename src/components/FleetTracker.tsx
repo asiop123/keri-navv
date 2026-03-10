@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, LocateFixed, Navigation, Clock, Weight, AlertTriangle, Layers, Eye } from 'lucide-react';
 import { subscribeToPositions } from '@/services/gpsTracking';
 import { supabase } from '@/integrations/supabase/client';
+import StreetViewPanorama from '@/components/StreetViewPanorama';
 
 const TOMTOM_KEY = getTomTomApiKey();
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
