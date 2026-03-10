@@ -260,11 +260,11 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       map.addSource('route', { type: 'geojson', data: route.geoJson });
       map.addLayer({
         id: 'route-line-bg', type: 'line', source: 'route',
-        paint: { 'line-color': '#3b82f6', 'line-width': 9, 'line-opacity': 0.3 },
+        paint: { 'line-color': '#1e3a5f', 'line-width': 9, 'line-opacity': 0.4 },
       });
       map.addLayer({
         id: 'route-line', type: 'line', source: 'route',
-        paint: { 'line-color': '#60a5fa', 'line-width': 5, 'line-opacity': 0.95 },
+        paint: { 'line-color': '#2563eb', 'line-width': 5, 'line-opacity': 0.95 },
       });
 
       // Main route label - blue bubble
