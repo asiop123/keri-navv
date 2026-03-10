@@ -293,13 +293,11 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         l2.textContent = 'Snabbaste rutten';
         mainLabel.appendChild(l2);
 
-        new tt.Marker({ element: mainLabel, anchor: 'center' })
+        const mainMarker = new tt.Marker({ element: mainLabel, anchor: 'center' })
           .setLngLat([midPoint[0], midPoint[1]])
           .addTo(map);
+        routeMarkersRef.current.push(mainMarker);
       }
-
-      // Remove old waypoint/rest markers (keep route labels)
-      document.querySelectorAll('.tt-marker:not(.tt-alt-label):not(.tt-main-label)').forEach(m => m.remove());
 
       // Waypoint markers
       route.waypoints.forEach((wp, i) => {
