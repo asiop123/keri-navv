@@ -1402,6 +1402,7 @@ export default function RoutePlanning() {
                 </div>
               </div>
             </div>
+            </>
           )}
 
           {/* Map controls */}
