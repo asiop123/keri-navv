@@ -680,7 +680,37 @@ export default function RoutePlanning() {
                       </button>
                     </div>
 
-
+                    {/* Rest stop facility filters */}
+                    <div className="space-y-2">
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Krav på rastplatser</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {([
+                          { key: 'toilet' as const, icon: '🚻', label: 'Toalett' },
+                          { key: 'food' as const, icon: '🍽️', label: 'Mat' },
+                          { key: 'shower' as const, icon: '🚿', label: 'Dusch' },
+                          { key: 'fuel' as const, icon: '⛽', label: 'Drivmedel' },
+                          { key: 'truckParking' as const, icon: '🅿️', label: 'Lastbilsp.' },
+                        ]).map(f => (
+                          <button
+                            key={f.key}
+                            onClick={() => setRestStopFilters(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
+                            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
+                              restStopFilters[f.key]
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                            }`}
+                          >
+                            <span>{f.icon}</span>
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                      {Object.values(restStopFilters).some(Boolean) && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Bara rastplatser med valda faciliteter visas
+                        </p>
+                      )}
+                    </div>
 
 
                     {/* BK status */}
