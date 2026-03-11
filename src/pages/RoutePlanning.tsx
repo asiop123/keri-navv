@@ -97,6 +97,9 @@ export default function RoutePlanning() {
     address?: string;
   } | null>(null);
 
+  const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
+  const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
+
   useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
 
   // Get GPS
