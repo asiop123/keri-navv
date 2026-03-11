@@ -207,8 +207,8 @@ export default function RoutePlanning() {
     gpsPointsRef.current = [];
   }, [stopGpsTracking, routeResult, navStartTime, selectedVehicle, totalWeight, vehicleId, routeType, timeline, haversineKm]);
 
-  const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
-  const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
+
+
 
   const getBKStatus = (weight: number) => {
     const results: { bk: BKClass; limit: number; status: 'green' | 'yellow' | 'red' }[] = [];
