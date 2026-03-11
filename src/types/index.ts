@@ -88,12 +88,22 @@ export interface TimelineEntry {
 
 export type RestStopSuitability = 'perfect' | 'good' | 'warning' | 'unsuitable';
 
+export interface RestStopFacilities {
+  toilet: boolean;
+  food: boolean;
+  shower: boolean;
+  fuel: boolean;
+  truckParking: boolean;
+}
+
 export interface RestStopInfo {
   name: string;
   lat: number;
   lng: number;
   distance?: string;
   category?: string;
+  address?: string;
+  facilities?: RestStopFacilities;
   alternatives?: RestStopInfo[];
   suitability?: RestStopSuitability;
   suitabilityNote?: string;
