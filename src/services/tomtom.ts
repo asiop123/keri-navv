@@ -276,6 +276,22 @@ function detectFacilities(poi: any): RestStopFacilities {
 }
 
 /**
+ * Check if a rest stop matches the required facility filters.
+ * If no filters are active (all false), every stop matches.
+ */
+function matchesFacilityFilters(facilities: RestStopFacilities, filters?: RestStopFacilities): boolean {
+  if (!filters) return true;
+  const anyActive = filters.toilet || filters.food || filters.shower || filters.fuel || filters.truckParking;
+  if (!anyActive) return true;
+  if (filters.toilet && !facilities.toilet) return false;
+  if (filters.food && !facilities.food) return false;
+  if (filters.shower && !facilities.shower) return false;
+  if (filters.fuel && !facilities.fuel) return false;
+  if (filters.truckParking && !facilities.truckParking) return false;
+  return true;
+}
+
+/**
  * Get the minimum distance (km) from a point to the nearest route segment.
  */
 function distanceToRoute(lat: number, lng: number, routePoints: [number, number][]): number {
