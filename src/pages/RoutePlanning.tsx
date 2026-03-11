@@ -14,7 +14,7 @@ import {
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 import { mockVehicles, getVehicleById } from '@/data/mockData';
-import { BK_LIMITS, BKClass, TimelineEntry } from '@/types';
+import { BK_LIMITS, BKClass, TimelineEntry, RestStopFacilities } from '@/types';
 import { toast } from 'sonner';
 import { geocode, calculateRoute, generateTimeline, reverseGeocode, RouteResult, VehicleParams } from '@/services/tomtom';
 import { SavedTrip, getSavedTrips, saveTrip } from '@/services/tripStorage';
@@ -62,6 +62,9 @@ export default function RoutePlanning() {
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
   const [isRoundTrip, setIsRoundTrip] = useState(false);
+  const [restStopFilters, setRestStopFilters] = useState<RestStopFacilities>({
+    toilet: false, food: false, shower: false, fuel: false, truckParking: false,
+  });
   const [trips, setTrips] = useState<TripLeg[]>([]);
   const [addingNewLeg, setAddingNewLeg] = useState(false);
 
@@ -84,9 +87,11 @@ export default function RoutePlanning() {
     endTime?: string;
     durationMinutes?: number;
     timelineIndex?: number;
-    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string; suitability?: string; suitabilityNote?: string }>;
+    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string; suitability?: string; suitabilityNote?: string; facilities?: RestStopFacilities }>;
     suitability?: string;
     suitabilityNote?: string;
+    facilities?: RestStopFacilities;
+    address?: string;
   } | null>(null);
 
   useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
@@ -231,7 +236,7 @@ export default function RoutePlanning() {
       const otherRoutes = allRoutes.slice(1);
       otherRoutes.forEach(r => delete r.alternatives);
 
-      const tl = await generateTimeline(bestRoute, routeType, finalStopMinutes, vehicleParams);
+      const tl = await generateTimeline(bestRoute, routeType, finalStopMinutes, vehicleParams, restStopFilters);
 
       const newLeg: TripLeg = {
         id: crypto.randomUUID(),
@@ -340,7 +345,7 @@ export default function RoutePlanning() {
       ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
       : undefined;
     const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
-    const tl = await generateTimeline(newMain, routeType, stopMinutes, vehicleParams);
+    const tl = await generateTimeline(newMain, routeType, stopMinutes, vehicleParams, restStopFilters);
     
     setRouteResult(newMain);
     setAlternativeRoutes(newAlts);
@@ -386,6 +391,8 @@ export default function RoutePlanning() {
         alternatives,
         suitability: entry.restStop?.suitability,
         suitabilityNote: entry.restStop?.suitabilityNote,
+        facilities: entry.restStop?.facilities,
+        address: entry.restStop?.address,
       });
       mapHandleRef.current?.flyToLocation(lng, lat, 14);
     }
@@ -677,7 +684,37 @@ export default function RoutePlanning() {
                       </button>
                     </div>
 
-
+                    {/* Rest stop facility filters */}
+                    <div className="space-y-2">
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Krav på rastplatser</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {([
+                          { key: 'toilet' as const, icon: '🚻', label: 'Toalett' },
+                          { key: 'food' as const, icon: '🍽️', label: 'Mat' },
+                          { key: 'shower' as const, icon: '🚿', label: 'Dusch' },
+                          { key: 'fuel' as const, icon: '⛽', label: 'Drivmedel' },
+                          { key: 'truckParking' as const, icon: '🅿️', label: 'Lastbilsp.' },
+                        ]).map(f => (
+                          <button
+                            key={f.key}
+                            onClick={() => setRestStopFilters(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
+                            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
+                              restStopFilters[f.key]
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                            }`}
+                          >
+                            <span>{f.icon}</span>
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                      {Object.values(restStopFilters).some(Boolean) && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Bara rastplatser med valda faciliteter visas
+                        </p>
+                      )}
+                    </div>
 
 
                     {/* BK status */}
@@ -1016,9 +1053,23 @@ export default function RoutePlanning() {
                                     {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                                   </div>
                                   {entry.restStop && (
-                                    <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px] text-primary">
-                                      <MapPin className="h-3 w-3" />
-                                      <span className="underline underline-offset-2">{entry.restStop.name}</span>
+                                    <div className="ml-7 mt-1">
+                                      <div className="flex items-center gap-1.5 text-[11px] text-primary">
+                                        <MapPin className="h-3 w-3" />
+                                        <span className="underline underline-offset-2">{entry.restStop.name}</span>
+                                      </div>
+                                      {entry.restStop.facilities && (
+                                        <div className="flex items-center gap-1 mt-0.5 ml-4">
+                                          {entry.restStop.facilities.toilet && <span className="text-[10px]" title="Toalett">🚻</span>}
+                                          {entry.restStop.facilities.food && <span className="text-[10px]" title="Mat">🍽️</span>}
+                                          {entry.restStop.facilities.shower && <span className="text-[10px]" title="Dusch">🚿</span>}
+                                          {entry.restStop.facilities.fuel && <span className="text-[10px]" title="Drivmedel">⛽</span>}
+                                          {entry.restStop.facilities.truckParking && <span className="text-[10px]" title="Lastbilsparkering">🅿️</span>}
+                                          {entry.restStop.address && (
+                                            <span className="text-[9px] text-muted-foreground ml-1 truncate max-w-[120px]">{entry.restStop.address}</span>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </button>
@@ -1110,6 +1161,19 @@ export default function RoutePlanning() {
                       )}
                       {selectedLocation.suitabilityNote && (
                         <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{selectedLocation.suitabilityNote}</p>
+                      )}
+                      {/* Facility badges */}
+                      {selectedLocation.facilities && Object.values(selectedLocation.facilities).some(Boolean) && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {selectedLocation.facilities.toilet && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚻 Toalett</Badge>}
+                          {selectedLocation.facilities.food && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🍽️ Mat</Badge>}
+                          {selectedLocation.facilities.shower && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚿 Dusch</Badge>}
+                          {selectedLocation.facilities.fuel && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">⛽ Drivmedel</Badge>}
+                          {selectedLocation.facilities.truckParking && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🅿️ Lastbilsp.</Badge>}
+                        </div>
+                      )}
+                      {selectedLocation.address && (
+                        <p className="text-[10px] text-muted-foreground mt-1">{selectedLocation.address}</p>
                       )}
                     </div>
                   </div>
