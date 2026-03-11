@@ -322,8 +322,18 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
           });
       }
 
+      // Combine bboxes for all legs
+      let fitBbox: [number, number, number, number] = [route.bbox[0], route.bbox[1], route.bbox[2], route.bbox[3]];
+      if (prevLegs) {
+        prevLegs.forEach(leg => {
+          fitBbox[0] = Math.min(fitBbox[0], leg.route.bbox[0]);
+          fitBbox[1] = Math.min(fitBbox[1], leg.route.bbox[1]);
+          fitBbox[2] = Math.max(fitBbox[2], leg.route.bbox[2]);
+          fitBbox[3] = Math.max(fitBbox[3], leg.route.bbox[3]);
+        });
+      }
       map.fitBounds(
-        [[route.bbox[0], route.bbox[1]], [route.bbox[2], route.bbox[3]]],
+        [[fitBbox[0], fitBbox[1]], [fitBbox[2], fitBbox[3]]],
         { padding: 80, duration: 1000 }
       );
     };
