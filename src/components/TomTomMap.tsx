@@ -149,7 +149,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     }, []);
 
     // Add route helper
-    const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[], alts?: RouteResult[]) => {
+    const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[], alts?: RouteResult[], prevLegs?: { route: RouteResult; color: string }[]) => {
       // Remove ALL old route markers (labels, waypoints, rest stops)
       routeMarkersRef.current.forEach(m => m.remove());
       routeMarkersRef.current = [];
@@ -161,10 +161,30 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         layersToRemove.push(`alt-route-line-${i}`, `alt-route-line-bg-${i}`);
         sourcesToRemove.push(`alt-route-${i}`);
       }
+      for (let i = 0; i < 10; i++) {
+        layersToRemove.push(`prev-leg-line-${i}`, `prev-leg-line-bg-${i}`);
+        sourcesToRemove.push(`prev-leg-${i}`);
+      }
       try {
         layersToRemove.forEach(l => { if (map.getLayer(l)) map.removeLayer(l); });
         sourcesToRemove.forEach(s => { if (map.getSource(s)) map.removeSource(s); });
       } catch {}
+
+      // Draw previous trip legs (underneath everything)
+      if (prevLegs && prevLegs.length > 0) {
+        prevLegs.forEach((leg, i) => {
+          const srcId = `prev-leg-${i}`;
+          map.addSource(srcId, { type: 'geojson', data: leg.route.geoJson });
+          map.addLayer({
+            id: `prev-leg-line-bg-${i}`, type: 'line', source: srcId,
+            paint: { 'line-color': leg.color, 'line-width': 8, 'line-opacity': 0.2 },
+          });
+          map.addLayer({
+            id: `prev-leg-line-${i}`, type: 'line', source: srcId,
+            paint: { 'line-color': leg.color, 'line-width': 5, 'line-opacity': 0.7 },
+          });
+        });
+      }
 
       // Draw alternative routes FIRST (underneath)
       if (alts && alts.length > 0) {
