@@ -540,7 +540,6 @@ export default function RoutePlanning() {
                       setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
                       pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
                     }
-                    setTimeout(() => handleSearch(), 100);
                   }}
                   placeholder="Vart vill du åka?"
                   className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-base placeholder:text-muted-foreground/60"
