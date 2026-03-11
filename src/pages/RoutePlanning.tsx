@@ -343,7 +343,7 @@ export default function RoutePlanning() {
       ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
       : undefined;
     const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
-    const tl = await generateTimeline(newMain, routeType, stopMinutes, vehicleParams);
+    const tl = await generateTimeline(newMain, routeType, stopMinutes, vehicleParams, restStopFilters);
     
     setRouteResult(newMain);
     setAlternativeRoutes(newAlts);
