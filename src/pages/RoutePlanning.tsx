@@ -934,10 +934,6 @@ export default function RoutePlanning() {
             </div>
           </div>
 
-          {/* Backdrop to dismiss resplan */}
-          {showDetails && (
-            <div className="absolute inset-0 z-[15]" onClick={() => setShowDetails(false)} />
-          )}
 
           {/* Bottom sheet - compact by default */}
           <div className="absolute bottom-0 left-0 right-0 z-20">
