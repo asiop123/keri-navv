@@ -1160,6 +1160,19 @@ export default function RoutePlanning() {
                       {selectedLocation.suitabilityNote && (
                         <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{selectedLocation.suitabilityNote}</p>
                       )}
+                      {/* Facility badges */}
+                      {selectedLocation.facilities && Object.values(selectedLocation.facilities).some(Boolean) && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {selectedLocation.facilities.toilet && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚻 Toalett</Badge>}
+                          {selectedLocation.facilities.food && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🍽️ Mat</Badge>}
+                          {selectedLocation.facilities.shower && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚿 Dusch</Badge>}
+                          {selectedLocation.facilities.fuel && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">⛽ Drivmedel</Badge>}
+                          {selectedLocation.facilities.truckParking && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🅿️ Lastbilsp.</Badge>}
+                        </div>
+                      )}
+                      {selectedLocation.address && (
+                        <p className="text-[10px] text-muted-foreground mt-1">{selectedLocation.address}</p>
+                      )}
                     </div>
                   </div>
 
