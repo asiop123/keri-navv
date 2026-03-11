@@ -138,8 +138,13 @@ export default function RoutePlanning() {
 
   const startGpsTracking = useCallback(() => {
     if (!('geolocation' in navigator)) return;
+    gpsPointsRef.current = [];
     const id = navigator.geolocation.watchPosition(
-      (pos) => setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => {
+        const point = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserPosition(point);
+        gpsPointsRef.current.push({ ...point, time: new Date().toISOString() });
+      },
       () => {},
       { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
     );
@@ -164,13 +169,43 @@ export default function RoutePlanning() {
     toast.success('Navigation startad!');
   }, [routeResult, startGpsTracking]);
 
-  const handleStopNavigation = useCallback(() => {
+  const handleStopNavigation = useCallback(async () => {
     setIsNavigating(false);
     setViewState('details');
     stopGpsTracking();
+
+    // Save driven trip
+    if (routeResult && navStartTime) {
+      const drivenTimeSeconds = Math.round((Date.now() - navStartTime.getTime()) / 1000);
+      const points = gpsPointsRef.current;
+      let drivenDistanceKm = 0;
+      for (let i = 1; i < points.length; i++) {
+        drivenDistanceKm += haversineKm(points[i - 1].lat, points[i - 1].lng, points[i].lat, points[i].lng);
+      }
+      const vehicle = selectedVehicle;
+      const drivenTrip: SavedTrip = {
+        id: crypto.randomUUID(), createdAt: new Date().toISOString(),
+        startName: routeResult.waypoints[0].name,
+        endName: routeResult.waypoints[routeResult.waypoints.length - 1].name,
+        waypointNames: routeResult.waypoints.slice(1, -1).map(w => w.name),
+        distanceKm: routeResult.distanceKm, travelTimeSeconds: routeResult.travelTimeSeconds,
+        totalWeightKg: totalWeight, vehicleId,
+        vehicleLabel: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.regNr})` : 'Okänt',
+        routeType, timeline, route: routeResult, tripSource: 'driven',
+        drivenDistanceKm: Math.round(drivenDistanceKm * 10) / 10,
+        drivenTimeSeconds,
+      };
+      await saveDrivenTrip(drivenTrip, drivenDistanceKm, drivenTimeSeconds, points);
+      const updated = await getSavedTrips();
+      setSavedTrips(updated);
+      toast.info(`Körning sparad: ${Math.round(drivenDistanceKm)} km`);
+    } else {
+      toast.info('Navigation avslutad');
+    }
+
     setNavStartTime(null);
-    toast.info('Navigation avslutad');
-  }, [stopGpsTracking]);
+    gpsPointsRef.current = [];
+  }, [stopGpsTracking, routeResult, navStartTime, selectedVehicle, totalWeight, vehicleId, routeType, timeline, haversineKm]);
 
   const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
   const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
