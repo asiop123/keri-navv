@@ -529,6 +529,24 @@ export default function RoutePlanning() {
                 )}
               </div>
 
+              {/* Tur & retur toggle - always visible */}
+              <div className="flex items-center justify-between px-4 py-2 border-t border-border/30">
+                <button
+                  onClick={() => setIsRoundTrip(!isRoundTrip)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    isRoundTrip
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-accent'
+                  }`}
+                >
+                  <Repeat className="h-3.5 w-3.5" />
+                  Tur & retur
+                </button>
+                {isRoundTrip && (
+                  <span className="text-[10px] text-primary font-medium">↩ Tillbaka till start</span>
+                )}
+              </div>
+
               {/* Expandable: start + options */}
               <div className="border-t border-border/50">
                 <button
@@ -666,14 +684,8 @@ export default function RoutePlanning() {
                       </button>
                     </div>
 
-                    {/* Tur & retur toggle */}
-                    <div className="flex items-center justify-between py-1">
-                      <div className="flex items-center gap-2">
-                        <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs text-foreground">Tur & retur</span>
-                      </div>
-                      <Switch checked={isRoundTrip} onCheckedChange={setIsRoundTrip} />
-                    </div>
+
+
 
                     {/* BK status */}
                     {bkResults.length > 0 && (
@@ -865,6 +877,77 @@ export default function RoutePlanning() {
                     </Button>
                   ) : (
                     <div className="h-12 px-4 flex items-center text-xs text-muted-foreground">✓</div>
+                  )}
+                </div>
+
+                {/* Resedetaljer - trip summary */}
+                <div className="px-4 py-3 border-t border-border/50 space-y-2">
+                  <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <Info className="h-3.5 w-3.5" />
+                    Resedetaljer
+                  </div>
+                  {displayTrips.map((leg, legIdx) => {
+                    const depTime = new Date(leg.route.departureTime);
+                    const arrTime = new Date(leg.route.arrivalTime);
+                    const driveH = Math.floor(leg.route.travelTimeSeconds / 3600);
+                    const driveMin = Math.round((leg.route.travelTimeSeconds % 3600) / 60);
+                    const restCount = leg.timeline.filter(t => t.type === 'rest' || t.type === 'overnight').length;
+                    // Calculate total trip time including rests
+                    const firstEntry = leg.timeline[0];
+                    const lastEntry = leg.timeline[leg.timeline.length - 1];
+                    const totalTripMs = lastEntry ? new Date(lastEntry.endTime).getTime() - new Date(firstEntry.startTime).getTime() : 0;
+                    const totalTripH = Math.floor(totalTripMs / 3600000);
+                    const totalTripMin = Math.round((totalTripMs % 3600000) / 60000);
+
+                    return (
+                      <div key={leg.id} className="bg-muted/40 rounded-xl p-3 space-y-2">
+                        {displayTrips.length > 1 && (
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: LEG_COLORS[legIdx % LEG_COLORS.length] }} />
+                            <span className="text-xs font-bold text-foreground">Tur {legIdx + 1}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <span className="text-xs text-foreground">{leg.startName}</span>
+                          </div>
+                          <span className="text-xs font-semibold text-foreground">
+                            {depTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <div className="ml-3 border-l-2 border-dashed border-border pl-3 py-1">
+                          <div className="text-[10px] text-muted-foreground space-y-0.5">
+                            <div>🚛 {leg.route.distanceKm} km · Körtid {driveH}h {driveMin}min</div>
+                            {restCount > 0 && <div>☕ {restCount} {restCount === 1 ? 'rast' : 'raster'} planerade</div>}
+                            {totalTripH > 0 || totalTripMin > 0 ? (
+                              <div>⏱ Total restid: {totalTripH}h {totalTripMin}min</div>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-destructive" />
+                            <span className="text-xs text-foreground">{leg.endName}</span>
+                          </div>
+                          <span className="text-xs font-semibold text-primary">
+                            ank {arrTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground text-right">
+                          {arrTime.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* Total summary for multi-leg */}
+                  {displayTrips.length > 1 && (
+                    <div className="bg-primary/10 rounded-xl p-3 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-foreground">Totalt</span>
+                      <span className="text-xs font-bold text-primary">
+                        {combinedDistanceKm} km · {combinedTimeH}h {combinedTimeMin}min
+                      </span>
+                    </div>
                   )}
                 </div>
 
