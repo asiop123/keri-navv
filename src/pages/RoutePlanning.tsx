@@ -1203,15 +1203,24 @@ export default function RoutePlanning() {
                   'bg-primary'
                 }`} />
 
-                {/* Street View preview */}
-                <div className="relative w-full h-[160px] bg-muted">
+                {/* Street View preview - click to fullscreen */}
+                <button
+                  onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
+                  className="relative w-full h-[160px] bg-muted block cursor-pointer group"
+                >
                   <StreetViewPanorama
                     lat={selectedLocation.lat}
                     lng={selectedLocation.lng}
-                    className="w-full h-[160px]"
+                    className="w-full h-[160px] pointer-events-none"
                     label="Street View"
                   />
-                </div>
+                  <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors flex items-center justify-center">
+                    <div className="bg-background/80 backdrop-blur rounded-full px-3 py-1.5 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
+                      <Eye className="h-3.5 w-3.5" />
+                      Visa helskärm
+                    </div>
+                  </div>
+                </button>
 
                 <div className="p-4">
                   {/* Close button */}
