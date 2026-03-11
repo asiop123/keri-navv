@@ -196,19 +196,22 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
           map.addSource(srcId, { type: 'geojson', data: alt.geoJson });
           map.addLayer({
             id: layerBgId, type: 'line', source: srcId,
-            paint: { 'line-color': '#94a3b8', 'line-width': 7, 'line-opacity': 0.3 },
+            paint: { 'line-color': '#94a3b8', 'line-width': 14, 'line-opacity': 0.15 },
           });
           map.addLayer({
             id: layerId, type: 'line', source: srcId,
             paint: { 'line-color': '#93c5fd', 'line-width': 5, 'line-opacity': 0.6 },
           });
 
-          // Make clickable
-          map.on('click', layerId, () => {
-            if (onAlternativeClickRef.current) onAlternativeClickRef.current(i);
+          // Make both layers clickable (bg is wider = easier to tap on mobile)
+          [layerBgId, layerId].forEach(lid => {
+            map.on('click', lid, (e: any) => {
+              e.originalEvent?.stopPropagation?.();
+              if (onAlternativeClickRef.current) onAlternativeClickRef.current(i);
+            });
+            map.on('mouseenter', lid, () => { map.getCanvas().style.cursor = 'pointer'; });
+            map.on('mouseleave', lid, () => { map.getCanvas().style.cursor = ''; });
           });
-          map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
-          map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
 
           // Alt route label
           if (alt.routePoints.length > 0) {
