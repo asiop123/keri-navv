@@ -577,7 +577,8 @@ export async function generateTimeline(
   routeType: 'normal' | 'fastest',
   waypointStopMinutes?: number[],
   vehicle?: VehicleParams,
-  facilityFilters?: RestStopFacilities
+  facilityFilters?: RestStopFacilities,
+  usedDriveMinutesToday?: number
 ): Promise<TimelineEntry[]> {
   const timeline: TimelineEntry[] = [];
   const SAFETY_MARGIN = 10;
@@ -588,7 +589,7 @@ export async function generateTimeline(
 
   let currentTime = new Date(route.departureTime);
   let drivingSinceRest = 0;
-  let dailyDriving = 0;
+  let dailyDriving = usedDriveMinutesToday ? usedDriveMinutesToday * 60 : 0;
   let totalDrivenMinutes = 0;
   const totalTravelMinutes = Math.round(route.travelTimeSeconds / 60);
 
