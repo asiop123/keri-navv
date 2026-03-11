@@ -557,14 +557,6 @@ export default function RoutePlanning() {
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
-      {/* Click-anywhere overlay to dismiss open panels */}
-      {(showDetails || selectedLocation) && (
-        <div
-          className="absolute inset-0 z-[15] cursor-pointer"
-          style={{ pointerEvents: 'auto' }}
-          onClick={(e) => { e.stopPropagation(); setShowDetails(false); setSelectedLocation(null); }}
-        />
-      )}
 
       {mapClickCoords && (
         <div className="absolute inset-0 z-40 bg-background">
