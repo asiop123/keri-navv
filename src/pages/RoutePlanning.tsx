@@ -87,9 +87,11 @@ export default function RoutePlanning() {
     endTime?: string;
     durationMinutes?: number;
     timelineIndex?: number;
-    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string; suitability?: string; suitabilityNote?: string }>;
+    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string; suitability?: string; suitabilityNote?: string; facilities?: RestStopFacilities }>;
     suitability?: string;
     suitabilityNote?: string;
+    facilities?: RestStopFacilities;
+    address?: string;
   } | null>(null);
 
   useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
