@@ -61,6 +61,9 @@ export default function RoutePlanning() {
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
+  const [isRoundTrip, setIsRoundTrip] = useState(false);
+  const [trips, setTrips] = useState<TripLeg[]>([]);
+  const [addingNewLeg, setAddingNewLeg] = useState(false);
 
   // GPS & Navigation
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
