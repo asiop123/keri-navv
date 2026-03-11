@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
-  Navigation, Locate, Play, Square, Compass, ChevronUp, ChevronDown, Search,
+  Navigation, Locate, Square, ChevronUp, ChevronDown, Search,
   Car, ArrowLeft, ExternalLink, Star, Info, Eye, Repeat,
 } from 'lucide-react';
 
@@ -102,22 +102,26 @@ export default function RoutePlanning() {
 
   useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
 
-  // Get GPS
+  // Auto-start GPS watch for smooth position
+  const gpsInitRef = useRef(false);
   useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setUserPosition(coords);
+    if (!('geolocation' in navigator) || gpsInitRef.current) return;
+    gpsInitRef.current = true;
+    const id = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserPosition(coords);
+        if (!start) {
           try {
             const name = await reverseGeocode(coords.lat, coords.lng);
             setStart(name);
           } catch { setStart('Min position'); }
-        },
-        () => { setStart(''); },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
+        }
+      },
+      () => { if (!start) setStart(''); },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+    );
+    return () => navigator.geolocation.clearWatch(id);
   }, []);
 
   const haversineKm = useCallback((lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -969,32 +973,31 @@ export default function RoutePlanning() {
                   </div>
                 )}
 
-                {/* Action buttons - always visible */}
-                <div className="px-3 py-2 flex gap-2">
-                  <Button
+                {/* BIG START BUTTON - always visible */}
+                <div className="px-3 py-3">
+                  <button
                     onClick={handleStartNavigation}
-                    className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm"
+                    className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-2xl text-lg flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/30 transition-all"
                   >
-                    <Play className="h-4 w-4 mr-1.5" />
-                    Starta
-                  </Button>
-                  <Button variant="outline" onClick={handleAddLeg} className="h-10 rounded-xl px-3" title="Lägg till tur">
-                    <Plus className="h-4 w-4" />
-                    <span className="text-xs ml-1">Tur</span>
-                  </Button>
-                  <div className="h-10 px-3 flex items-center text-xs text-muted-foreground">✓ Sparad</div>
+                    <Navigation className="h-6 w-6" />
+                    KÖR
+                  </button>
                 </div>
 
-                {/* Expandable details toggle */}
-                <button
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="w-full flex items-center justify-between px-4 py-3 border-t border-border/50 text-sm font-semibold text-foreground hover:bg-accent/50"
-                >
-                  <span className="flex items-center gap-2">
-                    📋 Din resplan
-                  </span>
-                  {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                </button>
+                {/* Secondary actions */}
+                <div className="px-3 pb-2 flex gap-2">
+                  <Button variant="outline" onClick={handleAddLeg} className="flex-1 h-9 rounded-xl text-xs">
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Lägg till tur
+                  </Button>
+                  <button
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-medium text-foreground hover:bg-accent/50 transition-colors"
+                  >
+                    📋 Resplan
+                    {showDetails ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
 
                 {showDetails && (
                   <div className="overflow-y-auto" style={{ maxHeight: 'calc(75vh - 140px)' }}>
@@ -1396,55 +1399,66 @@ export default function RoutePlanning() {
       {/* ===== NAVIGATION VIEW ===== */}
       {viewState === 'navigating' && routeResult && (
         <>
-          {/* Top HUD */}
+          {/* Top HUD - Big & Clear */}
           <div className="absolute top-0 left-0 right-0 z-30">
-            <div className="bg-primary/95 backdrop-blur-md text-primary-foreground p-4 shadow-xl">
-              <div className="flex items-center justify-between max-w-lg mx-auto">
-                <div className="flex items-center gap-3">
-                  <Compass className="h-6 w-6 animate-pulse" />
-                  <div>
-                    <div className="text-[10px] opacity-70 uppercase tracking-wider">Nästa stopp</div>
-                    <div className="font-bold text-lg leading-tight">{nextWaypoint?.name}</div>
+            <div className="bg-foreground/95 backdrop-blur-md text-background px-5 pt-5 pb-4 shadow-2xl">
+              <div className="max-w-lg mx-auto">
+                {/* Distance - HUGE */}
+                <div className="text-center mb-3">
+                  <div className="text-6xl font-black tracking-tighter leading-none">
+                    {distanceToNext || '...'}
+                  </div>
+                  <div className="text-sm opacity-60 mt-1">kvar till nästa stopp</div>
+                </div>
+
+                {/* Next stop name */}
+                <div className="bg-background/10 rounded-2xl px-4 py-3 text-center">
+                  <div className="text-xs opacity-50 uppercase tracking-widest mb-0.5">Nästa</div>
+                  <div className="font-bold text-lg leading-tight truncate">{nextWaypoint?.name}</div>
+                </div>
+
+                {/* Stats row */}
+                <div className="flex justify-center gap-4 mt-3">
+                  <div className="flex items-center gap-1.5 text-sm opacity-70">
+                    <Route className="h-4 w-4" />
+                    <span className="font-semibold">{routeResult.distanceKm} km</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm opacity-70">
+                    <Clock className="h-4 w-4" />
+                    <span className="font-semibold">{elapsedMin} min körd</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <div className={`w-2.5 h-2.5 rounded-full ${userPosition ? 'bg-emerald-400 animate-pulse' : 'bg-destructive'}`} />
+                    <span className="font-semibold opacity-70">GPS</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold tracking-tight">{distanceToNext || '...'}</div>
-                  <div className="text-[10px] opacity-70">kvar</div>
-                </div>
               </div>
             </div>
-            <div className="flex gap-2 p-3 justify-center">
-              <div className="bg-card/90 backdrop-blur rounded-full px-3 py-1.5 text-[11px] font-medium shadow-lg border border-border flex items-center gap-1.5">
-                <Route className="h-3 w-3 text-primary" /> {routeResult.distanceKm} km
-              </div>
-              <div className="bg-card/90 backdrop-blur rounded-full px-3 py-1.5 text-[11px] font-medium shadow-lg border border-border flex items-center gap-1.5">
-                <Clock className="h-3 w-3 text-primary" /> {elapsedMin} min
-              </div>
+          </div>
+
+          {/* Bottom controls */}
+          <div className="absolute bottom-6 left-0 right-0 z-30">
+            <div className="max-w-lg mx-auto px-4 flex items-center gap-3">
+              {/* Center on user */}
               {userPosition && (
-                <div className="bg-card/90 backdrop-blur rounded-full px-3 py-1.5 text-[11px] font-medium shadow-lg border border-border flex items-center gap-1.5">
-                  <Navigation className="h-3 w-3 text-emerald-500" /> GPS
-                </div>
+                <button
+                  onClick={() => mapHandleRef.current?.centerOnUser()}
+                  className="bg-card shadow-xl rounded-full p-4 border border-border shrink-0"
+                >
+                  <Locate className="h-6 w-6 text-primary" />
+                </button>
               )}
-            </div>
-          </div>
 
-          {/* Stop button */}
-          <div className="absolute bottom-8 left-0 right-0 z-30 flex justify-center">
-            <button
-              onClick={handleStopNavigation}
-              className="bg-destructive text-destructive-foreground shadow-xl rounded-full px-8 py-4 font-bold text-base flex items-center gap-2"
-            >
-              <Square className="h-5 w-5" /> Avsluta
-            </button>
-          </div>
-
-          {userPosition && (
-            <div className="absolute right-4 bottom-24 z-20">
-              <button onClick={() => mapHandleRef.current?.centerOnUser()} className="bg-card shadow-lg rounded-full p-3 border border-border">
-                <Locate className="h-5 w-5 text-primary" />
+              {/* Stop button - prominent */}
+              <button
+                onClick={handleStopNavigation}
+                className="flex-1 bg-destructive text-destructive-foreground shadow-xl rounded-2xl px-6 py-4 font-bold text-lg flex items-center justify-center gap-3"
+              >
+                <Square className="h-6 w-6" />
+                Avsluta körning
               </button>
             </div>
-          )}
+          </div>
         </>
       )}
     </div>
