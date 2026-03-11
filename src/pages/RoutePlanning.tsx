@@ -22,6 +22,17 @@ import TomTomMap, { TomTomMapHandle } from '@/components/TomTomMap';
 import TripHistory from '@/components/TripHistory';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
 
+interface TripLeg {
+  id: string;
+  startName: string;
+  endName: string;
+  route: RouteResult;
+  alternativeRoutes: RouteResult[];
+  timeline: TimelineEntry[];
+}
+
+const LEG_COLORS = ['#2563eb', '#16a34a', '#9333ea', '#ea580c', '#0891b2'];
+
 type ViewState = 'search' | 'details' | 'navigating';
 
 export default function RoutePlanning() {
