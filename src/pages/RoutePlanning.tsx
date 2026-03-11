@@ -535,10 +535,18 @@ export default function RoutePlanning() {
         className="absolute inset-0 z-0"
         defaultStyle="satellite"
         onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
+        onMapTap={() => { setShowDetails(false); setSelectedLocation(null); }}
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
-      {/* Fullscreen Street View on double-click */}
+      {/* Click-anywhere overlay to dismiss open panels */}
+      {(showDetails || selectedLocation) && (
+        <div
+          className="absolute inset-0 z-10"
+          onClick={() => { setShowDetails(false); setSelectedLocation(null); }}
+        />
+      )}
+
       {mapClickCoords && (
         <div className="absolute inset-0 z-40 bg-background">
           <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
@@ -927,10 +935,6 @@ export default function RoutePlanning() {
             </div>
           </div>
 
-          {/* Backdrop to dismiss resplan */}
-          {showDetails && (
-            <div className="absolute inset-0 z-[15]" onClick={() => setShowDetails(false)} />
-          )}
 
           {/* Bottom sheet - compact by default */}
           <div className="absolute bottom-0 left-0 right-0 z-20">
@@ -1198,9 +1202,6 @@ export default function RoutePlanning() {
 
           {/* Location detail card - Google Maps style */}
           {selectedLocation && (
-            <>
-            {/* Click-outside backdrop to dismiss */}
-            <div className="absolute inset-0 z-20" onClick={() => setSelectedLocation(null)} />
             <div className="absolute left-4 right-4 z-30 max-w-sm mx-auto animate-in slide-in-from-bottom-4 fade-in duration-300"
               style={{ top: '50%', transform: 'translateY(-50%)' }}
             >
@@ -1407,7 +1408,6 @@ export default function RoutePlanning() {
                 </div>
               </div>
             </div>
-            </>
           )}
 
           {/* Map controls */}

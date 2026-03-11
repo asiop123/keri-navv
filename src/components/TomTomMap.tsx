@@ -51,6 +51,7 @@ interface TomTomMapProps {
   defaultStyle?: string;
   previousLegs?: { route: RouteResult; color: string }[];
   onMapClick?: (lat: number, lng: number) => void;
+  onMapTap?: () => void;
   onAlternativeClick?: (index: number) => void;
 }
 
@@ -61,7 +62,7 @@ export interface TomTomMapHandle {
 }
 
 const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
-  ({ route, alternativeRoutes = [], timeline, userPosition, isNavigating, className = '', defaultStyle = 'basic', previousLegs = [], onMapClick, onAlternativeClick }, ref) => {
+  ({ route, alternativeRoutes = [], timeline, userPosition, isNavigating, className = '', defaultStyle = 'basic', previousLegs = [], onMapClick, onMapTap, onAlternativeClick }, ref) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<tt.Map | null>(null);
     const userMarkerRef = useRef<tt.Marker | null>(null);
@@ -70,8 +71,10 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     const [showStylePicker, setShowStylePicker] = useState(false);
     const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[]; alternativeRoutes?: RouteResult[]; previousLegs?: { route: RouteResult; color: string }[] }>({});
     const onMapClickRef = useRef(onMapClick);
+    const onMapTapRef = useRef(onMapTap);
     const onAlternativeClickRef = useRef(onAlternativeClick);
     onMapClickRef.current = onMapClick;
+    onMapTapRef.current = onMapTap;
     onAlternativeClickRef.current = onAlternativeClick;
 
     routeDataRef.current = { route, timeline, alternativeRoutes, previousLegs };
@@ -115,6 +118,12 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         e.preventDefault();
         if (onMapClickRef.current) {
           onMapClickRef.current(e.lngLat.lat, e.lngLat.lng);
+        }
+      });
+
+      map.on('click', () => {
+        if (onMapTapRef.current) {
+          onMapTapRef.current();
         }
       });
 
