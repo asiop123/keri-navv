@@ -104,6 +104,22 @@ export default function RoutePlanning() {
 
   useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
 
+  // Click outside to dismiss panels
+  useEffect(() => {
+    if (!showDetails && !selectedLocation) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (showDetails && bottomSheetRef.current && !bottomSheetRef.current.contains(target)) {
+        setShowDetails(false);
+      }
+      if (selectedLocation && locationCardRef.current && !locationCardRef.current.contains(target)) {
+        setSelectedLocation(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showDetails, selectedLocation]);
+
   // Auto-start GPS watch for smooth position
   const gpsInitRef = useRef(false);
   useEffect(() => {
