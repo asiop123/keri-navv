@@ -121,6 +121,12 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         }
       });
 
+      map.on('click', () => {
+        if (onMapTapRef.current) {
+          onMapTapRef.current();
+        }
+      });
+
       mapInstance.current = map;
 
       return () => {
