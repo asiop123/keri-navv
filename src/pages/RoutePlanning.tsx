@@ -542,8 +542,9 @@ export default function RoutePlanning() {
       {/* Click-anywhere overlay to dismiss open panels */}
       {(showDetails || selectedLocation) && (
         <div
-          className="absolute inset-0 z-10"
-          onClick={() => { setShowDetails(false); setSelectedLocation(null); }}
+          className="absolute inset-0 z-[15] cursor-pointer"
+          style={{ pointerEvents: 'auto' }}
+          onClick={(e) => { e.stopPropagation(); setShowDetails(false); setSelectedLocation(null); }}
         />
       )}
 
