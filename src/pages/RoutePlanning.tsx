@@ -529,6 +529,24 @@ export default function RoutePlanning() {
                 )}
               </div>
 
+              {/* Tur & retur toggle - always visible */}
+              <div className="flex items-center justify-between px-4 py-2 border-t border-border/30">
+                <button
+                  onClick={() => setIsRoundTrip(!isRoundTrip)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    isRoundTrip
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-accent'
+                  }`}
+                >
+                  <Repeat className="h-3.5 w-3.5" />
+                  Tur & retur
+                </button>
+                {isRoundTrip && (
+                  <span className="text-[10px] text-primary font-medium">↩ Tillbaka till start</span>
+                )}
+              </div>
+
               {/* Expandable: start + options */}
               <div className="border-t border-border/50">
                 <button
