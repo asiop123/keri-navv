@@ -846,6 +846,10 @@ export default function RoutePlanning() {
                     <Play className="h-5 w-5 mr-2" />
                     Starta
                   </Button>
+                  <Button variant="outline" onClick={handleAddLeg} className="h-12 rounded-xl px-3" title="Lägg till tur">
+                    <Plus className="h-4 w-4" />
+                    <span className="text-xs ml-1">Tur</span>
+                  </Button>
                   {!isSaved ? (
                     <Button variant="outline" onClick={handleSave} className="h-12 rounded-xl px-4">
                       <Save className="h-4 w-4" />
