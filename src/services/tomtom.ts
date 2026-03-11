@@ -733,16 +733,52 @@ export async function generateTimeline(
 
     for (const { bp, stops } of results) {
       const entry = timeline[bp.index];
-      if (entry && stops.length > 0) {
-        const bestStop = { ...stops[0], alternatives: stops.slice(1) };
+      if (!entry) continue;
+
+      let validStops = stops;
+
+      // For overnight stops, require actual truck parking or rest area — never a random road coordinate
+      if (bp.type === 'overnight') {
+        validStops = stops.filter(s => {
+          const cat = (s.category || '').toLowerCase();
+          return cat.includes('lastbil') || cat.includes('truck') || cat.includes('rast') || cat.includes('rest') || cat.includes('parkering') || cat.includes('parking');
+        });
+
+        // If no suitable overnight stops found, do an extended search (up to 10km)
+        if (validStops.length === 0) {
+          const widerStops = await searchRestStopsAlongRoute(
+            route.routePoints,
+            bp.fraction,
+            route.distanceKm,
+            route.travelTimeSeconds,
+            vehicle,
+            { truckParking: true }
+          );
+          validStops = widerStops.filter(s => {
+            const cat = (s.category || '').toLowerCase();
+            return cat.includes('lastbil') || cat.includes('truck') || cat.includes('rast') || cat.includes('rest') || cat.includes('parkering') || cat.includes('parking');
+          });
+          // If still nothing, accept any real POI result (not a fabricated coordinate)
+          if (validStops.length === 0 && widerStops.length > 0) {
+            validStops = widerStops;
+          }
+        }
+      }
+
+      if (validStops.length > 0) {
+        const bestStop = { ...validStops[0], alternatives: validStops.slice(1) };
         entry.restStop = bestStop;
         entry.location = bestStop.name;
         entry.label = bp.type === 'overnight'
           ? `Dygnsvila (11h) – ${bestStop.name}`
           : `Rast (45 min) – ${bestStop.name}`;
-      } else if (entry) {
-        const point = getPointAlongRoute(route.routePoints, bp.fraction);
-        entry.restStop = { name: 'Längs rutten', lat: point.lat, lng: point.lng, category: 'Rastplats', alternatives: [] };
+      } else {
+        // Never place a marker on the road — mark as "no safe stop found"
+        entry.label = bp.type === 'overnight'
+          ? 'Dygnsvila (11h) – ⚠️ Ingen säker plats hittades'
+          : 'Rast (45 min) – ⚠️ Ingen rastplats hittades';
+        entry.location = 'Ingen plats hittad';
+        // Don't set restStop at all — no marker on the map for a fake location
       }
     }
   }
