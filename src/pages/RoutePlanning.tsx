@@ -17,7 +17,7 @@ import { mockVehicles, getVehicleById } from '@/data/mockData';
 import { BK_LIMITS, BKClass, TimelineEntry, RestStopFacilities } from '@/types';
 import { toast } from 'sonner';
 import { geocode, calculateRoute, generateTimeline, reverseGeocode, RouteResult, VehicleParams } from '@/services/tomtom';
-import { SavedTrip, getSavedTrips, saveTrip } from '@/services/tripStorage';
+import { SavedTrip, getSavedTrips, saveTrip, saveDrivenTrip } from '@/services/tripStorage';
 import TomTomMap, { TomTomMapHandle } from '@/components/TomTomMap';
 import TripHistory from '@/components/TripHistory';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -76,6 +76,7 @@ export default function RoutePlanning() {
   const [gpsWatchId, setGpsWatchId] = useState<number | null>(null);
   const [distanceToNext, setDistanceToNext] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
+  const gpsPointsRef = useRef<{ lat: number; lng: number; time: string }[]>([]);
   const [navStartTime, setNavStartTime] = useState<Date | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
     type: string;
@@ -95,6 +96,9 @@ export default function RoutePlanning() {
     facilities?: RestStopFacilities;
     address?: string;
   } | null>(null);
+
+  const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
+  const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
 
   useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
 
@@ -137,8 +141,13 @@ export default function RoutePlanning() {
 
   const startGpsTracking = useCallback(() => {
     if (!('geolocation' in navigator)) return;
+    gpsPointsRef.current = [];
     const id = navigator.geolocation.watchPosition(
-      (pos) => setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => {
+        const point = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserPosition(point);
+        gpsPointsRef.current.push({ ...point, time: new Date().toISOString() });
+      },
       () => {},
       { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
     );
@@ -163,16 +172,46 @@ export default function RoutePlanning() {
     toast.success('Navigation startad!');
   }, [routeResult, startGpsTracking]);
 
-  const handleStopNavigation = useCallback(() => {
+  const handleStopNavigation = useCallback(async () => {
     setIsNavigating(false);
     setViewState('details');
     stopGpsTracking();
-    setNavStartTime(null);
-    toast.info('Navigation avslutad');
-  }, [stopGpsTracking]);
 
-  const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
-  const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
+    // Save driven trip
+    if (routeResult && navStartTime) {
+      const drivenTimeSeconds = Math.round((Date.now() - navStartTime.getTime()) / 1000);
+      const points = gpsPointsRef.current;
+      let drivenDistanceKm = 0;
+      for (let i = 1; i < points.length; i++) {
+        drivenDistanceKm += haversineKm(points[i - 1].lat, points[i - 1].lng, points[i].lat, points[i].lng);
+      }
+      const vehicle = selectedVehicle;
+      const drivenTrip: SavedTrip = {
+        id: crypto.randomUUID(), createdAt: new Date().toISOString(),
+        startName: routeResult.waypoints[0].name,
+        endName: routeResult.waypoints[routeResult.waypoints.length - 1].name,
+        waypointNames: routeResult.waypoints.slice(1, -1).map(w => w.name),
+        distanceKm: routeResult.distanceKm, travelTimeSeconds: routeResult.travelTimeSeconds,
+        totalWeightKg: totalWeight, vehicleId,
+        vehicleLabel: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.regNr})` : 'Okänt',
+        routeType, timeline, route: routeResult, tripSource: 'driven',
+        drivenDistanceKm: Math.round(drivenDistanceKm * 10) / 10,
+        drivenTimeSeconds,
+      };
+      await saveDrivenTrip(drivenTrip, drivenDistanceKm, drivenTimeSeconds, points);
+      const updated = await getSavedTrips();
+      setSavedTrips(updated);
+      toast.info(`Körning sparad: ${Math.round(drivenDistanceKm)} km`);
+    } else {
+      toast.info('Navigation avslutad');
+    }
+
+    setNavStartTime(null);
+    gpsPointsRef.current = [];
+  }, [stopGpsTracking, routeResult, navStartTime, selectedVehicle, totalWeight, vehicleId, routeType, timeline, haversineKm]);
+
+
+
 
   const getBKStatus = (weight: number) => {
     const results: { bk: BKClass; limit: number; status: 'green' | 'yellow' | 'red' }[] = [];
@@ -263,6 +302,21 @@ export default function RoutePlanning() {
       setViewState('details');
       const destWp = bestRoute.waypoints[bestRoute.waypoints.length - 1];
       setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
+
+      // Auto-save searched route
+      const vehicle = selectedVehicle;
+      const autoTrip: SavedTrip = {
+        id: crypto.randomUUID(), createdAt: new Date().toISOString(),
+        startName: bestRoute.waypoints[0].name,
+        endName: bestRoute.waypoints[bestRoute.waypoints.length - 1].name,
+        waypointNames: bestRoute.waypoints.slice(1, -1).map(w => w.name),
+        distanceKm: bestRoute.distanceKm, travelTimeSeconds: bestRoute.travelTimeSeconds,
+        totalWeightKg: totalWeight, vehicleId,
+        vehicleLabel: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.regNr})` : 'Okänt',
+        routeType, timeline: tl, route: bestRoute, tripSource: 'searched',
+      };
+      saveTrip(autoTrip).then(() => getSavedTrips().then(setSavedTrips));
+      setIsSaved(true);
 
       const hours = Math.floor(bestRoute.travelTimeSeconds / 3600);
       const mins = Math.round((bestRoute.travelTimeSeconds % 3600) / 60);
@@ -928,13 +982,7 @@ export default function RoutePlanning() {
                     <Plus className="h-4 w-4" />
                     <span className="text-xs ml-1">Tur</span>
                   </Button>
-                  {!isSaved ? (
-                    <Button variant="outline" onClick={handleSave} className="h-10 rounded-xl px-3">
-                      <Save className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <div className="h-10 px-3 flex items-center text-xs text-muted-foreground">✓</div>
-                  )}
+                  <div className="h-10 px-3 flex items-center text-xs text-muted-foreground">✓ Sparad</div>
                 </div>
 
                 {/* Expandable details toggle */}

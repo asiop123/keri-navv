@@ -116,7 +116,10 @@ export type Database = {
         Row: {
           created_at: string
           distance_km: number
+          driven_distance_km: number | null
+          driven_time_seconds: number | null
           end_name: string
+          gps_points: Json | null
           id: string
           route: Json
           route_type: string
@@ -124,6 +127,7 @@ export type Database = {
           timeline: Json
           total_weight_kg: number
           travel_time_seconds: number
+          trip_source: string
           user_id: string
           vehicle_id: string
           vehicle_label: string
@@ -132,7 +136,10 @@ export type Database = {
         Insert: {
           created_at?: string
           distance_km: number
+          driven_distance_km?: number | null
+          driven_time_seconds?: number | null
           end_name: string
+          gps_points?: Json | null
           id?: string
           route?: Json
           route_type?: string
@@ -140,6 +147,7 @@ export type Database = {
           timeline?: Json
           total_weight_kg?: number
           travel_time_seconds: number
+          trip_source?: string
           user_id?: string
           vehicle_id?: string
           vehicle_label?: string
@@ -148,7 +156,10 @@ export type Database = {
         Update: {
           created_at?: string
           distance_km?: number
+          driven_distance_km?: number | null
+          driven_time_seconds?: number | null
           end_name?: string
+          gps_points?: Json | null
           id?: string
           route?: Json
           route_type?: string
@@ -156,6 +167,7 @@ export type Database = {
           timeline?: Json
           total_weight_kg?: number
           travel_time_seconds?: number
+          trip_source?: string
           user_id?: string
           vehicle_id?: string
           vehicle_label?: string
