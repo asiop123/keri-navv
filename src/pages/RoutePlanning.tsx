@@ -939,7 +939,7 @@ export default function RoutePlanning() {
 
                 {/* Expandable details toggle */}
                 <button
-                  onClick={() => { setShowDetails(!showDetails); if (!showDetails) setShowTimeline(false); }}
+                  onClick={() => setShowDetails(!showDetails)}
                   className="w-full flex items-center justify-between px-4 py-3 border-t border-border/50 text-sm font-semibold text-foreground hover:bg-accent/50"
                 >
                   <span className="flex items-center gap-2">
