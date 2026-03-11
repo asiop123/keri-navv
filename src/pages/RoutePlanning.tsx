@@ -1125,13 +1125,16 @@ export default function RoutePlanning() {
                                             <span className="truncate">{entry.restStop.name}</span>
                                           </div>
                                         )}
-                                        {entry.restStop?.facilities && (
-                                          <div className="flex gap-1.5 mt-1">
-                                            {entry.restStop.facilities.toilet && <span title="Toalett">🚻</span>}
-                                            {entry.restStop.facilities.food && <span title="Mat">🍽️</span>}
-                                            {entry.restStop.facilities.shower && <span title="Dusch">🚿</span>}
-                                            {entry.restStop.facilities.fuel && <span title="Drivmedel">⛽</span>}
-                                            {entry.restStop.facilities.truckParking && <span title="Lastbilsp.">🅿️</span>}
+                                        {entry.restStop?.facilities && Object.values(entry.restStop.facilities).some(Boolean) && (
+                                          <div className="flex items-center gap-1.5 mt-1">
+                                            <div className="flex gap-1">
+                                              {entry.restStop.facilities.toilet && <span title="Toalett (uppskattat)">🚻</span>}
+                                              {entry.restStop.facilities.food && <span title="Mat (uppskattat)">🍽️</span>}
+                                              {entry.restStop.facilities.shower && <span title="Dusch (uppskattat)">🚿</span>}
+                                              {entry.restStop.facilities.fuel && <span title="Drivmedel (uppskattat)">⛽</span>}
+                                              {entry.restStop.facilities.truckParking && <span title="Lastbilsp. (uppskattat)">🅿️</span>}
+                                            </div>
+                                            <span className="text-[9px] text-muted-foreground italic">~uppskattat</span>
                                           </div>
                                         )}
                                         {entry.type === 'arrival' && (
