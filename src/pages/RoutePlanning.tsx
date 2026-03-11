@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
   Navigation, Locate, Play, Square, Compass, ChevronUp, ChevronDown, Search,
-  Car, ArrowLeft, ExternalLink, Star, Info, Eye,
+  Car, ArrowLeft, ExternalLink, Star, Info, Eye, Repeat,
 } from 'lucide-react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
