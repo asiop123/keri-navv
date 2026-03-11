@@ -14,7 +14,7 @@ import {
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 import { mockVehicles, getVehicleById } from '@/data/mockData';
-import { BK_LIMITS, BKClass, TimelineEntry } from '@/types';
+import { BK_LIMITS, BKClass, TimelineEntry, RestStopFacilities } from '@/types';
 import { toast } from 'sonner';
 import { geocode, calculateRoute, generateTimeline, reverseGeocode, RouteResult, VehicleParams } from '@/services/tomtom';
 import { SavedTrip, getSavedTrips, saveTrip } from '@/services/tripStorage';
