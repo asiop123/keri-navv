@@ -391,6 +391,8 @@ export default function RoutePlanning() {
         alternatives,
         suitability: entry.restStop?.suitability,
         suitabilityNote: entry.restStop?.suitabilityNote,
+        facilities: entry.restStop?.facilities,
+        address: entry.restStop?.address,
       });
       mapHandleRef.current?.flyToLocation(lng, lat, 14);
     }
