@@ -102,22 +102,26 @@ export default function RoutePlanning() {
 
   useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
 
-  // Get GPS
+  // Auto-start GPS watch for smooth position
+  const gpsInitRef = useRef(false);
   useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setUserPosition(coords);
+    if (!('geolocation' in navigator) || gpsInitRef.current) return;
+    gpsInitRef.current = true;
+    const id = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserPosition(coords);
+        if (!start) {
           try {
             const name = await reverseGeocode(coords.lat, coords.lng);
             setStart(name);
           } catch { setStart('Min position'); }
-        },
-        () => { setStart(''); },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
+        }
+      },
+      () => { if (!start) setStart(''); },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+    );
+    return () => navigator.geolocation.clearWatch(id);
   }, []);
 
   const haversineKm = useCallback((lat1: number, lon1: number, lat2: number, lon2: number) => {
