@@ -1,7 +1,7 @@
 import { TimelineEntry, RestStopInfo, RestStopSuitability, RestStopFacilities } from '@/types';
 
 const API_KEY = 'MuNXa5wvdkAvcr10ExFWNBen06rcF3mT';
-const GOOGLE_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
+
 const BASE_URL = 'https://api.tomtom.com';
 
 export interface VehicleParams {
