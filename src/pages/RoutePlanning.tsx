@@ -37,6 +37,8 @@ type ViewState = 'search' | 'details' | 'navigating';
 
 export default function RoutePlanning() {
   const mapHandleRef = useRef<TomTomMapHandle>(null);
+  const bottomSheetRef = useRef<HTMLDivElement>(null);
+  const locationCardRef = useRef<HTMLDivElement>(null);
   const [viewState, setViewState] = useState<ViewState>('search');
   const [destination, setDestination] = useState('');
   const [start, setStart] = useState('');
@@ -101,6 +103,22 @@ export default function RoutePlanning() {
   const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
 
   useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
+
+  // Click outside to dismiss panels
+  useEffect(() => {
+    if (!showDetails && !selectedLocation) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (showDetails && bottomSheetRef.current && !bottomSheetRef.current.contains(target)) {
+        setShowDetails(false);
+      }
+      if (selectedLocation && locationCardRef.current && !locationCardRef.current.contains(target)) {
+        setSelectedLocation(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showDetails, selectedLocation]);
 
   // Auto-start GPS watch for smooth position
   const gpsInitRef = useRef(false);
@@ -535,17 +553,10 @@ export default function RoutePlanning() {
         className="absolute inset-0 z-0"
         defaultStyle="satellite"
         onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
-        onMapTap={() => { setShowDetails(false); setSelectedLocation(null); }}
+        
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
-      {/* Click-anywhere overlay to dismiss open panels */}
-      {(showDetails || selectedLocation) && (
-        <div
-          className="absolute inset-0 z-10"
-          onClick={() => { setShowDetails(false); setSelectedLocation(null); }}
-        />
-      )}
 
       {mapClickCoords && (
         <div className="absolute inset-0 z-40 bg-background">
@@ -937,7 +948,7 @@ export default function RoutePlanning() {
 
 
           {/* Bottom sheet - compact by default */}
-          <div className="absolute bottom-0 left-0 right-0 z-20">
+          <div ref={bottomSheetRef} className="absolute bottom-0 left-0 right-0 z-20">
             <div className="max-w-lg mx-auto">
               <div className={`bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden transition-all ${showDetails ? 'max-h-[75vh]' : ''}`}>
                 
@@ -1202,7 +1213,7 @@ export default function RoutePlanning() {
 
           {/* Location detail card - Google Maps style */}
           {selectedLocation && (
-            <div className="absolute left-4 right-4 z-30 max-w-sm mx-auto animate-in slide-in-from-bottom-4 fade-in duration-300"
+            <div ref={locationCardRef} className="absolute left-4 right-4 z-30 max-w-sm mx-auto animate-in slide-in-from-bottom-4 fade-in duration-300"
               style={{ top: '50%', transform: 'translateY(-50%)' }}
             >
               <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
