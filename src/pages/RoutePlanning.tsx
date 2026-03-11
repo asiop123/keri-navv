@@ -504,8 +504,33 @@ export default function RoutePlanning() {
           {/* Search bar - Google Maps style */}
           <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
             <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
+              {/* Start point - always visible */}
+              <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                <AddressAutocomplete
+                  value={start}
+                  onChange={setStart}
+                  placeholder="Min position (GPS)"
+                  className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-xs text-muted-foreground placeholder:text-muted-foreground/50"
+                  biasLat={userPosition?.lat}
+                  biasLng={userPosition?.lng}
+                />
+                {userPosition && (
+                  <button
+                    onClick={async () => {
+                      const name = await reverseGeocode(userPosition.lat, userPosition.lng);
+                      setStart(name);
+                    }}
+                    className="shrink-0 p-1 rounded-md hover:bg-accent"
+                    title="Min position"
+                  >
+                    <Locate className="h-3.5 w-3.5 text-primary" />
+                  </button>
+                )}
+              </div>
+
               {/* Destination field */}
-              <div className="flex items-center gap-3 px-4 py-3">
+              <div className="flex items-center gap-3 px-4 py-2">
                 <Search className="h-5 w-5 text-muted-foreground shrink-0" />
                 <AddressAutocomplete
                   value={destination}
@@ -529,64 +554,33 @@ export default function RoutePlanning() {
                 )}
               </div>
 
-              {/* Tur & retur toggle - always visible */}
-              <div className="flex items-center justify-between px-4 py-2 border-t border-border/30">
-                <button
-                  onClick={() => setIsRoundTrip(!isRoundTrip)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    isRoundTrip
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-accent'
-                  }`}
-                >
-                  <Repeat className="h-3.5 w-3.5" />
-                  Tur & retur
-                </button>
-                {isRoundTrip && (
-                  <span className="text-[10px] text-primary font-medium">↩ Tillbaka till start</span>
-                )}
-              </div>
-
-              {/* Expandable: start + options */}
+              {/* Expandable options */}
               <div className="border-t border-border/50">
-                <button
-                  onClick={() => setShowOptions(!showOptions)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground hover:bg-accent/50 transition-colors"
-                >
-                  <span className="flex items-center gap-2">
+                {/* Tur & retur toggle + options toggle */}
+                <div className="flex items-center justify-between px-4 py-2">
+                  <button
+                    onClick={() => setIsRoundTrip(!isRoundTrip)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                      isRoundTrip
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-accent'
+                    }`}
+                  >
+                    <Repeat className="h-3.5 w-3.5" />
+                    Tur & retur
+                  </button>
+                  <button
+                    onClick={() => setShowOptions(!showOptions)}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     <Car className="h-3.5 w-3.5" />
-                    {start ? `Från: ${start}` : 'Startpunkt & fordon'}
-                    {selectedVehicle && ` · ${selectedVehicle.brand} ${selectedVehicle.model}`}
-                  </span>
-                  {showOptions ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                </button>
+                    {selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model}` : 'Fordon & mer'}
+                    {showOptions ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  </button>
+                </div>
 
                 {showOptions && (
                   <div className="px-4 pb-4 space-y-3 border-t border-border/30">
-                    {/* Start point */}
-                    <div className="flex items-center gap-2 pt-3">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                      <AddressAutocomplete
-                        value={start}
-                        onChange={setStart}
-                        placeholder="Startpunkt (auto GPS)"
-                        className="h-9 text-sm"
-                        biasLat={userPosition?.lat}
-                        biasLng={userPosition?.lng}
-                      />
-                      {userPosition && (
-                        <button
-                          onClick={async () => {
-                            const name = await reverseGeocode(userPosition.lat, userPosition.lng);
-                            setStart(name);
-                          }}
-                          className="shrink-0 p-1.5 rounded-md hover:bg-accent"
-                          title="Min position"
-                        >
-                          <Locate className="h-4 w-4 text-primary" />
-                        </button>
-                      )}
-                    </div>
 
                     {/* Waypoints */}
                     {waypoints.map((wp, i) => (
