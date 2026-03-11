@@ -973,32 +973,31 @@ export default function RoutePlanning() {
                   </div>
                 )}
 
-                {/* Action buttons - always visible */}
-                <div className="px-3 py-2 flex gap-2">
-                  <Button
+                {/* BIG START BUTTON - always visible */}
+                <div className="px-3 py-3">
+                  <button
                     onClick={handleStartNavigation}
-                    className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm"
+                    className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-2xl text-lg flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/30 transition-all"
                   >
-                    <Play className="h-4 w-4 mr-1.5" />
-                    Starta
-                  </Button>
-                  <Button variant="outline" onClick={handleAddLeg} className="h-10 rounded-xl px-3" title="Lägg till tur">
-                    <Plus className="h-4 w-4" />
-                    <span className="text-xs ml-1">Tur</span>
-                  </Button>
-                  <div className="h-10 px-3 flex items-center text-xs text-muted-foreground">✓ Sparad</div>
+                    <Navigation className="h-6 w-6" />
+                    KÖR
+                  </button>
                 </div>
 
-                {/* Expandable details toggle */}
-                <button
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="w-full flex items-center justify-between px-4 py-3 border-t border-border/50 text-sm font-semibold text-foreground hover:bg-accent/50"
-                >
-                  <span className="flex items-center gap-2">
-                    📋 Din resplan
-                  </span>
-                  {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                </button>
+                {/* Secondary actions */}
+                <div className="px-3 pb-2 flex gap-2">
+                  <Button variant="outline" onClick={handleAddLeg} className="flex-1 h-9 rounded-xl text-xs">
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Lägg till tur
+                  </Button>
+                  <button
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-medium text-foreground hover:bg-accent/50 transition-colors"
+                  >
+                    📋 Resplan
+                    {showDetails ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
 
                 {showDetails && (
                   <div className="overflow-y-auto" style={{ maxHeight: 'calc(75vh - 140px)' }}>
