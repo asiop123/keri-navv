@@ -67,9 +67,21 @@ export default function TripHistory({ trips, onSelect, onDelete }: TripHistoryPr
                   <span>{(trip.totalWeightKg / 1000).toFixed(1)}t</span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Badge variant={trip.tripSource === 'driven' ? 'default' : 'secondary'} className="text-[10px]">
+                    {trip.tripSource === 'driven' ? (
+                      <><Navigation className="h-2.5 w-2.5 mr-0.5" /> Körd</>
+                    ) : (
+                      <><Search className="h-2.5 w-2.5 mr-0.5" /> Sökt</>
+                    )}
+                  </Badge>
                   <Badge variant="secondary" className="text-[10px]">
                     {trip.routeType === 'normal' ? 'Normal' : 'Snabbast'}
                   </Badge>
+                  {trip.tripSource === 'driven' && trip.drivenDistanceKm && (
+                    <span className="text-[10px] text-muted-foreground">
+                      Faktiskt: {Math.round(trip.drivenDistanceKm)} km
+                    </span>
+                  )}
                   <span className="text-[10px] text-muted-foreground">
                     {new Date(trip.createdAt).toLocaleDateString('sv-SE')} {new Date(trip.createdAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                   </span>
