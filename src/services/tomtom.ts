@@ -541,51 +541,79 @@ export async function searchRestStops(
 }
 
 /**
- * Search Google Places Nearby for truck stops and rest areas
+ * Search Google Places Nearby using the JS SDK (avoids CORS issues).
+ * Creates a temporary hidden map div for the PlacesService.
  */
 async function searchGooglePlaces(
   lat: number,
   lng: number,
   radius: number
 ): Promise<Array<{ name: string; lat: number; lng: number; address?: string; isTruckStop: boolean; facilities: RestStopFacilities }>> {
-  try {
-    const keywords = ['truck stop', 'rastplats', 'lastbilsparkering'];
+  // Only works if Google Maps JS SDK is loaded
+  if (!window.google?.maps?.places) return [];
+
+  return new Promise((resolve) => {
     const results: Array<{ name: string; lat: number; lng: number; address?: string; isTruckStop: boolean; facilities: RestStopFacilities }> = [];
+    const seen = new Set<string>();
+
+    // Create a temporary div for PlacesService (it requires a map or div)
+    let tempDiv = document.getElementById('__places_service_div');
+    if (!tempDiv) {
+      tempDiv = document.createElement('div');
+      tempDiv.id = '__places_service_div';
+      tempDiv.style.display = 'none';
+      document.body.appendChild(tempDiv);
+    }
+    const service = new google.maps.places.PlacesService(tempDiv as HTMLDivElement);
+
+    const keywords = ['truck stop', 'rastplats', 'lastbilsparkering', 'bensinstation lastbil'];
+    let completed = 0;
+
+    const onAllDone = () => {
+      resolve(results);
+    };
 
     for (const keyword of keywords) {
-      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${Math.min(radius, 30000)}&keyword=${encodeURIComponent(keyword)}&key=${GOOGLE_KEY}&language=sv`;
-      try {
-        const res = await fetch(url);
-        if (!res.ok) continue;
-        const data = await res.json();
-        for (const place of (data.results || []).slice(0, 5)) {
-          const types: string[] = place.types || [];
-          const typesStr = types.join(' ').toLowerCase();
-          const nameStr = (place.name || '').toLowerCase();
-          const isTruck = nameStr.includes('truck') || nameStr.includes('lastbil') || typesStr.includes('truck');
+      const request: google.maps.places.TextSearchRequest = {
+        query: keyword,
+        location: new google.maps.LatLng(lat, lng),
+        radius: Math.min(radius, 30000),
+      };
 
-          results.push({
-            name: place.name,
-            lat: place.geometry.location.lat,
-            lng: place.geometry.location.lng,
-            address: place.vicinity || '',
-            isTruckStop: isTruck,
-            facilities: {
-              toilet: true,
-              food: typesStr.includes('restaurant') || typesStr.includes('food') || typesStr.includes('cafe'),
-              shower: isTruck,
-              fuel: typesStr.includes('gas_station'),
-              truckParking: isTruck,
-            },
-          });
+      service.textSearch(request, (places, status) => {
+        completed++;
+        if (status === google.maps.places.PlacesServiceStatus.OK && places) {
+          for (const place of places.slice(0, 5)) {
+            const pLat = place.geometry?.location?.lat();
+            const pLng = place.geometry?.location?.lng();
+            if (pLat == null || pLng == null) continue;
+            const key = `${pLat.toFixed(3)},${pLng.toFixed(3)}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+
+            const types = place.types || [];
+            const name = place.name || 'Rastplats';
+            const facilities = detectFacilitiesFromGoogle(types, name);
+
+            results.push({
+              name,
+              lat: pLat,
+              lng: pLng,
+              address: place.formatted_address || '',
+              isTruckStop: facilities.truckParking,
+              facilities,
+            });
+          }
         }
-      } catch { /* skip keyword */ }
+        if (completed >= keywords.length) onAllDone();
+      });
     }
 
-    return results;
-  } catch {
-    return [];
-  }
+    // Safety timeout in case Google doesn't respond
+    setTimeout(() => {
+      if (completed < keywords.length) resolve(results);
+    }, 5000);
+  });
 }
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
