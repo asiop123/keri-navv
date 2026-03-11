@@ -382,14 +382,14 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       const map = mapInstance.current;
       if (!map || !route) return;
 
-      const draw = () => addRouteToMap(map, route, timeline, alternativeRoutes);
+      const draw = () => addRouteToMap(map, route, timeline, alternativeRoutes, previousLegs);
 
       if (map.isStyleLoaded()) {
         draw();
       } else {
         map.on('load', draw);
       }
-    }, [route, timeline, alternativeRoutes]);
+    }, [route, timeline, alternativeRoutes, previousLegs]);
 
     return (
       <>
