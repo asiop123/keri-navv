@@ -207,28 +207,50 @@ export default function RoutePlanning() {
         ...waypoints.filter(w => w.address.trim()).map(w => geocode(w.address)),
       ]);
 
+      // Round-trip: destination becomes waypoint, start becomes end
+      const finalWaypoints = isRoundTrip && !addingNewLeg
+        ? [...waypointCoords, endCoord]
+        : waypointCoords;
+      const finalEnd = isRoundTrip && !addingNewLeg ? startCoord : endCoord;
+
       const vehicleParams: VehicleParams | undefined = selectedVehicle
         ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
         : undefined;
 
-      const result = await calculateRoute(startCoord, endCoord, waypointCoords, new Date(departureTime).toISOString(), vehicleParams);
+      const result = await calculateRoute(startCoord, finalEnd, finalWaypoints, new Date(departureTime).toISOString(), vehicleParams);
       const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
+      const finalStopMinutes = isRoundTrip && !addingNewLeg
+        ? [...stopMinutes, 30]
+        : stopMinutes;
 
-      // Pick the fastest route as the main one
       const allRoutes = [result, ...(result.alternatives || [])];
       allRoutes.sort((a, b) => a.travelTimeSeconds - b.travelTimeSeconds);
       const bestRoute = allRoutes[0];
-      // Clean alternatives from the selected route object
       delete bestRoute.alternatives;
 
       const otherRoutes = allRoutes.slice(1);
       otherRoutes.forEach(r => delete r.alternatives);
 
-      const tl = await generateTimeline(bestRoute, routeType, stopMinutes, vehicleParams);
+      const tl = await generateTimeline(bestRoute, routeType, finalStopMinutes, vehicleParams);
+
+      const newLeg: TripLeg = {
+        id: crypto.randomUUID(),
+        startName: startCoord.name,
+        endName: isRoundTrip && !addingNewLeg ? `${endCoord.name} ↩ ${startCoord.name}` : endCoord.name,
+        route: bestRoute,
+        alternativeRoutes: otherRoutes,
+        timeline: tl,
+      };
+
+      if (addingNewLeg) {
+        setTrips(prev => [...prev, newLeg]);
+        setAddingNewLeg(false);
+      } else {
+        setTrips([newLeg]);
+      }
 
       setAlternativeRoutes(otherRoutes);
       setSelectedRouteIndex(0);
-
       setRouteResult(bestRoute);
       setTimeline(tl);
       setViewState('details');
