@@ -426,7 +426,7 @@ export async function searchRestStopsAlongRoute(
           const cats: string[] = r.poi?.categories || [];
           const isTruckStop = cats.some((c: string) => c.toLowerCase().includes('truck'));
           const { suitability, note } = assessStopSuitability(cats, vehicle);
-          const facilities = detectFacilities(r.poi);
+          const facilities = detectFacilitiesFromTomTom(r.poi);
           
           if (!matchesFacilityFilters(facilities, filters)) continue;
           
