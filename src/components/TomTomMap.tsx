@@ -196,11 +196,11 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
           map.addSource(srcId, { type: 'geojson', data: alt.geoJson });
           map.addLayer({
             id: layerBgId, type: 'line', source: srcId,
-            paint: { 'line-color': '#94a3b8', 'line-width': 14, 'line-opacity': 0.15 },
+            paint: { 'line-color': '#94a3b8', 'line-width': 30, 'line-opacity': 0.01 },
           });
           map.addLayer({
             id: layerId, type: 'line', source: srcId,
-            paint: { 'line-color': '#93c5fd', 'line-width': 5, 'line-opacity': 0.6 },
+            paint: { 'line-color': '#93c5fd', 'line-width': 6, 'line-opacity': 0.6 },
           });
 
           // Make both layers clickable (bg is wider = easier to tap on mobile)
