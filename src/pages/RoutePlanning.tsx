@@ -438,6 +438,18 @@ export default function RoutePlanning() {
   const nextWaypoint = routeResult ? routeResult.waypoints[Math.min(currentStep + 1, routeResult.waypoints.length - 1)] : null;
   const elapsedMin = navStartTime ? Math.round((Date.now() - navStartTime.getTime()) / 60000) : 0;
 
+  const combinedDistanceKm = trips.length > 1 ? trips.reduce((s, t) => s + t.route.distanceKm, 0) : routeResult?.distanceKm || 0;
+  const combinedTimeSeconds = trips.length > 1 ? trips.reduce((s, t) => s + t.route.travelTimeSeconds, 0) : routeResult?.travelTimeSeconds || 0;
+  const combinedTimeH = Math.floor(combinedTimeSeconds / 3600);
+  const combinedTimeMin = Math.round((combinedTimeSeconds % 3600) / 60);
+  const previousLegsForMap = trips.length > 1 ? trips.slice(0, -1).map((leg, i) => ({ route: leg.route, color: LEG_COLORS[i % LEG_COLORS.length] })) : [];
+  const allTimelineEntries = trips.length > 0 ? trips.flatMap(t => t.timeline) : timeline;
+  const allRestCount = allTimelineEntries.filter(t => t.type === 'rest' || t.type === 'overnight').length;
+  const displayTrips: TripLeg[] = trips.length > 0 ? trips : routeResult ? [{
+    id: 'current', startName: start, endName: destination,
+    route: routeResult, alternativeRoutes, timeline,
+  }] : [];
+
   const timelineIcon = (type: TimelineEntry['type']) => {
     switch (type) { case 'drive': return '🚛'; case 'rest': return '☕'; case 'overnight': return '🌙'; case 'stop': return '📦'; case 'arrival': return '🏁'; }
   };
