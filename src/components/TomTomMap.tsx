@@ -141,9 +141,9 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
 
       // Re-add route after style loads
       map.once('styledata', () => {
-        const { route: r, timeline: tl, alternativeRoutes: alts } = routeDataRef.current;
+        const { route: r, timeline: tl, alternativeRoutes: alts, previousLegs: pl } = routeDataRef.current;
         if (r) {
-          addRouteToMap(map, r, tl, alts);
+          addRouteToMap(map, r, tl, alts, pl);
         }
       });
     }, []);
