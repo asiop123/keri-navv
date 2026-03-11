@@ -1094,6 +1094,8 @@ export default function RoutePlanning() {
                         <span className="font-semibold">EU-regler:</span> 4,5h → 45 min rast · Max {routeType === 'fastest' ? '10h' : '9h'}/dag · 11h dygnsvila
                       </div>
                     </div>
+                    </div>
+                  )}
                   </div>
                 )}
               </div>
