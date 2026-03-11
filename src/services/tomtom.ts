@@ -258,20 +258,44 @@ function assessStopSuitability(
 }
 
 /**
- * Detect facilities from TomTom POI categories and classifications
+ * Detect facilities from TomTom POI categories and classifications.
+ * Conservative: only mark as true when there's strong evidence.
  */
-function detectFacilities(poi: any): RestStopFacilities {
+function detectFacilitiesFromTomTom(poi: any): RestStopFacilities {
   const cats: string[] = (poi?.categories || []).map((c: string) => c.toLowerCase());
   const classNames: string[] = (poi?.classifications || [])
     .flatMap((cl: any) => (cl?.names || []).map((n: any) => (n?.name || '').toLowerCase()));
   const allTerms = [...cats, ...classNames].join(' ');
 
+  const isTruckStop = allTerms.includes('truck stop') || allTerms.includes('lastbilsparkering');
+  const isRestArea = allTerms.includes('rest area') || allTerms.includes('rastplats') || allTerms.includes('rast');
+  const isFuelStation = allTerms.includes('petrol') || allTerms.includes('gas station') || allTerms.includes('fuel') || allTerms.includes('bensin') || allTerms.includes('diesel') || allTerms.includes('tankstation');
+
   return {
-    toilet: allTerms.includes('rest') || allTerms.includes('rast') || allTerms.includes('truck') || allTerms.includes('wc'),
-    food: allTerms.includes('restaurant') || allTerms.includes('food') || allTerms.includes('café') || allTerms.includes('cafe') || allTerms.includes('mat') || allTerms.includes('fast food'),
-    shower: allTerms.includes('truck') || allTerms.includes('shower') || allTerms.includes('dusch'),
-    fuel: allTerms.includes('petrol') || allTerms.includes('gas') || allTerms.includes('fuel') || allTerms.includes('bensin') || allTerms.includes('diesel'),
-    truckParking: allTerms.includes('truck') || allTerms.includes('lastbil') || (allTerms.includes('parking') && allTerms.includes('heavy')),
+    toilet: isTruckStop || isRestArea || isFuelStation,
+    food: allTerms.includes('restaurant') || allTerms.includes('food') || allTerms.includes('café') || allTerms.includes('cafe') || allTerms.includes('fast food'),
+    shower: isTruckStop, // only truck stops reliably have showers
+    fuel: isFuelStation,
+    truckParking: isTruckStop || (allTerms.includes('parking') && (allTerms.includes('heavy') || allTerms.includes('truck') || allTerms.includes('lastbil'))),
+  };
+}
+
+/**
+ * Detect facilities from Google Places types
+ */
+function detectFacilitiesFromGoogle(types: string[], name: string): RestStopFacilities {
+  const typesStr = types.join(' ').toLowerCase();
+  const nameStr = name.toLowerCase();
+  const isTruck = nameStr.includes('truck') || nameStr.includes('lastbil') || typesStr.includes('truck');
+  const isFuel = typesStr.includes('gas_station') || nameStr.includes('bensin') || nameStr.includes('diesel') || nameStr.includes('circle k') || nameStr.includes('preem') || nameStr.includes('okq8') || nameStr.includes('st1') || nameStr.includes('ingo');
+  const isRestArea = nameStr.includes('rastplats') || nameStr.includes('rast') || nameStr.includes('rest area');
+
+  return {
+    toilet: isTruck || isFuel || isRestArea,
+    food: typesStr.includes('restaurant') || typesStr.includes('food') || typesStr.includes('cafe') || typesStr.includes('meal'),
+    shower: isTruck,
+    fuel: isFuel,
+    truckParking: isTruck,
   };
 }
 
