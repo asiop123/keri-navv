@@ -570,30 +570,6 @@ export default function RoutePlanning() {
 
                 {showOptions && (
                   <div className="px-4 pb-4 space-y-3 border-t border-border/30">
-                    {/* Start point */}
-                    <div className="flex items-center gap-2 pt-3">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                      <AddressAutocomplete
-                        value={start}
-                        onChange={setStart}
-                        placeholder="Startpunkt (auto GPS)"
-                        className="h-9 text-sm"
-                        biasLat={userPosition?.lat}
-                        biasLng={userPosition?.lng}
-                      />
-                      {userPosition && (
-                        <button
-                          onClick={async () => {
-                            const name = await reverseGeocode(userPosition.lat, userPosition.lng);
-                            setStart(name);
-                          }}
-                          className="shrink-0 p-1.5 rounded-md hover:bg-accent"
-                          title="Min position"
-                        >
-                          <Locate className="h-4 w-4 text-primary" />
-                        </button>
-                      )}
-                    </div>
 
                     {/* Waypoints */}
                     {waypoints.map((wp, i) => (
