@@ -775,13 +775,17 @@ export default function RoutePlanning() {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">{destination}</div>
+                  <div className="text-sm font-semibold truncate">
+                    {trips.length > 1 ? `${trips.length} turer` : destination}
+                  </div>
                   <div className="text-[10px] text-muted-foreground flex items-center gap-2">
-                    <span className="font-bold text-primary">{routeResult.distanceKm} km</span>
+                    <span className="font-bold text-primary">{trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km</span>
                     <span>·</span>
-                    <span className="font-bold text-primary">{totalDriveTimeH}h {totalDriveTimeMin}min</span>
-                    <span>·</span>
-                    <span>ank {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="font-bold text-primary">{trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}</span>
+                    {trips.length <= 1 && <>
+                      <span>·</span>
+                      <span>ank {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </>}
                   </div>
                 </div>
               </div>
