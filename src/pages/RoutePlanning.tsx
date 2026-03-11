@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
-  Navigation, Locate, Play, Square, Compass, ChevronUp, ChevronDown, Search,
+  Navigation, Locate, Square, ChevronUp, ChevronDown, Search,
   Car, ArrowLeft, ExternalLink, Star, Info, Eye, Repeat,
 } from 'lucide-react';
 
