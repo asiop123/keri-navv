@@ -17,7 +17,7 @@ import { mockVehicles, getVehicleById } from '@/data/mockData';
 import { BK_LIMITS, BKClass, TimelineEntry, RestStopFacilities } from '@/types';
 import { toast } from 'sonner';
 import { geocode, calculateRoute, generateTimeline, reverseGeocode, RouteResult, VehicleParams } from '@/services/tomtom';
-import { SavedTrip, getSavedTrips, saveTrip } from '@/services/tripStorage';
+import { SavedTrip, getSavedTrips, saveTrip, saveDrivenTrip } from '@/services/tripStorage';
 import TomTomMap, { TomTomMapHandle } from '@/components/TomTomMap';
 import TripHistory from '@/components/TripHistory';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
