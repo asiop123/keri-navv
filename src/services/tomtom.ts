@@ -272,9 +272,9 @@ function detectFacilitiesFromTomTom(poi: any): RestStopFacilities {
   const isFuelStation = allTerms.includes('petrol') || allTerms.includes('gas station') || allTerms.includes('fuel') || allTerms.includes('bensin') || allTerms.includes('diesel') || allTerms.includes('tankstation');
 
   return {
-    toilet: isTruckStop || isRestArea || isFuelStation,
+    toilet: isTruckStop || isRestArea, // fuel stations don't always have public toilets
     food: allTerms.includes('restaurant') || allTerms.includes('food') || allTerms.includes('café') || allTerms.includes('cafe') || allTerms.includes('fast food'),
-    shower: isTruckStop, // only truck stops reliably have showers
+    shower: false, // can't reliably determine from category data alone
     fuel: isFuelStation,
     truckParking: isTruckStop || (allTerms.includes('parking') && (allTerms.includes('heavy') || allTerms.includes('truck') || allTerms.includes('lastbil'))),
   };
