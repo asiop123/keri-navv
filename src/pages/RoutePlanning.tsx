@@ -76,6 +76,7 @@ export default function RoutePlanning() {
   const [gpsWatchId, setGpsWatchId] = useState<number | null>(null);
   const [distanceToNext, setDistanceToNext] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
+  const gpsPointsRef = useRef<{ lat: number; lng: number; time: string }[]>([]);
   const [navStartTime, setNavStartTime] = useState<Date | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
     type: string;
