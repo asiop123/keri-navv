@@ -554,19 +554,30 @@ export default function RoutePlanning() {
                 )}
               </div>
 
-              {/* Expandable: start + options */}
+              {/* Expandable options */}
               <div className="border-t border-border/50">
-                <button
-                  onClick={() => setShowOptions(!showOptions)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground hover:bg-accent/50 transition-colors"
-                >
-                  <span className="flex items-center gap-2">
+                {/* Tur & retur toggle + options toggle */}
+                <div className="flex items-center justify-between px-4 py-2">
+                  <button
+                    onClick={() => setIsRoundTrip(!isRoundTrip)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                      isRoundTrip
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-accent'
+                    }`}
+                  >
+                    <Repeat className="h-3.5 w-3.5" />
+                    Tur & retur
+                  </button>
+                  <button
+                    onClick={() => setShowOptions(!showOptions)}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     <Car className="h-3.5 w-3.5" />
-                    {start ? `Från: ${start}` : 'Startpunkt & fordon'}
-                    {selectedVehicle && ` · ${selectedVehicle.brand} ${selectedVehicle.model}`}
-                  </span>
-                  {showOptions ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                </button>
+                    {selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model}` : 'Fordon & mer'}
+                    {showOptions ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  </button>
+                </div>
 
                 {showOptions && (
                   <div className="px-4 pb-4 space-y-3 border-t border-border/30">
