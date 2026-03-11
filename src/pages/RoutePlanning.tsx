@@ -1125,13 +1125,16 @@ export default function RoutePlanning() {
                                             <span className="truncate">{entry.restStop.name}</span>
                                           </div>
                                         )}
-                                        {entry.restStop?.facilities && (
-                                          <div className="flex gap-1.5 mt-1">
-                                            {entry.restStop.facilities.toilet && <span title="Toalett">🚻</span>}
-                                            {entry.restStop.facilities.food && <span title="Mat">🍽️</span>}
-                                            {entry.restStop.facilities.shower && <span title="Dusch">🚿</span>}
-                                            {entry.restStop.facilities.fuel && <span title="Drivmedel">⛽</span>}
-                                            {entry.restStop.facilities.truckParking && <span title="Lastbilsp.">🅿️</span>}
+                                        {entry.restStop?.facilities && Object.values(entry.restStop.facilities).some(Boolean) && (
+                                          <div className="flex items-center gap-1.5 mt-1">
+                                            <div className="flex gap-1">
+                                              {entry.restStop.facilities.toilet && <span title="Toalett (uppskattat)">🚻</span>}
+                                              {entry.restStop.facilities.food && <span title="Mat (uppskattat)">🍽️</span>}
+                                              {entry.restStop.facilities.shower && <span title="Dusch (uppskattat)">🚿</span>}
+                                              {entry.restStop.facilities.fuel && <span title="Drivmedel (uppskattat)">⛽</span>}
+                                              {entry.restStop.facilities.truckParking && <span title="Lastbilsp. (uppskattat)">🅿️</span>}
+                                            </div>
+                                            <span className="text-[9px] text-muted-foreground italic">~uppskattat</span>
                                           </div>
                                         )}
                                         {entry.type === 'arrival' && (
@@ -1271,12 +1274,18 @@ export default function RoutePlanning() {
                       )}
                       {/* Facility badges */}
                       {selectedLocation.facilities && Object.values(selectedLocation.facilities).some(Boolean) && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {selectedLocation.facilities.toilet && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚻 Toalett</Badge>}
-                          {selectedLocation.facilities.food && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🍽️ Mat</Badge>}
-                          {selectedLocation.facilities.shower && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚿 Dusch</Badge>}
-                          {selectedLocation.facilities.fuel && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">⛽ Drivmedel</Badge>}
-                          {selectedLocation.facilities.truckParking && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🅿️ Lastbilsp.</Badge>}
+                        <div className="mt-2 space-y-1">
+                          <div className="flex flex-wrap gap-1">
+                            {selectedLocation.facilities.toilet && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚻 Toalett</Badge>}
+                            {selectedLocation.facilities.food && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🍽️ Mat</Badge>}
+                            {selectedLocation.facilities.shower && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚿 Dusch</Badge>}
+                            {selectedLocation.facilities.fuel && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">⛽ Drivmedel</Badge>}
+                            {selectedLocation.facilities.truckParking && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🅿️ Lastbilsp.</Badge>}
+                          </div>
+                          <p className="text-[9px] text-muted-foreground italic flex items-center gap-1">
+                            <Info className="h-2.5 w-2.5 shrink-0" />
+                            Faciliteter är uppskattade baserat på platstyp — verifiera innan
+                          </p>
                         </div>
                       )}
                       {selectedLocation.address && (
