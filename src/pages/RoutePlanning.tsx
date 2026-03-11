@@ -462,6 +462,7 @@ export default function RoutePlanning() {
         route={routeResult}
         alternativeRoutes={alternativeRoutes}
         timeline={timeline}
+        previousLegs={previousLegsForMap}
         userPosition={userPosition}
         isNavigating={isNavigating}
         className="absolute inset-0 z-0"
