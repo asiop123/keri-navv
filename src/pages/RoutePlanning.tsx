@@ -982,13 +982,7 @@ export default function RoutePlanning() {
                     <Plus className="h-4 w-4" />
                     <span className="text-xs ml-1">Tur</span>
                   </Button>
-                  {!isSaved ? (
-                    <Button variant="outline" onClick={handleSave} className="h-10 rounded-xl px-3">
-                      <Save className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <div className="h-10 px-3 flex items-center text-xs text-muted-foreground">✓</div>
-                  )}
+                  <div className="h-10 px-3 flex items-center text-xs text-muted-foreground">✓ Sparad</div>
                 </div>
 
                 {/* Expandable details toggle */}
