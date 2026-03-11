@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SavedTrip, deleteTrip } from '@/services/tripStorage';
-import { Route, Trash2, Eye, Clock, MapPin } from 'lucide-react';
+import { Route, Trash2, Eye, Clock, MapPin, Navigation, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TripHistoryProps {
