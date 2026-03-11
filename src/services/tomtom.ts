@@ -291,9 +291,9 @@ function detectFacilitiesFromGoogle(types: string[], name: string): RestStopFaci
   const isRestArea = nameStr.includes('rastplats') || nameStr.includes('rast') || nameStr.includes('rest area');
 
   return {
-    toilet: isTruck || isFuel || isRestArea,
+    toilet: isTruck || isRestArea, // don't assume fuel stations have public toilets
     food: typesStr.includes('restaurant') || typesStr.includes('food') || typesStr.includes('cafe') || typesStr.includes('meal'),
-    shower: isTruck,
+    shower: false, // can't verify from API data
     fuel: isFuel,
     truckParking: isTruck,
   };
