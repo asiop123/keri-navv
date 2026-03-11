@@ -1330,15 +1330,13 @@ export default function RoutePlanning() {
 
                   {/* Action buttons */}
                   <div className="mt-3 flex gap-2">
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${selectedLocation.lat},${selectedLocation.lng}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
                       className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground rounded-xl py-2 text-xs font-medium hover:opacity-90 transition-opacity"
                     >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Google Maps
-                    </a>
+                      <Eye className="h-3.5 w-3.5" />
+                      Street View
+                    </button>
                     <button
                       onClick={() => {
                         mapHandleRef.current?.flyToLocation(selectedLocation.lng, selectedLocation.lat, 16);
