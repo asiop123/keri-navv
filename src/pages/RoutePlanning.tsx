@@ -289,12 +289,42 @@ export default function RoutePlanning() {
   };
 
   const handleBack = () => {
+    if (addingNewLeg && trips.length > 0) {
+      setAddingNewLeg(false);
+      const lastTrip = trips[trips.length - 1];
+      setRouteResult(lastTrip.route);
+      setAlternativeRoutes(lastTrip.alternativeRoutes);
+      setTimeline(lastTrip.timeline);
+      setViewState('details');
+      return;
+    }
     setViewState('search');
     setRouteResult(null);
     setAlternativeRoutes([]);
     setSelectedRouteIndex(0);
     setTimeline([]);
     setDestination('');
+    setSelectedLocation(null);
+    setTrips([]);
+    setAddingNewLeg(false);
+  };
+
+  const handleAddLeg = () => {
+    if (!routeResult) return;
+    const lastWp = routeResult.waypoints[routeResult.waypoints.length - 1];
+    setStart(lastWp.name);
+    setDestination('');
+    setWaypoints([]);
+    const lastTl = trips.length > 0 ? trips[trips.length - 1].timeline : timeline;
+    const lastEntry = lastTl[lastTl.length - 1];
+    if (lastEntry) {
+      setDepartureTime(new Date(lastEntry.endTime).toISOString().slice(0, 16));
+    }
+    setAddingNewLeg(true);
+    setViewState('search');
+    setRouteResult(null);
+    setAlternativeRoutes([]);
+    setTimeline([]);
     setSelectedLocation(null);
   };
 
