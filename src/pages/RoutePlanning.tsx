@@ -264,6 +264,21 @@ export default function RoutePlanning() {
       const destWp = bestRoute.waypoints[bestRoute.waypoints.length - 1];
       setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
 
+      // Auto-save searched route
+      const vehicle = selectedVehicle;
+      const autoTrip: SavedTrip = {
+        id: crypto.randomUUID(), createdAt: new Date().toISOString(),
+        startName: bestRoute.waypoints[0].name,
+        endName: bestRoute.waypoints[bestRoute.waypoints.length - 1].name,
+        waypointNames: bestRoute.waypoints.slice(1, -1).map(w => w.name),
+        distanceKm: bestRoute.distanceKm, travelTimeSeconds: bestRoute.travelTimeSeconds,
+        totalWeightKg: totalWeight, vehicleId,
+        vehicleLabel: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.regNr})` : 'Okänt',
+        routeType, timeline: tl, route: bestRoute, tripSource: 'searched',
+      };
+      saveTrip(autoTrip).then(() => getSavedTrips().then(setSavedTrips));
+      setIsSaved(true);
+
       const hours = Math.floor(bestRoute.travelTimeSeconds / 3600);
       const mins = Math.round((bestRoute.travelTimeSeconds % 3600) / 60);
       const altInfo = otherRoutes.length > 0 ? ` · ${otherRoutes.length + 1} rutter` : '';
