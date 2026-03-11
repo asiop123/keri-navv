@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
   Navigation, Locate, Square, ChevronUp, ChevronDown, Search,
-  Car, ArrowLeft, ExternalLink, Star, Info, Eye, Repeat,
+  Car, ArrowLeft, Star, Info, Eye, Repeat,
 } from 'lucide-react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
