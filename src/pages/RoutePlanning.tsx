@@ -1274,12 +1274,18 @@ export default function RoutePlanning() {
                       )}
                       {/* Facility badges */}
                       {selectedLocation.facilities && Object.values(selectedLocation.facilities).some(Boolean) && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {selectedLocation.facilities.toilet && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚻 Toalett</Badge>}
-                          {selectedLocation.facilities.food && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🍽️ Mat</Badge>}
-                          {selectedLocation.facilities.shower && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚿 Dusch</Badge>}
-                          {selectedLocation.facilities.fuel && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">⛽ Drivmedel</Badge>}
-                          {selectedLocation.facilities.truckParking && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🅿️ Lastbilsp.</Badge>}
+                        <div className="mt-2 space-y-1">
+                          <div className="flex flex-wrap gap-1">
+                            {selectedLocation.facilities.toilet && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚻 Toalett</Badge>}
+                            {selectedLocation.facilities.food && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🍽️ Mat</Badge>}
+                            {selectedLocation.facilities.shower && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚿 Dusch</Badge>}
+                            {selectedLocation.facilities.fuel && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">⛽ Drivmedel</Badge>}
+                            {selectedLocation.facilities.truckParking && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🅿️ Lastbilsp.</Badge>}
+                          </div>
+                          <p className="text-[9px] text-muted-foreground italic flex items-center gap-1">
+                            <Info className="h-2.5 w-2.5 shrink-0" />
+                            Faciliteter är uppskattade baserat på platstyp — verifiera innan
+                          </p>
                         </div>
                       )}
                       {selectedLocation.address && (
