@@ -445,11 +445,12 @@ export async function generateTimeline(
   route: RouteResult,
   routeType: 'normal' | 'fastest',
   waypointStopMinutes?: number[],
-  vehicle?: VehicleParams
+  vehicle?: VehicleParams,
+  facilityFilters?: RestStopFacilities
 ): Promise<TimelineEntry[]> {
   const timeline: TimelineEntry[] = [];
-  const SAFETY_MARGIN = 10; // 10 min margin before legal limit
-  const MAX_DRIVE_BEFORE_REST = 4.5 * 60 - SAFETY_MARGIN; // 260 min instead of 270
+  const SAFETY_MARGIN = 10;
+  const MAX_DRIVE_BEFORE_REST = 4.5 * 60 - SAFETY_MARGIN;
   const REST_DURATION = 45;
   const MAX_DAILY_DRIVE = (routeType === 'fastest' ? 10 : 9) * 60 - SAFETY_MARGIN;
   const OVERNIGHT_REST = 11 * 60;
@@ -515,7 +516,7 @@ export async function generateTimeline(
     const results = await Promise.all(
       restBreakPoints.map(async (bp) => {
         const point = getPointAlongRoute(route.routePoints, bp.fraction);
-        const stops = await searchRestStops(point.lat, point.lng, 20000, vehicle);
+        const stops = await searchRestStops(point.lat, point.lng, 30000, vehicle, facilityFilters);
         return { bp, stops, searchPoint: point };
       })
     );
