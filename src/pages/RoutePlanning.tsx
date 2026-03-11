@@ -534,7 +534,7 @@ export default function RoutePlanning() {
         isNavigating={isNavigating}
         className="absolute inset-0 z-0"
         defaultStyle="satellite"
-        onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
+        onMapClick={(lat, lng) => { setMapClickCoords({ lat, lng }); setShowDetails(false); setSelectedLocation(null); }}
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
