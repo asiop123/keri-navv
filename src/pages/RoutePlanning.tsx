@@ -1133,11 +1133,6 @@ export default function RoutePlanning() {
                     </div>
                   </div>
                 )}
-                    </div>
-                    </div>
-                  )}
-                  </div>
-                )}
               </div>
             </div>
           </div>
