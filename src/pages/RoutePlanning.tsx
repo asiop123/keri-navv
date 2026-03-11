@@ -62,6 +62,9 @@ export default function RoutePlanning() {
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
   const [isRoundTrip, setIsRoundTrip] = useState(false);
+  const [restStopFilters, setRestStopFilters] = useState<RestStopFacilities>({
+    toilet: false, food: false, shower: false, fuel: false, truckParking: false,
+  });
   const [trips, setTrips] = useState<TripLeg[]>([]);
   const [addingNewLeg, setAddingNewLeg] = useState(false);
 
