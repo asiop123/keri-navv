@@ -666,6 +666,15 @@ export default function RoutePlanning() {
                       </button>
                     </div>
 
+                    {/* Tur & retur toggle */}
+                    <div className="flex items-center justify-between py-1">
+                      <div className="flex items-center gap-2">
+                        <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs text-foreground">Tur & retur</span>
+                      </div>
+                      <Switch checked={isRoundTrip} onCheckedChange={setIsRoundTrip} />
+                    </div>
+
                     {/* BK status */}
                     {bkResults.length > 0 && (
                       <div className="flex gap-1.5 flex-wrap">
