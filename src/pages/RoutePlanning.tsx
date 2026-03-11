@@ -1399,55 +1399,66 @@ export default function RoutePlanning() {
       {/* ===== NAVIGATION VIEW ===== */}
       {viewState === 'navigating' && routeResult && (
         <>
-          {/* Top HUD */}
+          {/* Top HUD - Big & Clear */}
           <div className="absolute top-0 left-0 right-0 z-30">
-            <div className="bg-primary/95 backdrop-blur-md text-primary-foreground p-4 shadow-xl">
-              <div className="flex items-center justify-between max-w-lg mx-auto">
-                <div className="flex items-center gap-3">
-                  <Compass className="h-6 w-6 animate-pulse" />
-                  <div>
-                    <div className="text-[10px] opacity-70 uppercase tracking-wider">Nästa stopp</div>
-                    <div className="font-bold text-lg leading-tight">{nextWaypoint?.name}</div>
+            <div className="bg-foreground/95 backdrop-blur-md text-background px-5 pt-5 pb-4 shadow-2xl">
+              <div className="max-w-lg mx-auto">
+                {/* Distance - HUGE */}
+                <div className="text-center mb-3">
+                  <div className="text-6xl font-black tracking-tighter leading-none">
+                    {distanceToNext || '...'}
+                  </div>
+                  <div className="text-sm opacity-60 mt-1">kvar till nästa stopp</div>
+                </div>
+
+                {/* Next stop name */}
+                <div className="bg-background/10 rounded-2xl px-4 py-3 text-center">
+                  <div className="text-xs opacity-50 uppercase tracking-widest mb-0.5">Nästa</div>
+                  <div className="font-bold text-lg leading-tight truncate">{nextWaypoint?.name}</div>
+                </div>
+
+                {/* Stats row */}
+                <div className="flex justify-center gap-4 mt-3">
+                  <div className="flex items-center gap-1.5 text-sm opacity-70">
+                    <Route className="h-4 w-4" />
+                    <span className="font-semibold">{routeResult.distanceKm} km</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm opacity-70">
+                    <Clock className="h-4 w-4" />
+                    <span className="font-semibold">{elapsedMin} min körd</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <div className={`w-2.5 h-2.5 rounded-full ${userPosition ? 'bg-emerald-400 animate-pulse' : 'bg-destructive'}`} />
+                    <span className="font-semibold opacity-70">GPS</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold tracking-tight">{distanceToNext || '...'}</div>
-                  <div className="text-[10px] opacity-70">kvar</div>
-                </div>
               </div>
             </div>
-            <div className="flex gap-2 p-3 justify-center">
-              <div className="bg-card/90 backdrop-blur rounded-full px-3 py-1.5 text-[11px] font-medium shadow-lg border border-border flex items-center gap-1.5">
-                <Route className="h-3 w-3 text-primary" /> {routeResult.distanceKm} km
-              </div>
-              <div className="bg-card/90 backdrop-blur rounded-full px-3 py-1.5 text-[11px] font-medium shadow-lg border border-border flex items-center gap-1.5">
-                <Clock className="h-3 w-3 text-primary" /> {elapsedMin} min
-              </div>
+          </div>
+
+          {/* Bottom controls */}
+          <div className="absolute bottom-6 left-0 right-0 z-30">
+            <div className="max-w-lg mx-auto px-4 flex items-center gap-3">
+              {/* Center on user */}
               {userPosition && (
-                <div className="bg-card/90 backdrop-blur rounded-full px-3 py-1.5 text-[11px] font-medium shadow-lg border border-border flex items-center gap-1.5">
-                  <Navigation className="h-3 w-3 text-emerald-500" /> GPS
-                </div>
+                <button
+                  onClick={() => mapHandleRef.current?.centerOnUser()}
+                  className="bg-card shadow-xl rounded-full p-4 border border-border shrink-0"
+                >
+                  <Locate className="h-6 w-6 text-primary" />
+                </button>
               )}
-            </div>
-          </div>
 
-          {/* Stop button */}
-          <div className="absolute bottom-8 left-0 right-0 z-30 flex justify-center">
-            <button
-              onClick={handleStopNavigation}
-              className="bg-destructive text-destructive-foreground shadow-xl rounded-full px-8 py-4 font-bold text-base flex items-center gap-2"
-            >
-              <Square className="h-5 w-5" /> Avsluta
-            </button>
-          </div>
-
-          {userPosition && (
-            <div className="absolute right-4 bottom-24 z-20">
-              <button onClick={() => mapHandleRef.current?.centerOnUser()} className="bg-card shadow-lg rounded-full p-3 border border-border">
-                <Locate className="h-5 w-5 text-primary" />
+              {/* Stop button - prominent */}
+              <button
+                onClick={handleStopNavigation}
+                className="flex-1 bg-destructive text-destructive-foreground shadow-xl rounded-2xl px-6 py-4 font-bold text-lg flex items-center justify-center gap-3"
+              >
+                <Square className="h-6 w-6" />
+                Avsluta körning
               </button>
             </div>
-          )}
+          </div>
         </>
       )}
     </div>
