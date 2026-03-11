@@ -398,87 +398,103 @@ export async function searchRestStopsAlongRoute(
   
   if (searchPoints.length === 0) return [];
   
-  const searchRadiusM = maxOffRouteKm * 1000 + 500; // add small buffer for API radius
   const seen = new Set<string>();
   const allStops: RestStopInfo[] = [];
-  
-  // Search from multiple points along the corridor
-  await Promise.all(
-    searchPoints.map(async (pt) => {
-      const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${pt.lat}&lon=${pt.lng}&radius=${searchRadiusM}&categorySet=7369,9352,7312,7311&limit=10&language=sv-SE`;
-      
-      try {
-        const res = await fetch(url);
-        if (!res.ok) return;
-        const data = await res.json();
-        
-        for (const r of (data.results || [])) {
-          const stopLat = r.position.lat;
-          const stopLng = r.position.lon;
-          const key = `${stopLat.toFixed(3)},${stopLng.toFixed(3)}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          
-          // Check distance to route
-          const distToRoute = distanceToRoute(stopLat, stopLng, routePoints);
-          if (distToRoute > maxOffRouteKm) continue;
-          
-          const cats: string[] = r.poi?.categories || [];
-          const isTruckStop = cats.some((c: string) => c.toLowerCase().includes('truck'));
-          const { suitability, note } = assessStopSuitability(cats, vehicle);
-          const facilities = detectFacilitiesFromTomTom(r.poi);
-          
-          if (!matchesFacilityFilters(facilities, filters)) continue;
-          
-          allStops.push({
-            name: r.poi?.name || r.address?.freeformAddress || 'Rastplats',
-            lat: stopLat,
-            lng: stopLng,
-            distance: `${distToRoute.toFixed(1)} km från rutt`,
-            category: isTruckStop ? 'Lastbilsparkering' : (cats[0] || 'Rastplats'),
-            address: r.address?.freeformAddress || '',
-            facilities,
-            suitability,
-            suitabilityNote: note,
-          });
-        }
-      } catch { /* skip */ }
-    })
-  );
-  
-  // Also try Google Places from the middle search point
-  if (searchPoints.length > 0) {
-    const midPt = searchPoints[Math.floor(searchPoints.length / 2)];
-    try {
-      const googleResults = await searchGooglePlaces(midPt.lat, midPt.lng, searchRadiusM);
-      for (const place of googleResults) {
-        const key = `${place.lat.toFixed(3)},${place.lng.toFixed(3)}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        
-        const distToRoute = distanceToRoute(place.lat, place.lng, routePoints);
-        if (distToRoute > maxOffRouteKm) continue;
-        if (!matchesFacilityFilters(place.facilities, filters)) continue;
-        
-        const fakeCats = place.isTruckStop ? ['truck stop'] : ['rest area'];
-        const { suitability, note } = assessStopSuitability(fakeCats, vehicle);
-        
-        allStops.push({
-          name: place.name,
-          lat: place.lat,
-          lng: place.lng,
-          distance: `${distToRoute.toFixed(1)} km från rutt`,
-          category: place.isTruckStop ? 'Lastbilsparkering' : 'Rastplats',
-          address: place.address || '',
-          facilities: place.facilities,
-          suitability,
-          suitabilityNote: note,
-        });
-      }
-    } catch { /* skip */ }
+
+  // Helper to collect stops from a search with a given max distance
+  const collectStops = async (maxDistKm: number, applyFilters: boolean) => {
+    const searchRadiusM = maxDistKm * 1000 + 500;
+
+    // TomTom search from multiple corridor points
+    // categorySet: 7369=truck stop, 9352=rest area, 7312=petrol station, 7311=parking garage
+    await Promise.all(
+      searchPoints.map(async (pt) => {
+        const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${pt.lat}&lon=${pt.lng}&radius=${searchRadiusM}&categorySet=7369,9352,7312,7311&limit=15&language=sv-SE`;
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return;
+          const data = await res.json();
+          for (const r of (data.results || [])) {
+            const stopLat = r.position.lat;
+            const stopLng = r.position.lon;
+            const key = `${stopLat.toFixed(3)},${stopLng.toFixed(3)}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const distToRoute = distanceToRoute(stopLat, stopLng, routePoints);
+            if (distToRoute > maxDistKm) continue;
+            const cats: string[] = r.poi?.categories || [];
+            const isTruckStop = cats.some((c: string) => c.toLowerCase().includes('truck'));
+            const { suitability, note } = assessStopSuitability(cats, vehicle);
+            const facilities = detectFacilitiesFromTomTom(r.poi);
+            if (applyFilters && !matchesFacilityFilters(facilities, filters)) continue;
+            allStops.push({
+              name: r.poi?.name || r.address?.freeformAddress || 'Rastplats',
+              lat: stopLat, lng: stopLng,
+              distance: `${distToRoute.toFixed(1)} km från rutt`,
+              category: isTruckStop ? 'Lastbilsparkering' : (cats[0] || 'Rastplats'),
+              address: r.address?.freeformAddress || '',
+              facilities, suitability, suitabilityNote: note,
+            });
+          }
+        } catch { /* skip */ }
+      })
+    );
+
+    // Google Places JS SDK search from multiple corridor points
+    const googleSearchPoints = [
+      searchPoints[0],
+      searchPoints[Math.floor(searchPoints.length / 2)],
+      searchPoints[searchPoints.length - 1],
+    ].filter((p, i, arr) => arr.findIndex(a => a.lat === p.lat && a.lng === p.lng) === i);
+
+    await Promise.all(
+      googleSearchPoints.map(async (pt) => {
+        try {
+          const googleResults = await searchGooglePlaces(pt.lat, pt.lng, searchRadiusM);
+          for (const place of googleResults) {
+            const key = `${place.lat.toFixed(3)},${place.lng.toFixed(3)}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const distToRoute = distanceToRoute(place.lat, place.lng, routePoints);
+            if (distToRoute > maxDistKm) continue;
+            if (applyFilters && !matchesFacilityFilters(place.facilities, filters)) continue;
+            const fakeCats = place.isTruckStop ? ['truck stop'] : ['rest area'];
+            const { suitability, note } = assessStopSuitability(fakeCats, vehicle);
+            allStops.push({
+              name: place.name, lat: place.lat, lng: place.lng,
+              distance: `${distToRoute.toFixed(1)} km från rutt`,
+              category: place.isTruckStop ? 'Lastbilsparkering' : 'Rastplats',
+              address: place.address || '',
+              facilities: place.facilities, suitability, suitabilityNote: note,
+            });
+          }
+        } catch { /* skip */ }
+      })
+    );
+  };
+
+  // First pass: search with filters within normal distance
+  await collectStops(maxOffRouteKm, true);
+
+  // If no results with filters, widen search (up to 5km) and relax filters
+  if (allStops.length === 0) {
+    await collectStops(Math.max(maxOffRouteKm * 2, 5), false);
   }
   
-  // Sort: closest to route first, then by category priority and suitability
+  // Sort: best facility match first, then closest to route, then category priority
+  const hasActiveFilters = filters && (filters.toilet || filters.food || filters.shower || filters.fuel || filters.truckParking);
+  
+  const facilityMatchScore = (f: RestStopFacilities): number => {
+    if (!hasActiveFilters || !filters) return 0;
+    let score = 0;
+    if (filters.toilet && f.toilet) score++;
+    if (filters.food && f.food) score++;
+    if (filters.shower && f.shower) score++;
+    if (filters.fuel && f.fuel) score++;
+    if (filters.truckParking && f.truckParking) score++;
+    return score;
+  };
+
   const catPriority = (cat: string) => {
     const c = (cat || '').toLowerCase();
     if (c.includes('lastbil') || c.includes('truck')) return 0;
@@ -489,13 +505,16 @@ export async function searchRestStopsAlongRoute(
   const suitOrder: Record<RestStopSuitability, number> = { perfect: 0, good: 1, warning: 2, unsuitable: 3 };
   
   allStops.sort((a, b) => {
-    // Parse distance value
-    const distA = parseFloat(a.distance || '99');
-    const distB = parseFloat(b.distance || '99');
+    // Facility match score (higher = better)
+    const fmA = facilityMatchScore(a.facilities || {} as RestStopFacilities);
+    const fmB = facilityMatchScore(b.facilities || {} as RestStopFacilities);
+    if (fmA !== fmB) return fmB - fmA;
     const cp = catPriority(a.category || '') - catPriority(b.category || '');
     if (cp !== 0) return cp;
     const sp = (suitOrder[a.suitability || 'good']) - (suitOrder[b.suitability || 'good']);
     if (sp !== 0) return sp;
+    const distA = parseFloat(a.distance || '99');
+    const distB = parseFloat(b.distance || '99');
     return distA - distB;
   });
   
