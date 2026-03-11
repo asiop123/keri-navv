@@ -844,42 +844,43 @@ export default function RoutePlanning() {
             </div>
           </div>
 
-          {/* Bottom sheet */}
+          {/* Bottom sheet - compact by default */}
           <div className="absolute bottom-0 left-0 right-0 z-20">
             <div className="max-w-lg mx-auto">
-              {/* Expand/collapse timeline */}
-              <div className="bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden">
-                {/* Route alternatives selector */}
+              <div className={`bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden transition-all ${showDetails ? 'max-h-[75vh]' : 'max-h-[999px]'}`}>
+                
+                {/* Route alternatives - horizontal scroll, always visible */}
                 {alternativeRoutes.length > 0 && (
-                  <div className="px-4 pt-3 pb-2">
-                    <div className="flex gap-2">
+                  <div className="px-3 pt-3 pb-1">
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
                       <button
-                        className="flex-1 rounded-lg px-3 py-2 text-left border-2 border-primary bg-primary/10 transition-colors"
+                        className="shrink-0 rounded-lg px-2.5 py-1.5 text-left border-2 border-primary bg-primary/10 min-w-[80px]"
                       >
-                        <div className="text-xs font-semibold text-foreground">Rutt 1 <span className="text-primary">(vald)</span></div>
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-[11px] font-semibold text-foreground">Rutt 1</div>
+                        <div className="text-[9px] text-muted-foreground whitespace-nowrap">
                           {routeResult.distanceKm} km · {Math.floor(routeResult.travelTimeSeconds / 3600)}h {Math.round((routeResult.travelTimeSeconds % 3600) / 60)}min
                         </div>
                       </button>
                       {alternativeRoutes.map((alt, i) => {
-                        const diffKm = alt.distanceKm - routeResult.distanceKm;
                         const diffMin = Math.round((alt.travelTimeSeconds - routeResult.travelTimeSeconds) / 60);
+                        const diffKm = alt.distanceKm - routeResult.distanceKm;
                         return (
                           <button
                             key={i}
                             onClick={() => handleSwitchRoute(i + 1)}
-                            className="flex-1 rounded-lg px-3 py-2 text-left border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors"
+                            className="shrink-0 rounded-lg px-2.5 py-1.5 text-left border border-border hover:border-primary/50 min-w-[80px]"
                           >
-                            <div className="text-xs font-semibold text-foreground">Rutt {i + 2}</div>
-                            <div className="text-[10px] text-muted-foreground">
+                            <div className="text-[11px] font-semibold text-foreground">Rutt {i + 2}</div>
+                            <div className="text-[9px] text-muted-foreground whitespace-nowrap">
                               {alt.distanceKm} km · {Math.floor(alt.travelTimeSeconds / 3600)}h {Math.round((alt.travelTimeSeconds % 3600) / 60)}min
                             </div>
-                            <div className="text-[10px] mt-0.5">
+                            <div className="text-[9px] mt-0.5 whitespace-nowrap">
                               <span className={diffMin > 0 ? 'text-destructive' : 'text-emerald-600'}>
-                                {diffMin > 0 ? '+' : ''}{diffMin} min
+                                {diffMin > 0 ? '+' : ''}{diffMin}min
                               </span>
-                              <span className="text-muted-foreground ml-1">
-                                {diffKm > 0 ? '+' : ''}{diffKm} km
+                              {' '}
+                              <span className="text-muted-foreground">
+                                {diffKm > 0 ? '+' : ''}{diffKm}km
                               </span>
                             </div>
                           </button>
@@ -889,115 +890,123 @@ export default function RoutePlanning() {
                   </div>
                 )}
 
-                {/* Action buttons */}
-                <div className="p-4 pt-2 flex gap-2">
+                {/* Action buttons - always visible */}
+                <div className="px-3 py-2 flex gap-2">
                   <Button
                     onClick={handleStartNavigation}
-                    className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-base"
+                    className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm"
                   >
-                    <Play className="h-5 w-5 mr-2" />
+                    <Play className="h-4 w-4 mr-1.5" />
                     Starta
                   </Button>
-                  <Button variant="outline" onClick={handleAddLeg} className="h-12 rounded-xl px-3" title="Lägg till tur">
+                  <Button variant="outline" onClick={handleAddLeg} className="h-10 rounded-xl px-3" title="Lägg till tur">
                     <Plus className="h-4 w-4" />
                     <span className="text-xs ml-1">Tur</span>
                   </Button>
                   {!isSaved ? (
-                    <Button variant="outline" onClick={handleSave} className="h-12 rounded-xl px-4">
+                    <Button variant="outline" onClick={handleSave} className="h-10 rounded-xl px-3">
                       <Save className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <div className="h-12 px-4 flex items-center text-xs text-muted-foreground">✓</div>
+                    <div className="h-10 px-3 flex items-center text-xs text-muted-foreground">✓</div>
                   )}
                 </div>
 
-                {/* Resedetaljer - trip summary */}
-                <div className="px-4 py-3 border-t border-border/50 space-y-2">
-                  <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Info className="h-3.5 w-3.5" />
-                    Resedetaljer
-                  </div>
-                  {displayTrips.map((leg, legIdx) => {
-                    const depTime = new Date(leg.route.departureTime);
-                    const arrTime = new Date(leg.route.arrivalTime);
-                    const driveH = Math.floor(leg.route.travelTimeSeconds / 3600);
-                    const driveMin = Math.round((leg.route.travelTimeSeconds % 3600) / 60);
-                    const restCount = leg.timeline.filter(t => t.type === 'rest' || t.type === 'overnight').length;
-                    // Calculate total trip time including rests
-                    const firstEntry = leg.timeline[0];
-                    const lastEntry = leg.timeline[leg.timeline.length - 1];
-                    const totalTripMs = lastEntry ? new Date(lastEntry.endTime).getTime() - new Date(firstEntry.startTime).getTime() : 0;
-                    const totalTripH = Math.floor(totalTripMs / 3600000);
-                    const totalTripMin = Math.round((totalTripMs % 3600000) / 60000);
-
-                    return (
-                      <div key={leg.id} className="bg-muted/40 rounded-xl p-3 space-y-2">
-                        {displayTrips.length > 1 && (
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: LEG_COLORS[legIdx % LEG_COLORS.length] }} />
-                            <span className="text-xs font-bold text-foreground">Tur {legIdx + 1}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                            <span className="text-xs text-foreground">{leg.startName}</span>
-                          </div>
-                          <span className="text-xs font-semibold text-foreground">
-                            {depTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <div className="ml-3 border-l-2 border-dashed border-border pl-3 py-1">
-                          <div className="text-[10px] text-muted-foreground space-y-0.5">
-                            <div>🚛 {leg.route.distanceKm} km · Körtid {driveH}h {driveMin}min</div>
-                            {restCount > 0 && <div>☕ {restCount} {restCount === 1 ? 'rast' : 'raster'} planerade</div>}
-                            {totalTripH > 0 || totalTripMin > 0 ? (
-                              <div>⏱ Total restid: {totalTripH}h {totalTripMin}min</div>
-                            ) : null}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-destructive" />
-                            <span className="text-xs text-foreground">{leg.endName}</span>
-                          </div>
-                          <span className="text-xs font-semibold text-primary">
-                            ank {arrTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground text-right">
-                          {arrTime.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {/* Total summary for multi-leg */}
-                  {displayTrips.length > 1 && (
-                    <div className="bg-primary/10 rounded-xl p-3 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-foreground">Totalt</span>
-                      <span className="text-xs font-bold text-primary">
-                        {combinedDistanceKm} km · {combinedTimeH}h {combinedTimeMin}min
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Timeline toggle */}
+                {/* Expandable details toggle */}
                 <button
-                  onClick={() => setShowTimeline(!showTimeline)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 border-t border-border/50 text-xs text-muted-foreground hover:bg-accent/50"
+                  onClick={() => { setShowDetails(!showDetails); if (!showDetails) setShowTimeline(false); }}
+                  className="w-full flex items-center justify-between px-4 py-2 border-t border-border/50 text-xs text-muted-foreground hover:bg-accent/50"
                 >
                   <span className="flex items-center gap-2">
-                    <Clock className="h-3.5 w-3.5" />
-                    Tidslinje ({allTimelineEntries.length} steg · {allRestCount} raster)
-                    {trips.length > 1 && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{trips.length} turer</Badge>}
+                    <Info className="h-3.5 w-3.5" />
+                    Resedetaljer & tidslinje
                   </span>
-                  {showTimeline ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                  {showDetails ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
                 </button>
 
-                {showTimeline && (
-                  <div className="max-h-[40vh] overflow-y-auto border-t border-border/30">
-                    <div className="p-3 space-y-1">
+                {showDetails && (
+                  <div className="overflow-y-auto" style={{ maxHeight: 'calc(75vh - 140px)' }}>
+                    {/* Trip summary */}
+                    <div className="px-4 py-3 space-y-2">
+                      {displayTrips.map((leg, legIdx) => {
+                        const depTime = new Date(leg.route.departureTime);
+                        const arrTime = new Date(leg.route.arrivalTime);
+                        const driveH = Math.floor(leg.route.travelTimeSeconds / 3600);
+                        const driveMin = Math.round((leg.route.travelTimeSeconds % 3600) / 60);
+                        const restCount = leg.timeline.filter(t => t.type === 'rest' || t.type === 'overnight').length;
+                        const firstEntry = leg.timeline[0];
+                        const lastEntry = leg.timeline[leg.timeline.length - 1];
+                        const totalTripMs = lastEntry ? new Date(lastEntry.endTime).getTime() - new Date(firstEntry.startTime).getTime() : 0;
+                        const totalTripH = Math.floor(totalTripMs / 3600000);
+                        const totalTripMin = Math.round((totalTripMs % 3600000) / 60000);
+
+                        return (
+                          <div key={leg.id} className="bg-muted/40 rounded-xl p-3 space-y-2">
+                            {displayTrips.length > 1 && (
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: LEG_COLORS[legIdx % LEG_COLORS.length] }} />
+                                <span className="text-xs font-bold text-foreground">Tur {legIdx + 1}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                <span className="text-xs text-foreground">{leg.startName}</span>
+                              </div>
+                              <span className="text-xs font-semibold text-foreground">
+                                {depTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <div className="ml-3 border-l-2 border-dashed border-border pl-3 py-1">
+                              <div className="text-[10px] text-muted-foreground space-y-0.5">
+                                <div>🚛 {leg.route.distanceKm} km · Körtid {driveH}h {driveMin}min</div>
+                                {restCount > 0 && <div>☕ {restCount} {restCount === 1 ? 'rast' : 'raster'} planerade</div>}
+                                {totalTripH > 0 || totalTripMin > 0 ? (
+                                  <div>⏱ Total restid: {totalTripH}h {totalTripMin}min</div>
+                                ) : null}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-destructive" />
+                                <span className="text-xs text-foreground">{leg.endName}</span>
+                              </div>
+                              <span className="text-xs font-semibold text-primary">
+                                ank {arrTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-muted-foreground text-right">
+                              {arrTime.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {displayTrips.length > 1 && (
+                        <div className="bg-primary/10 rounded-xl p-3 flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Totalt</span>
+                          <span className="text-xs font-bold text-primary">
+                            {combinedDistanceKm} km · {combinedTimeH}h {combinedTimeMin}min
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Timeline toggle */}
+                    <button
+                      onClick={() => setShowTimeline(!showTimeline)}
+                      className="w-full flex items-center justify-between px-4 py-2.5 border-t border-border/50 text-xs text-muted-foreground hover:bg-accent/50"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5" />
+                        Tidslinje ({allTimelineEntries.length} steg · {allRestCount} raster)
+                        {trips.length > 1 && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{trips.length} turer</Badge>}
+                      </span>
+                      {showTimeline ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                    </button>
+
+                    {showTimeline && (
+                      <div className="border-t border-border/30">
+                        <div className="p-3 space-y-1">
                       {displayTrips.map((leg, legIdx) => (
                         <div key={leg.id}>
                           {displayTrips.length > 1 && (
