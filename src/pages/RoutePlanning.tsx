@@ -539,7 +539,14 @@ export default function RoutePlanning() {
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
-      {/* Fullscreen Street View on double-click */}
+      {/* Click-anywhere overlay to dismiss open panels */}
+      {(showDetails || selectedLocation) && (
+        <div
+          className="absolute inset-0 z-10"
+          onClick={() => { setShowDetails(false); setSelectedLocation(null); }}
+        />
+      )}
+
       {mapClickCoords && (
         <div className="absolute inset-0 z-40 bg-background">
           <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
