@@ -257,46 +257,188 @@ function assessStopSuitability(
   return { suitability: 'good', note: '' };
 }
 
+/**
+ * Detect facilities from TomTom POI categories and classifications
+ */
+function detectFacilities(poi: any): RestStopFacilities {
+  const cats: string[] = (poi?.categories || []).map((c: string) => c.toLowerCase());
+  const classNames: string[] = (poi?.classifications || [])
+    .flatMap((cl: any) => (cl?.names || []).map((n: any) => (n?.name || '').toLowerCase()));
+  const allTerms = [...cats, ...classNames].join(' ');
+
+  return {
+    toilet: allTerms.includes('rest') || allTerms.includes('rast') || allTerms.includes('truck') || allTerms.includes('wc'),
+    food: allTerms.includes('restaurant') || allTerms.includes('food') || allTerms.includes('café') || allTerms.includes('cafe') || allTerms.includes('mat') || allTerms.includes('fast food'),
+    shower: allTerms.includes('truck') || allTerms.includes('shower') || allTerms.includes('dusch'),
+    fuel: allTerms.includes('petrol') || allTerms.includes('gas') || allTerms.includes('fuel') || allTerms.includes('bensin') || allTerms.includes('diesel'),
+    truckParking: allTerms.includes('truck') || allTerms.includes('lastbil') || (allTerms.includes('parking') && allTerms.includes('heavy')),
+  };
+}
+
+/**
+ * Check if a rest stop matches the required facility filters.
+ * If no filters are active (all false), every stop matches.
+ */
+function matchesFacilityFilters(facilities: RestStopFacilities, filters?: RestStopFacilities): boolean {
+  if (!filters) return true;
+  const anyActive = filters.toilet || filters.food || filters.shower || filters.fuel || filters.truckParking;
+  if (!anyActive) return true;
+  if (filters.toilet && !facilities.toilet) return false;
+  if (filters.food && !facilities.food) return false;
+  if (filters.shower && !facilities.shower) return false;
+  if (filters.fuel && !facilities.fuel) return false;
+  if (filters.truckParking && !facilities.truckParking) return false;
+  return true;
+}
+
 export async function searchRestStops(
   lat: number,
   lng: number,
-  radius: number = 20000,
-  vehicle?: VehicleParams
+  radius: number = 30000,
+  vehicle?: VehicleParams,
+  filters?: RestStopFacilities
 ): Promise<RestStopInfo[]> {
   // 7369 = truck stop, 7311 = petrol/gas station, 9352 = rest area, 7312 = parking
-  const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${lat}&lon=${lng}&radius=${radius}&categorySet=7369,9352,7312,7311&limit=8&language=sv-SE`;
+  const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${lat}&lon=${lng}&radius=${radius}&categorySet=7369,9352,7312,7311&limit=20&language=sv-SE`;
   
   try {
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    const data = await res.json();
-    if (!data.results?.length) return [];
-    
-    const stops: RestStopInfo[] = data.results.map((r: any) => {
+    const [tomtomRes, googleRes] = await Promise.all([
+      fetch(url).then(r => r.ok ? r.json() : { results: [] }).catch(() => ({ results: [] })),
+      searchGooglePlaces(lat, lng, radius),
+    ]);
+
+    const seen = new Set<string>();
+    const stops: RestStopInfo[] = [];
+
+    // Process TomTom results
+    for (const r of (tomtomRes.results || [])) {
       const distKm = (r.dist / 1000).toFixed(1);
       const cats: string[] = r.poi?.categories || [];
       const isTruckStop = cats.some((c: string) => c.toLowerCase().includes('truck'));
       const { suitability, note } = assessStopSuitability(cats, vehicle);
+      const facilities = detectFacilities(r.poi);
+      const address = r.address?.freeformAddress || '';
+      const key = `${r.position.lat.toFixed(3)},${r.position.lon.toFixed(3)}`;
 
-      return {
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      if (!matchesFacilityFilters(facilities, filters)) continue;
+
+      stops.push({
         name: r.poi?.name || r.address?.freeformAddress || 'Rastplats',
         lat: r.position.lat,
         lng: r.position.lon,
         distance: `${distKm} km`,
         category: isTruckStop ? 'Lastbilsparkering' : (cats[0] || 'Rastplats'),
+        address,
+        facilities,
         suitability,
         suitabilityNote: note,
-      };
+      });
+    }
+
+    // Process Google Places results
+    for (const place of googleRes) {
+      const key = `${place.lat.toFixed(3)},${place.lng.toFixed(3)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const distKm = haversineKm(lat, lng, place.lat, place.lng).toFixed(1);
+      const facilities = place.facilities;
+      if (!matchesFacilityFilters(facilities, filters)) continue;
+
+      const fakeCats = place.isTruckStop ? ['truck stop'] : ['rest area'];
+      const { suitability, note } = assessStopSuitability(fakeCats, vehicle);
+
+      stops.push({
+        name: place.name,
+        lat: place.lat,
+        lng: place.lng,
+        distance: `${distKm} km`,
+        category: place.isTruckStop ? 'Lastbilsparkering' : 'Rastplats',
+        address: place.address || '',
+        facilities,
+        suitability,
+        suitabilityNote: note,
+      });
+    }
+
+    // Sort: category priority (truck > rest > fuel > parking), then suitability
+    const catPriority = (cat: string) => {
+      const c = (cat || '').toLowerCase();
+      if (c.includes('lastbil') || c.includes('truck')) return 0;
+      if (c.includes('rast') || c.includes('rest')) return 1;
+      if (c.includes('bensin') || c.includes('fuel') || c.includes('petrol')) return 2;
+      return 3;
+    };
+    const suitOrder: Record<RestStopSuitability, number> = { perfect: 0, good: 1, warning: 2, unsuitable: 3 };
+    stops.sort((a, b) => {
+      const cp = catPriority(a.category || '') - catPriority(b.category || '');
+      if (cp !== 0) return cp;
+      return (suitOrder[a.suitability || 'good']) - (suitOrder[b.suitability || 'good']);
     });
 
-    // Sort: perfect first, then good, warning, unsuitable last
-    const order: Record<RestStopSuitability, number> = { perfect: 0, good: 1, warning: 2, unsuitable: 3 };
-    stops.sort((a, b) => (order[a.suitability || 'good']) - (order[b.suitability || 'good']));
-
-    return stops;
+    return stops.slice(0, 15);
   } catch {
     return [];
   }
+}
+
+/**
+ * Search Google Places Nearby for truck stops and rest areas
+ */
+async function searchGooglePlaces(
+  lat: number,
+  lng: number,
+  radius: number
+): Promise<Array<{ name: string; lat: number; lng: number; address?: string; isTruckStop: boolean; facilities: RestStopFacilities }>> {
+  try {
+    const keywords = ['truck stop', 'rastplats', 'lastbilsparkering'];
+    const results: Array<{ name: string; lat: number; lng: number; address?: string; isTruckStop: boolean; facilities: RestStopFacilities }> = [];
+
+    for (const keyword of keywords) {
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${Math.min(radius, 30000)}&keyword=${encodeURIComponent(keyword)}&key=${GOOGLE_KEY}&language=sv`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const place of (data.results || []).slice(0, 5)) {
+          const types: string[] = place.types || [];
+          const typesStr = types.join(' ').toLowerCase();
+          const nameStr = (place.name || '').toLowerCase();
+          const isTruck = nameStr.includes('truck') || nameStr.includes('lastbil') || typesStr.includes('truck');
+
+          results.push({
+            name: place.name,
+            lat: place.geometry.location.lat,
+            lng: place.geometry.location.lng,
+            address: place.vicinity || '',
+            isTruckStop: isTruck,
+            facilities: {
+              toilet: true, // most places found via these keywords have toilets
+              food: typesStr.includes('restaurant') || typesStr.includes('food') || typesStr.includes('cafe'),
+              shower: isTruck, // truck stops typically have showers
+              fuel: typesStr.includes('gas_station'),
+              truckParking: isTruck,
+            },
+          });
+        }
+      } catch { /* skip keyword */ }
+    }
+
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 export async function generateTimeline(
