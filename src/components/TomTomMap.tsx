@@ -49,6 +49,7 @@ interface TomTomMapProps {
   isNavigating?: boolean;
   className?: string;
   defaultStyle?: string;
+  previousLegs?: { route: RouteResult; color: string }[];
   onMapClick?: (lat: number, lng: number) => void;
   onAlternativeClick?: (index: number) => void;
 }
@@ -60,20 +61,20 @@ export interface TomTomMapHandle {
 }
 
 const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
-  ({ route, alternativeRoutes = [], timeline, userPosition, isNavigating, className = '', defaultStyle = 'basic', onMapClick, onAlternativeClick }, ref) => {
+  ({ route, alternativeRoutes = [], timeline, userPosition, isNavigating, className = '', defaultStyle = 'basic', previousLegs = [], onMapClick, onAlternativeClick }, ref) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<tt.Map | null>(null);
     const userMarkerRef = useRef<tt.Marker | null>(null);
     const routeMarkersRef = useRef<tt.Marker[]>([]);
     const [currentStyle, setCurrentStyle] = useState(defaultStyle);
     const [showStylePicker, setShowStylePicker] = useState(false);
-    const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[]; alternativeRoutes?: RouteResult[] }>({});
+    const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[]; alternativeRoutes?: RouteResult[]; previousLegs?: { route: RouteResult; color: string }[] }>({});
     const onMapClickRef = useRef(onMapClick);
     const onAlternativeClickRef = useRef(onAlternativeClick);
     onMapClickRef.current = onMapClick;
     onAlternativeClickRef.current = onAlternativeClick;
 
-    routeDataRef.current = { route, timeline, alternativeRoutes };
+    routeDataRef.current = { route, timeline, alternativeRoutes, previousLegs };
 
     const centerOnUser = useCallback(() => {
       const map = mapInstance.current;
@@ -140,15 +141,15 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
 
       // Re-add route after style loads
       map.once('styledata', () => {
-        const { route: r, timeline: tl, alternativeRoutes: alts } = routeDataRef.current;
+        const { route: r, timeline: tl, alternativeRoutes: alts, previousLegs: pl } = routeDataRef.current;
         if (r) {
-          addRouteToMap(map, r, tl, alts);
+          addRouteToMap(map, r, tl, alts, pl);
         }
       });
     }, []);
 
     // Add route helper
-    const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[], alts?: RouteResult[]) => {
+    const addRouteToMap = (map: tt.Map, route: RouteResult, timeline?: TimelineEntry[], alts?: RouteResult[], prevLegs?: { route: RouteResult; color: string }[]) => {
       // Remove ALL old route markers (labels, waypoints, rest stops)
       routeMarkersRef.current.forEach(m => m.remove());
       routeMarkersRef.current = [];
@@ -160,10 +161,30 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         layersToRemove.push(`alt-route-line-${i}`, `alt-route-line-bg-${i}`);
         sourcesToRemove.push(`alt-route-${i}`);
       }
+      for (let i = 0; i < 10; i++) {
+        layersToRemove.push(`prev-leg-line-${i}`, `prev-leg-line-bg-${i}`);
+        sourcesToRemove.push(`prev-leg-${i}`);
+      }
       try {
         layersToRemove.forEach(l => { if (map.getLayer(l)) map.removeLayer(l); });
         sourcesToRemove.forEach(s => { if (map.getSource(s)) map.removeSource(s); });
       } catch {}
+
+      // Draw previous trip legs (underneath everything)
+      if (prevLegs && prevLegs.length > 0) {
+        prevLegs.forEach((leg, i) => {
+          const srcId = `prev-leg-${i}`;
+          map.addSource(srcId, { type: 'geojson', data: leg.route.geoJson });
+          map.addLayer({
+            id: `prev-leg-line-bg-${i}`, type: 'line', source: srcId,
+            paint: { 'line-color': leg.color, 'line-width': 8, 'line-opacity': 0.2 },
+          });
+          map.addLayer({
+            id: `prev-leg-line-${i}`, type: 'line', source: srcId,
+            paint: { 'line-color': leg.color, 'line-width': 5, 'line-opacity': 0.7 },
+          });
+        });
+      }
 
       // Draw alternative routes FIRST (underneath)
       if (alts && alts.length > 0) {
@@ -301,8 +322,18 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
           });
       }
 
+      // Combine bboxes for all legs
+      let fitBbox: [number, number, number, number] = [route.bbox[0], route.bbox[1], route.bbox[2], route.bbox[3]];
+      if (prevLegs) {
+        prevLegs.forEach(leg => {
+          fitBbox[0] = Math.min(fitBbox[0], leg.route.bbox[0]);
+          fitBbox[1] = Math.min(fitBbox[1], leg.route.bbox[1]);
+          fitBbox[2] = Math.max(fitBbox[2], leg.route.bbox[2]);
+          fitBbox[3] = Math.max(fitBbox[3], leg.route.bbox[3]);
+        });
+      }
       map.fitBounds(
-        [[route.bbox[0], route.bbox[1]], [route.bbox[2], route.bbox[3]]],
+        [[fitBbox[0], fitBbox[1]], [fitBbox[2], fitBbox[3]]],
         { padding: 80, duration: 1000 }
       );
     };
@@ -351,14 +382,14 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       const map = mapInstance.current;
       if (!map || !route) return;
 
-      const draw = () => addRouteToMap(map, route, timeline, alternativeRoutes);
+      const draw = () => addRouteToMap(map, route, timeline, alternativeRoutes, previousLegs);
 
       if (map.isStyleLoaded()) {
         draw();
       } else {
         map.on('load', draw);
       }
-    }, [route, timeline, alternativeRoutes]);
+    }, [route, timeline, alternativeRoutes, previousLegs]);
 
     return (
       <>

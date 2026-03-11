@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
   Navigation, Locate, Play, Square, Compass, ChevronUp, ChevronDown, Search,
-  Car, ArrowLeft, ExternalLink, Star, Info, Eye,
+  Car, ArrowLeft, ExternalLink, Star, Info, Eye, Repeat,
 } from 'lucide-react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
@@ -20,6 +21,17 @@ import { SavedTrip, getSavedTrips, saveTrip } from '@/services/tripStorage';
 import TomTomMap, { TomTomMapHandle } from '@/components/TomTomMap';
 import TripHistory from '@/components/TripHistory';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
+
+interface TripLeg {
+  id: string;
+  startName: string;
+  endName: string;
+  route: RouteResult;
+  alternativeRoutes: RouteResult[];
+  timeline: TimelineEntry[];
+}
+
+const LEG_COLORS = ['#2563eb', '#16a34a', '#9333ea', '#ea580c', '#0891b2'];
 
 type ViewState = 'search' | 'details' | 'navigating';
 
@@ -49,6 +61,9 @@ export default function RoutePlanning() {
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
+  const [isRoundTrip, setIsRoundTrip] = useState(false);
+  const [trips, setTrips] = useState<TripLeg[]>([]);
+  const [addingNewLeg, setAddingNewLeg] = useState(false);
 
   // GPS & Navigation
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
@@ -192,28 +207,50 @@ export default function RoutePlanning() {
         ...waypoints.filter(w => w.address.trim()).map(w => geocode(w.address)),
       ]);
 
+      // Round-trip: destination becomes waypoint, start becomes end
+      const finalWaypoints = isRoundTrip && !addingNewLeg
+        ? [...waypointCoords, endCoord]
+        : waypointCoords;
+      const finalEnd = isRoundTrip && !addingNewLeg ? startCoord : endCoord;
+
       const vehicleParams: VehicleParams | undefined = selectedVehicle
         ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
         : undefined;
 
-      const result = await calculateRoute(startCoord, endCoord, waypointCoords, new Date(departureTime).toISOString(), vehicleParams);
+      const result = await calculateRoute(startCoord, finalEnd, finalWaypoints, new Date(departureTime).toISOString(), vehicleParams);
       const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
+      const finalStopMinutes = isRoundTrip && !addingNewLeg
+        ? [...stopMinutes, 30]
+        : stopMinutes;
 
-      // Pick the fastest route as the main one
       const allRoutes = [result, ...(result.alternatives || [])];
       allRoutes.sort((a, b) => a.travelTimeSeconds - b.travelTimeSeconds);
       const bestRoute = allRoutes[0];
-      // Clean alternatives from the selected route object
       delete bestRoute.alternatives;
 
       const otherRoutes = allRoutes.slice(1);
       otherRoutes.forEach(r => delete r.alternatives);
 
-      const tl = await generateTimeline(bestRoute, routeType, stopMinutes, vehicleParams);
+      const tl = await generateTimeline(bestRoute, routeType, finalStopMinutes, vehicleParams);
+
+      const newLeg: TripLeg = {
+        id: crypto.randomUUID(),
+        startName: startCoord.name,
+        endName: isRoundTrip && !addingNewLeg ? `${endCoord.name} ↩ ${startCoord.name}` : endCoord.name,
+        route: bestRoute,
+        alternativeRoutes: otherRoutes,
+        timeline: tl,
+      };
+
+      if (addingNewLeg) {
+        setTrips(prev => [...prev, newLeg]);
+        setAddingNewLeg(false);
+      } else {
+        setTrips([newLeg]);
+      }
 
       setAlternativeRoutes(otherRoutes);
       setSelectedRouteIndex(0);
-
       setRouteResult(bestRoute);
       setTimeline(tl);
       setViewState('details');
@@ -252,12 +289,42 @@ export default function RoutePlanning() {
   };
 
   const handleBack = () => {
+    if (addingNewLeg && trips.length > 0) {
+      setAddingNewLeg(false);
+      const lastTrip = trips[trips.length - 1];
+      setRouteResult(lastTrip.route);
+      setAlternativeRoutes(lastTrip.alternativeRoutes);
+      setTimeline(lastTrip.timeline);
+      setViewState('details');
+      return;
+    }
     setViewState('search');
     setRouteResult(null);
     setAlternativeRoutes([]);
     setSelectedRouteIndex(0);
     setTimeline([]);
     setDestination('');
+    setSelectedLocation(null);
+    setTrips([]);
+    setAddingNewLeg(false);
+  };
+
+  const handleAddLeg = () => {
+    if (!routeResult) return;
+    const lastWp = routeResult.waypoints[routeResult.waypoints.length - 1];
+    setStart(lastWp.name);
+    setDestination('');
+    setWaypoints([]);
+    const lastTl = trips.length > 0 ? trips[trips.length - 1].timeline : timeline;
+    const lastEntry = lastTl[lastTl.length - 1];
+    if (lastEntry) {
+      setDepartureTime(new Date(lastEntry.endTime).toISOString().slice(0, 16));
+    }
+    setAddingNewLeg(true);
+    setViewState('search');
+    setRouteResult(null);
+    setAlternativeRoutes([]);
+    setTimeline([]);
     setSelectedLocation(null);
   };
 
@@ -371,6 +438,18 @@ export default function RoutePlanning() {
   const nextWaypoint = routeResult ? routeResult.waypoints[Math.min(currentStep + 1, routeResult.waypoints.length - 1)] : null;
   const elapsedMin = navStartTime ? Math.round((Date.now() - navStartTime.getTime()) / 60000) : 0;
 
+  const combinedDistanceKm = trips.length > 1 ? trips.reduce((s, t) => s + t.route.distanceKm, 0) : routeResult?.distanceKm || 0;
+  const combinedTimeSeconds = trips.length > 1 ? trips.reduce((s, t) => s + t.route.travelTimeSeconds, 0) : routeResult?.travelTimeSeconds || 0;
+  const combinedTimeH = Math.floor(combinedTimeSeconds / 3600);
+  const combinedTimeMin = Math.round((combinedTimeSeconds % 3600) / 60);
+  const previousLegsForMap = trips.length > 1 ? trips.slice(0, -1).map((leg, i) => ({ route: leg.route, color: LEG_COLORS[i % LEG_COLORS.length] })) : [];
+  const allTimelineEntries = trips.length > 0 ? trips.flatMap(t => t.timeline) : timeline;
+  const allRestCount = allTimelineEntries.filter(t => t.type === 'rest' || t.type === 'overnight').length;
+  const displayTrips: TripLeg[] = trips.length > 0 ? trips : routeResult ? [{
+    id: 'current', startName: start, endName: destination,
+    route: routeResult, alternativeRoutes, timeline,
+  }] : [];
+
   const timelineIcon = (type: TimelineEntry['type']) => {
     switch (type) { case 'drive': return '🚛'; case 'rest': return '☕'; case 'overnight': return '🌙'; case 'stop': return '📦'; case 'arrival': return '🏁'; }
   };
@@ -383,6 +462,7 @@ export default function RoutePlanning() {
         route={routeResult}
         alternativeRoutes={alternativeRoutes}
         timeline={timeline}
+        previousLegs={previousLegsForMap}
         userPosition={userPosition}
         isNavigating={isNavigating}
         className="absolute inset-0 z-0"
@@ -586,6 +666,15 @@ export default function RoutePlanning() {
                       </button>
                     </div>
 
+                    {/* Tur & retur toggle */}
+                    <div className="flex items-center justify-between py-1">
+                      <div className="flex items-center gap-2">
+                        <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs text-foreground">Tur & retur</span>
+                      </div>
+                      <Switch checked={isRoundTrip} onCheckedChange={setIsRoundTrip} />
+                    </div>
+
                     {/* BK status */}
                     {bkResults.length > 0 && (
                       <div className="flex gap-1.5 flex-wrap">
@@ -695,13 +784,17 @@ export default function RoutePlanning() {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">{destination}</div>
+                  <div className="text-sm font-semibold truncate">
+                    {trips.length > 1 ? `${trips.length} turer` : destination}
+                  </div>
                   <div className="text-[10px] text-muted-foreground flex items-center gap-2">
-                    <span className="font-bold text-primary">{routeResult.distanceKm} km</span>
+                    <span className="font-bold text-primary">{trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km</span>
                     <span>·</span>
-                    <span className="font-bold text-primary">{totalDriveTimeH}h {totalDriveTimeMin}min</span>
-                    <span>·</span>
-                    <span>ank {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="font-bold text-primary">{trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}</span>
+                    {trips.length <= 1 && <>
+                      <span>·</span>
+                      <span>ank {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </>}
                   </div>
                 </div>
               </div>
@@ -762,6 +855,10 @@ export default function RoutePlanning() {
                     <Play className="h-5 w-5 mr-2" />
                     Starta
                   </Button>
+                  <Button variant="outline" onClick={handleAddLeg} className="h-12 rounded-xl px-3" title="Lägg till tur">
+                    <Plus className="h-4 w-4" />
+                    <span className="text-xs ml-1">Tur</span>
+                  </Button>
                   {!isSaved ? (
                     <Button variant="outline" onClick={handleSave} className="h-12 rounded-xl px-4">
                       <Save className="h-4 w-4" />
@@ -778,7 +875,8 @@ export default function RoutePlanning() {
                 >
                   <span className="flex items-center gap-2">
                     <Clock className="h-3.5 w-3.5" />
-                    Tidslinje ({timeline.length} steg · {timeline.filter(t => t.type === 'rest' || t.type === 'overnight').length} raster)
+                    Tidslinje ({allTimelineEntries.length} steg · {allRestCount} raster)
+                    {trips.length > 1 && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{trips.length} turer</Badge>}
                   </span>
                   {showTimeline ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
                 </button>
@@ -786,62 +884,73 @@ export default function RoutePlanning() {
                 {showTimeline && (
                   <div className="max-h-[40vh] overflow-y-auto border-t border-border/30">
                     <div className="p-3 space-y-1">
-                      {timeline.map((entry, i) => {
-                        // Show day header when date changes
-                        const entryDate = new Date(entry.startTime).toLocaleDateString('sv-SE');
-                        const prevDate = i > 0 ? new Date(timeline[i - 1].startTime).toLocaleDateString('sv-SE') : null;
-                        const showDayHeader = i === 0 || entryDate !== prevDate;
-                        const entryDay = new Date(entry.startTime);
+                      {displayTrips.map((leg, legIdx) => (
+                        <div key={leg.id}>
+                          {displayTrips.length > 1 && (
+                            <div className="flex items-center gap-2 py-2 px-1 mt-2 mb-1 first:mt-0">
+                              <div className="w-3 h-3 rounded-full shrink-0" style={{ background: LEG_COLORS[legIdx % LEG_COLORS.length] }} />
+                              <span className="text-[11px] font-bold text-foreground truncate">
+                                Tur {legIdx + 1}: {leg.startName} → {leg.endName}
+                              </span>
+                            </div>
+                          )}
+                          {leg.timeline.map((entry, i) => {
+                            const entryDate = new Date(entry.startTime).toLocaleDateString('sv-SE');
+                            const prevDate = i > 0 ? new Date(leg.timeline[i - 1].startTime).toLocaleDateString('sv-SE') : null;
+                            const showDayHeader = i === 0 || entryDate !== prevDate;
+                            const entryDay = new Date(entry.startTime);
 
-                        return (
-                          <div key={i}>
-                            {showDayHeader && (
-                              <div className="flex items-center gap-2 py-1.5 px-1 mt-1 mb-0.5">
-                                <div className="h-px flex-1 bg-border" />
-                                <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">
-                                  📅 {entryDay.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'short' })}
-                                </span>
-                                <div className="h-px flex-1 bg-border" />
-                              </div>
-                            )}
-                            <button
-                              onClick={() => handleTimelineEntryClick(entry, i)}
-                              className={`w-full text-left rounded-lg px-3 py-2 transition-colors hover:ring-1 hover:ring-primary/30 cursor-pointer ${
-                              entry.type === 'drive' ? 'border-l-4 border-l-primary/60' :
-                              entry.type === 'rest' ? 'border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20' :
-                              entry.type === 'overnight' ? 'border-l-4 border-l-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20' :
-                              entry.type === 'stop' ? 'border-l-4 border-l-orange-400 bg-orange-50/50 dark:bg-orange-950/20' :
-                              'border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
-                            }`}>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm">{timelineIcon(entry.type)}</span>
-                                  <span className="text-xs font-medium">{entry.label}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  {entry.durationMinutes > 0 && (
-                                    <span className="text-[10px] text-muted-foreground">{entry.durationMinutes} min</span>
+                            return (
+                              <div key={`${legIdx}-${i}`}>
+                                {showDayHeader && (
+                                  <div className="flex items-center gap-2 py-1.5 px-1 mt-1 mb-0.5">
+                                    <div className="h-px flex-1 bg-border" />
+                                    <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">
+                                      📅 {entryDay.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'short' })}
+                                    </span>
+                                    <div className="h-px flex-1 bg-border" />
+                                  </div>
+                                )}
+                                <button
+                                  onClick={() => handleTimelineEntryClick(entry, i)}
+                                  className={`w-full text-left rounded-lg px-3 py-2 transition-colors hover:ring-1 hover:ring-primary/30 cursor-pointer ${
+                                  entry.type === 'drive' ? 'border-l-4 border-l-primary/60' :
+                                  entry.type === 'rest' ? 'border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20' :
+                                  entry.type === 'overnight' ? 'border-l-4 border-l-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20' :
+                                  entry.type === 'stop' ? 'border-l-4 border-l-orange-400 bg-orange-50/50 dark:bg-orange-950/20' :
+                                  'border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
+                                }`}>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm">{timelineIcon(entry.type)}</span>
+                                      <span className="text-xs font-medium">{entry.label}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      {entry.durationMinutes > 0 && (
+                                        <span className="text-[10px] text-muted-foreground">{entry.durationMinutes} min</span>
+                                      )}
+                                      {(entry.restStop || entry.type === 'stop' || entry.type === 'arrival') && (
+                                        <MapPin className="h-3 w-3 text-primary" />
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="ml-7 text-[10px] text-muted-foreground">
+                                    {new Date(entry.startTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                                    {' – '}
+                                    {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                  {entry.restStop && (
+                                    <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px] text-primary">
+                                      <MapPin className="h-3 w-3" />
+                                      <span className="underline underline-offset-2">{entry.restStop.name}</span>
+                                    </div>
                                   )}
-                                  {(entry.restStop || entry.type === 'stop' || entry.type === 'arrival') && (
-                                    <MapPin className="h-3 w-3 text-primary" />
-                                  )}
-                                </div>
+                                </button>
                               </div>
-                              <div className="ml-7 text-[10px] text-muted-foreground">
-                                {new Date(entry.startTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                                {' – '}
-                                {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                              </div>
-                              {entry.restStop && (
-                                <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px] text-primary">
-                                  <MapPin className="h-3 w-3" />
-                                  <span className="underline underline-offset-2">{entry.restStop.name}</span>
-                                </div>
-                              )}
-                            </button>
-                          </div>
-                        );
-                      })}
+                            );
+                          })}
+                        </div>
+                      ))}
                     </div>
                     <div className="px-4 pb-3">
                       <div className="rounded-lg bg-muted/40 p-2.5 text-[10px] text-muted-foreground">
