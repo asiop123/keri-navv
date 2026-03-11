@@ -752,7 +752,7 @@ export async function generateTimeline(
             route.distanceKm,
             route.travelTimeSeconds,
             vehicle,
-            { truckParking: true }
+            { truckParking: true, toilet: false, food: false, shower: false, fuel: false }
           );
           validStops = widerStops.filter(s => {
             const cat = (s.category || '').toLowerCase();
