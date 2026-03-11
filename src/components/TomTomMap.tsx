@@ -51,6 +51,7 @@ interface TomTomMapProps {
   defaultStyle?: string;
   previousLegs?: { route: RouteResult; color: string }[];
   onMapClick?: (lat: number, lng: number) => void;
+  onMapTap?: () => void;
   onAlternativeClick?: (index: number) => void;
 }
 
