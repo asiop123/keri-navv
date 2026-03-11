@@ -16,6 +16,9 @@ export interface SavedTrip {
   routeType: 'normal' | 'fastest';
   timeline: TimelineEntry[];
   route: RouteResult;
+  tripSource?: 'searched' | 'driven';
+  drivenDistanceKm?: number;
+  drivenTimeSeconds?: number;
 }
 
 export async function getSavedTrips(): Promise<SavedTrip[]> {
@@ -42,6 +45,9 @@ export async function getSavedTrips(): Promise<SavedTrip[]> {
       routeType: row.route_type as 'normal' | 'fastest',
       timeline: row.timeline as TimelineEntry[],
       route: row.route as RouteResult,
+      tripSource: row.trip_source || 'searched',
+      drivenDistanceKm: row.driven_distance_km ? Number(row.driven_distance_km) : undefined,
+      drivenTimeSeconds: row.driven_time_seconds ?? undefined,
     }));
   } catch (err) {
     console.error('Failed to fetch trips:', err);
@@ -64,10 +70,44 @@ export async function saveTrip(trip: SavedTrip): Promise<void> {
       route_type: trip.routeType,
       timeline: trip.timeline as any,
       route: trip.route as any,
+      trip_source: trip.tripSource || 'searched',
+      driven_distance_km: trip.drivenDistanceKm ?? null,
+      driven_time_seconds: trip.drivenTimeSeconds ?? null,
     });
     if (error) throw error;
   } catch (err) {
     console.error('Failed to save trip:', err);
+  }
+}
+
+export async function saveDrivenTrip(
+  originalTrip: SavedTrip,
+  drivenDistanceKm: number,
+  drivenTimeSeconds: number,
+  gpsPoints: { lat: number; lng: number; time: string }[]
+): Promise<void> {
+  try {
+    const { error } = await supabase.from('saved_trips').insert({
+      id: crypto.randomUUID(),
+      start_name: originalTrip.startName,
+      end_name: originalTrip.endName,
+      waypoint_names: originalTrip.waypointNames,
+      distance_km: originalTrip.distanceKm,
+      travel_time_seconds: originalTrip.travelTimeSeconds,
+      total_weight_kg: originalTrip.totalWeightKg,
+      vehicle_id: originalTrip.vehicleId,
+      vehicle_label: originalTrip.vehicleLabel,
+      route_type: originalTrip.routeType,
+      timeline: originalTrip.timeline as any,
+      route: originalTrip.route as any,
+      trip_source: 'driven',
+      driven_distance_km: drivenDistanceKm,
+      driven_time_seconds: drivenTimeSeconds,
+      gps_points: gpsPoints as any,
+    });
+    if (error) throw error;
+  } catch (err) {
+    console.error('Failed to save driven trip:', err);
   }
 }
 
