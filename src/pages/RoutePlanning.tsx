@@ -1049,9 +1049,23 @@ export default function RoutePlanning() {
                                     {new Date(entry.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                                   </div>
                                   {entry.restStop && (
-                                    <div className="ml-7 mt-1 flex items-center gap-1.5 text-[11px] text-primary">
-                                      <MapPin className="h-3 w-3" />
-                                      <span className="underline underline-offset-2">{entry.restStop.name}</span>
+                                    <div className="ml-7 mt-1">
+                                      <div className="flex items-center gap-1.5 text-[11px] text-primary">
+                                        <MapPin className="h-3 w-3" />
+                                        <span className="underline underline-offset-2">{entry.restStop.name}</span>
+                                      </div>
+                                      {entry.restStop.facilities && (
+                                        <div className="flex items-center gap-1 mt-0.5 ml-4">
+                                          {entry.restStop.facilities.toilet && <span className="text-[10px]" title="Toalett">🚻</span>}
+                                          {entry.restStop.facilities.food && <span className="text-[10px]" title="Mat">🍽️</span>}
+                                          {entry.restStop.facilities.shower && <span className="text-[10px]" title="Dusch">🚿</span>}
+                                          {entry.restStop.facilities.fuel && <span className="text-[10px]" title="Drivmedel">⛽</span>}
+                                          {entry.restStop.facilities.truckParking && <span className="text-[10px]" title="Lastbilsparkering">🅿️</span>}
+                                          {entry.restStop.address && (
+                                            <span className="text-[9px] text-muted-foreground ml-1 truncate max-w-[120px]">{entry.restStop.address}</span>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </button>
