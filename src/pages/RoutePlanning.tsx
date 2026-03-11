@@ -37,6 +37,8 @@ type ViewState = 'search' | 'details' | 'navigating';
 
 export default function RoutePlanning() {
   const mapHandleRef = useRef<TomTomMapHandle>(null);
+  const bottomSheetRef = useRef<HTMLDivElement>(null);
+  const locationCardRef = useRef<HTMLDivElement>(null);
   const [viewState, setViewState] = useState<ViewState>('search');
   const [destination, setDestination] = useState('');
   const [start, setStart] = useState('');
