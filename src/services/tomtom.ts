@@ -122,7 +122,7 @@ export async function calculateRoute(
     .join(':');
 
   const depart = departAt || new Date().toISOString();
-  let url = `${BASE_URL}/routing/1/calculateRoute/${locations}/json?key=${API_KEY}&travelMode=truck&departAt=${depart}&routeRepresentation=polyline&computeTravelTimeFor=all&maxAlternatives=1`;
+  let url = `${BASE_URL}/routing/1/calculateRoute/${locations}/json?key=${API_KEY}&travelMode=truck&departAt=${depart}&routeRepresentation=polyline&computeTravelTimeFor=all&maxAlternatives=5`;
 
   if (vehicleParams) {
     if (vehicleParams.weightKg) url += `&vehicleWeight=${vehicleParams.weightKg}`;
