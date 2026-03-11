@@ -238,7 +238,7 @@ export default function RoutePlanning() {
       const otherRoutes = allRoutes.slice(1);
       otherRoutes.forEach(r => delete r.alternatives);
 
-      const tl = await generateTimeline(bestRoute, routeType, finalStopMinutes, vehicleParams, restStopFilters);
+      const tl = await generateTimeline(bestRoute, routeType, finalStopMinutes, vehicleParams, restStopFilters, usedDriveHours);
 
       const newLeg: TripLeg = {
         id: crypto.randomUUID(),
