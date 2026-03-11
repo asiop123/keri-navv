@@ -127,6 +127,18 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         }
       });
 
+      map.on('mousedown', () => {
+        if (onMapTapRef.current) {
+          onMapTapRef.current();
+        }
+      });
+
+      map.on('touchstart', () => {
+        if (onMapTapRef.current) {
+          onMapTapRef.current();
+        }
+      });
+
       mapInstance.current = map;
 
       return () => {

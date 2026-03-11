@@ -540,7 +540,16 @@ export default function RoutePlanning() {
   };
 
   return (
-    <div className="relative w-full -m-4 md:-m-6" style={{ height: 'calc(100vh - 3.5rem)' }}>
+    <div
+      className="relative w-full -m-4 md:-m-6"
+      style={{ height: 'calc(100vh - 3.5rem)' }}
+      onPointerDownCapture={(e) => {
+        const target = e.target as Node;
+        if (bottomSheetRef.current?.contains(target) || locationCardRef.current?.contains(target)) return;
+        setShowDetails(false);
+        setSelectedLocation(null);
+      }}
+    >
       {/* Map */}
       <TomTomMap
         ref={mapHandleRef}
@@ -553,7 +562,10 @@ export default function RoutePlanning() {
         className="absolute inset-0 z-0"
         defaultStyle="satellite"
         onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
-        
+        onMapTap={() => {
+          setShowDetails(false);
+          setSelectedLocation(null);
+        }}
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
