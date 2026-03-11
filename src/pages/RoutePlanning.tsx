@@ -686,6 +686,30 @@ export default function RoutePlanning() {
                       </button>
                     </div>
 
+                    {/* Remaining drive time */}
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Körtid redan använd idag</Label>
+                      <div className="flex items-center gap-3 mt-1">
+                        <input
+                          type="range"
+                          min={0}
+                          max={9}
+                          step={0.5}
+                          value={usedDriveHours}
+                          onChange={e => setUsedDriveHours(Number(e.target.value))}
+                          className="flex-1 h-2 accent-primary"
+                        />
+                        <span className="text-sm font-bold text-foreground min-w-[3rem] text-right">
+                          {usedDriveHours}h
+                        </span>
+                      </div>
+                      {usedDriveHours > 0 && (
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                          ⏱ {routeType === 'fastest' ? 10 - usedDriveHours : 9 - usedDriveHours}h körtid kvar idag
+                        </p>
+                      )}
+                    </div>
+
                     {/* Rest stop facility filters */}
                     <div className="space-y-2">
                       <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Krav på rastplatser</div>
