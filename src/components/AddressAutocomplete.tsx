@@ -252,7 +252,8 @@ export default function AddressAutocomplete({
           value={value}
           onChange={e => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => suggestions.length > 0 && setIsOpen(true)}
+          onFocus={() => { suggestions.length > 0 && setIsOpen(true); onInputFocus?.(); }}
+          onBlur={() => onInputBlur?.()}
           placeholder={placeholder}
           className={`h-10 text-sm pr-8 ${className}`}
         />
