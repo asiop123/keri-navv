@@ -55,6 +55,7 @@ export default function RoutePlanning() {
   const [isSaved, setIsSaved] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showBottomSheet, setShowBottomSheet] = useState(true);
   
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -105,20 +106,11 @@ export default function RoutePlanning() {
   useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
 
   // Click outside to dismiss panels
-  useEffect(() => {
-    if (!showDetails && !selectedLocation) return;
-    const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (showDetails && bottomSheetRef.current && !bottomSheetRef.current.contains(target)) {
-        setShowDetails(false);
-      }
-      if (selectedLocation && locationCardRef.current && !locationCardRef.current.contains(target)) {
-        setSelectedLocation(null);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showDetails, selectedLocation]);
+  const dismissPanels = useCallback(() => {
+    setShowDetails(false);
+    setShowBottomSheet(false);
+    setSelectedLocation(null);
+  }, []);
 
   // Auto-start GPS watch for smooth position
   const gpsInitRef = useRef(false);
@@ -322,6 +314,7 @@ export default function RoutePlanning() {
       setRouteResult(bestRoute);
       setTimeline(tl);
       setViewState('details');
+      setShowBottomSheet(true);
       const destWp = bestRoute.waypoints[bestRoute.waypoints.length - 1];
       setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
 
@@ -543,12 +536,6 @@ export default function RoutePlanning() {
     <div
       className="relative w-full -m-4 md:-m-6"
       style={{ height: 'calc(100vh - 3.5rem)' }}
-      onPointerDownCapture={(e) => {
-        const target = e.target as Node;
-        if (bottomSheetRef.current?.contains(target) || locationCardRef.current?.contains(target)) return;
-        setShowDetails(false);
-        setSelectedLocation(null);
-      }}
     >
       {/* Map */}
       <TomTomMap
@@ -562,10 +549,7 @@ export default function RoutePlanning() {
         className="absolute inset-0 z-0"
         defaultStyle="satellite"
         onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
-        onMapTap={() => {
-          setShowDetails(false);
-          setSelectedLocation(null);
-        }}
+        onMapTap={dismissPanels}
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
@@ -831,7 +815,6 @@ export default function RoutePlanning() {
                       )}
                     </div>
 
-
                     {/* BK status */}
                     {bkResults.length > 0 && (
                       <div className="flex gap-1.5 flex-wrap">
@@ -958,8 +941,21 @@ export default function RoutePlanning() {
             </div>
           </div>
 
+          {/* Floating restore button when bottom sheet is hidden */}
+          {!showBottomSheet && (
+            <div className="absolute bottom-4 right-4 z-20">
+              <Button
+                onClick={() => setShowBottomSheet(true)}
+                className="rounded-full shadow-lg px-4 py-2 gap-2"
+              >
+                <ChevronUp className="h-4 w-4" />
+                Visa resplan
+              </Button>
+            </div>
+          )}
 
           {/* Bottom sheet - compact by default */}
+          {showBottomSheet && (
           <div ref={bottomSheetRef} className="absolute bottom-0 left-0 right-0 z-20">
             <div className="max-w-lg mx-auto">
               <div className={`bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden transition-all ${showDetails ? 'max-h-[75vh]' : ''}`}>
@@ -1222,8 +1218,9 @@ export default function RoutePlanning() {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Location detail card - Google Maps style */}
+
           {selectedLocation && (
             <div ref={locationCardRef} className="absolute left-4 right-4 z-30 max-w-sm mx-auto animate-in slide-in-from-bottom-4 fade-in duration-300"
               style={{ top: '50%', transform: 'translateY(-50%)' }}
