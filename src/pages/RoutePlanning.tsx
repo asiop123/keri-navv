@@ -249,8 +249,9 @@ export default function RoutePlanning() {
 
   const pendingDestCoordsRef = useRef<{ lat: number; lng: number; name: string } | null>(null);
 
-  const handleSearch = async () => {
-    if (!destination.trim()) return;
+  const handleSearch = async (overrideDest?: string) => {
+    const destToUse = overrideDest || destination;
+    if (!destToUse.trim()) return;
     setIsLoading(true);
     setIsSaved(false);
 
