@@ -170,25 +170,51 @@ export default function AddressAutocomplete({
     }
   }, [biasLat, biasLng]);
 
+  const getMatchingHistory = useCallback((query: string) => {
+    if (!initialSuggestions.length) return [];
+    const q = query.toLowerCase();
+    return initialSuggestions.filter(s =>
+      s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q)
+    );
+  }, [initialSuggestions]);
+
   const search = useCallback(async (query: string) => {
     if (query.length < 2) {
-      setSuggestions([]);
-      setIsOpen(false);
+      // Show all history when query is short
+      if (initialSuggestions.length > 0) {
+        setSuggestions(initialSuggestions);
+        setIsOpen(true);
+        setSelectedIndex(-1);
+      } else {
+        setSuggestions([]);
+        setIsOpen(false);
+      }
       return;
     }
 
     setIsLoading(true);
     try {
+      let searchResults: Suggestion[] = [];
+      
       if (sdkReady) {
         const ok = await searchGoogle(query);
         if (!ok) await searchTomTom(query);
+        // Grab whatever setSuggestions set from the search callbacks
+        // We need to merge after, so we re-read from state via a different approach
       } else {
         await searchTomTom(query);
       }
     } finally {
       setIsLoading(false);
+      // After search completes, merge matching history to the top
+      setSuggestions(prev => {
+        const nonHistory = prev.filter(s => !s.isHistory);
+        const matchingHistory = getMatchingHistory(query);
+        if (matchingHistory.length === 0) return nonHistory;
+        return [...matchingHistory, ...nonHistory];
+      });
     }
-  }, [sdkReady, searchGoogle, searchTomTom]);
+  }, [sdkReady, searchGoogle, searchTomTom, initialSuggestions, getMatchingHistory]);
 
   const resolvePlace = useCallback((placeId: string): Promise<{ lat: number; lng: number } | null> => {
     return new Promise((resolve) => {
