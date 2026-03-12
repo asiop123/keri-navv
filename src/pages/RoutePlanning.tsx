@@ -314,6 +314,7 @@ export default function RoutePlanning() {
       setRouteResult(bestRoute);
       setTimeline(tl);
       setViewState('details');
+      setShowBottomSheet(true);
       const destWp = bestRoute.waypoints[bestRoute.waypoints.length - 1];
       setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
 
