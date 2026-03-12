@@ -112,20 +112,6 @@ export default function RoutePlanning() {
     setSelectedLocation(null);
   }, []);
 
-  useEffect(() => {
-    if (viewState !== 'details') return;
-
-    const handleGlobalPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (bottomSheetRef.current?.contains(target) || locationCardRef.current?.contains(target)) {
-        return;
-      }
-      dismissPanels();
-    };
-
-    document.addEventListener('pointerdown', handleGlobalPointerDown, true);
-    return () => document.removeEventListener('pointerdown', handleGlobalPointerDown, true);
-  }, [viewState, dismissPanels]);
 
   // Auto-start GPS watch for smooth position
   const gpsInitRef = useRef(false);
@@ -551,12 +537,6 @@ export default function RoutePlanning() {
     <div
       className="relative w-full -m-4 md:-m-6"
       style={{ height: 'calc(100vh - 3.5rem)' }}
-      onPointerDownCapture={(e) => {
-        if (viewState !== 'details') return;
-        const target = e.target as Node;
-        if (bottomSheetRef.current?.contains(target) || locationCardRef.current?.contains(target)) return;
-        dismissPanels();
-      }}
     >
       {/* Map */}
       <TomTomMap
@@ -574,6 +554,13 @@ export default function RoutePlanning() {
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
+      {viewState === 'details' && showBottomSheet && !selectedLocation && (
+        <div
+          className="absolute inset-0 z-10"
+          onPointerDown={dismissPanels}
+          aria-hidden="true"
+        />
+      )}
 
       {mapClickCoords && (
         <div className="absolute inset-0 z-40 bg-background">
