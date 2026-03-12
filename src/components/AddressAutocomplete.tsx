@@ -174,7 +174,7 @@ export default function AddressAutocomplete({
     if (!initialSuggestions.length) return [];
     const q = query.toLowerCase();
     return initialSuggestions.filter(s =>
-      s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q)
+      s.name.toLowerCase().includes(q)
     );
   }, [initialSuggestions]);
 
