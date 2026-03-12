@@ -627,6 +627,18 @@ export default function RoutePlanning() {
                   value={destination}
                   onChange={setDestination}
                   onSelect={(suggestion) => {
+                    if (suggestion.isHistory) {
+                      const trip = savedTrips.find(t => t.id === suggestion.id);
+                      if (trip) {
+                        setRouteResult(trip.route);
+                        setTimeline(trip.timeline);
+                        setDestination(trip.endName);
+                        const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
+                        setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
+                        setViewState('details');
+                        return;
+                      }
+                    }
                     if (suggestion.lat && suggestion.lng) {
                       setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
                       pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
@@ -639,6 +651,14 @@ export default function RoutePlanning() {
                   biasLng={userPosition?.lng}
                   onInputFocus={() => setSearchFocused(true)}
                   onInputBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                  initialSuggestions={savedTrips.slice(0, 5).map(t => ({
+                    id: t.id,
+                    name: `${t.startName} → ${t.endName}`,
+                    address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round((t.travelTimeSeconds % 3600) / 60)}min`,
+                    lat: t.route.waypoints[t.route.waypoints.length - 1].lat,
+                    lng: t.route.waypoints[t.route.waypoints.length - 1].lng,
+                    isHistory: true,
+                  }))}
                 />
                 {destination && (
                   <button onClick={() => setDestination('')} className="text-muted-foreground hover:text-foreground">
