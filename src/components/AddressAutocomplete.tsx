@@ -51,6 +51,8 @@ interface AddressAutocompleteProps {
   className?: string;
   biasLat?: number;
   biasLng?: number;
+  onInputFocus?: () => void;
+  onInputBlur?: () => void;
 }
 
 export default function AddressAutocomplete({
@@ -61,6 +63,8 @@ export default function AddressAutocomplete({
   className = '',
   biasLat,
   biasLng,
+  onInputFocus,
+  onInputBlur,
 }: AddressAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -248,7 +252,8 @@ export default function AddressAutocomplete({
           value={value}
           onChange={e => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => suggestions.length > 0 && setIsOpen(true)}
+          onFocus={() => { suggestions.length > 0 && setIsOpen(true); onInputFocus?.(); }}
+          onBlur={() => onInputBlur?.()}
           placeholder={placeholder}
           className={`h-10 text-sm pr-8 ${className}`}
         />

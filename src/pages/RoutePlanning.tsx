@@ -56,6 +56,7 @@ export default function RoutePlanning() {
   const [showOptions, setShowOptions] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showBottomSheet, setShowBottomSheet] = useState(true);
+  const [searchFocused, setSearchFocused] = useState(false);
   
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -630,11 +631,14 @@ export default function RoutePlanning() {
                       setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
                       pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
                     }
+                    setSearchFocused(false);
                   }}
                   placeholder="Vart vill du åka?"
                   className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-base placeholder:text-muted-foreground/60"
                   biasLat={userPosition?.lat}
                   biasLng={userPosition?.lng}
+                  onInputFocus={() => setSearchFocused(true)}
+                  onInputBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                 />
                 {destination && (
                   <button onClick={() => setDestination('')} className="text-muted-foreground hover:text-foreground">
@@ -872,7 +876,7 @@ export default function RoutePlanning() {
               </div>
 
               {/* Saved trips panel */}
-              {savedTrips.length > 0 && (
+              {savedTrips.length > 0 && searchFocused && destination.length < 2 && (
                 <div className="bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden">
                   <div className="px-4 py-2.5 border-b border-border/50 flex items-center gap-2">
                     <History className="h-4 w-4 text-primary" />
