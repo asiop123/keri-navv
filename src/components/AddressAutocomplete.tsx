@@ -63,6 +63,8 @@ export default function AddressAutocomplete({
   className = '',
   biasLat,
   biasLng,
+  onInputFocus,
+  onInputBlur,
 }: AddressAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
