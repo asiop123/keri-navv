@@ -554,8 +554,15 @@ export default function RoutePlanning() {
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
+      {viewState === 'details' && showBottomSheet && !selectedLocation && (
+        <div
+          className="absolute inset-0 z-10"
+          onPointerDown={dismissPanels}
+          aria-hidden="true"
+        />
+      )}
 
-      {mapClickCoords && (
+
         <div className="absolute inset-0 z-40 bg-background">
           <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
             <Button
