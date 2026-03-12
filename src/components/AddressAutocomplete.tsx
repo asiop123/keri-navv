@@ -173,9 +173,11 @@ export default function AddressAutocomplete({
   const getMatchingHistory = useCallback((query: string) => {
     if (!initialSuggestions.length) return [];
     const q = query.toLowerCase();
-    return initialSuggestions.filter(s =>
-      s.name.toLowerCase().includes(q)
-    );
+    return initialSuggestions.filter(s => {
+      // Match if any word in the name starts with the query
+      const words = s.name.toLowerCase().split(/[\s→]+/);
+      return words.some(word => word.startsWith(q));
+    });
   }, [initialSuggestions]);
 
   const search = useCallback(async (query: string) => {
