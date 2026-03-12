@@ -876,7 +876,7 @@ export default function RoutePlanning() {
               </div>
 
               {/* Saved trips panel */}
-              {savedTrips.length > 0 && (
+              {savedTrips.length > 0 && searchFocused && destination.length < 2 && (
                 <div className="bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden">
                   <div className="px-4 py-2.5 border-b border-border/50 flex items-center gap-2">
                     <History className="h-4 w-4 text-primary" />
