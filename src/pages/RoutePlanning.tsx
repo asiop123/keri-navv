@@ -112,6 +112,21 @@ export default function RoutePlanning() {
     setSelectedLocation(null);
   }, []);
 
+  useEffect(() => {
+    if (viewState !== 'details') return;
+
+    const handleGlobalPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (bottomSheetRef.current?.contains(target) || locationCardRef.current?.contains(target)) {
+        return;
+      }
+      dismissPanels();
+    };
+
+    document.addEventListener('pointerdown', handleGlobalPointerDown, true);
+    return () => document.removeEventListener('pointerdown', handleGlobalPointerDown, true);
+  }, [viewState, dismissPanels]);
+
   // Auto-start GPS watch for smooth position
   const gpsInitRef = useRef(false);
   useEffect(() => {
