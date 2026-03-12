@@ -651,15 +651,25 @@ export default function RoutePlanning() {
                   biasLng={userPosition?.lng}
                   onInputFocus={() => setSearchFocused(true)}
                   onInputBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                  initialSuggestions={savedTrips.slice(0, 5).map(t => ({
-                    id: t.id,
-                    name: `${t.startName} → ${t.endName}`,
-                    address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round((t.travelTimeSeconds % 3600) / 60)}min`,
-                    lat: t.route.waypoints[t.route.waypoints.length - 1].lat,
-                    lng: t.route.waypoints[t.route.waypoints.length - 1].lng,
-                    isHistory: true,
-                    matchText: t.endName,
-                  }))}
+                  initialSuggestions={(() => {
+                    const seen = new Set<string>();
+                    return savedTrips.reduce<Array<{ id: string; name: string; address: string; lat: number; lng: number; isHistory: boolean; matchText: string }>>((acc, t) => {
+                      const key = t.endName.toLowerCase();
+                      if (seen.has(key)) return acc;
+                      seen.add(key);
+                      const destWp = t.route.waypoints[t.route.waypoints.length - 1];
+                      acc.push({
+                        id: t.id,
+                        name: t.endName,
+                        address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round((t.travelTimeSeconds % 3600) / 60)}min`,
+                        lat: destWp.lat,
+                        lng: destWp.lng,
+                        isHistory: true,
+                        matchText: t.endName,
+                      });
+                      return acc;
+                    }, []).slice(0, 5);
+                  })()}
                 />
                 {destination && (
                   <button onClick={() => setDestination('')} className="text-muted-foreground hover:text-foreground">
