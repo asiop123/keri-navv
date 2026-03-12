@@ -886,7 +886,7 @@ export default function RoutePlanning() {
               {destination && (
                 <div className="px-4 pb-3">
                   <Button
-                    onClick={handleSearch}
+                    onClick={() => handleSearch()}
                     disabled={isLoading}
                     className="w-full h-10 bg-primary text-primary-foreground font-semibold rounded-xl"
                   >
