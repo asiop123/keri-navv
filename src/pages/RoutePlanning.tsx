@@ -941,8 +941,21 @@ export default function RoutePlanning() {
             </div>
           </div>
 
+          {/* Floating restore button when bottom sheet is hidden */}
+          {!showBottomSheet && (
+            <div className="absolute bottom-4 right-4 z-20">
+              <Button
+                onClick={() => setShowBottomSheet(true)}
+                className="rounded-full shadow-lg px-4 py-2 gap-2"
+              >
+                <ChevronUp className="h-4 w-4" />
+                Visa resplan
+              </Button>
+            </div>
+          )}
 
           {/* Bottom sheet - compact by default */}
+          {showBottomSheet && (
           <div ref={bottomSheetRef} className="absolute bottom-0 left-0 right-0 z-20">
             <div className="max-w-lg mx-auto">
               <div className={`bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden transition-all ${showDetails ? 'max-h-[75vh]' : ''}`}>
