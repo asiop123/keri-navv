@@ -287,7 +287,7 @@ export default function AddressAutocomplete({
                 i === selectedIndex ? 'bg-accent' : ''
               } ${i > 0 ? 'border-t border-border/50' : ''}`}
             >
-              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+              {s.isHistory ? <History className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" /> : <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />}
               <div className="min-w-0">
                 <div className="font-medium text-foreground truncate">{s.name}</div>
                 {s.address && s.address !== s.name && (
