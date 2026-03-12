@@ -562,7 +562,7 @@ export default function RoutePlanning() {
         />
       )}
 
-
+      {mapClickCoords && (
         <div className="absolute inset-0 z-40 bg-background">
           <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
             <Button
