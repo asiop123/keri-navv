@@ -548,10 +548,7 @@ export default function RoutePlanning() {
         className="absolute inset-0 z-0"
         defaultStyle="satellite"
         onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
-        onMapTap={() => {
-          setShowDetails(false);
-          setSelectedLocation(null);
-        }}
+        onMapTap={dismissPanels}
         onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
       />
 
