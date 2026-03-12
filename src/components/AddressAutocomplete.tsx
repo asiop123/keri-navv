@@ -179,10 +179,14 @@ export default function AddressAutocomplete({
   }, [initialSuggestions]);
 
   const search = useCallback(async (query: string) => {
+    // For any input, check matching history first
+    const matchingHistory = getMatchingHistory(query);
+
     if (query.length < 2) {
-      // Show all history when query is short
-      if (initialSuggestions.length > 0) {
-        setSuggestions(initialSuggestions);
+      // Show matching history (all if empty query, filtered otherwise)
+      const historyToShow = query.length === 0 ? initialSuggestions : matchingHistory;
+      if (historyToShow.length > 0) {
+        setSuggestions(historyToShow);
         setIsOpen(true);
         setSelectedIndex(-1);
       } else {
@@ -194,22 +198,17 @@ export default function AddressAutocomplete({
 
     setIsLoading(true);
     try {
-      let searchResults: Suggestion[] = [];
-      
       if (sdkReady) {
         const ok = await searchGoogle(query);
         if (!ok) await searchTomTom(query);
-        // Grab whatever setSuggestions set from the search callbacks
-        // We need to merge after, so we re-read from state via a different approach
       } else {
         await searchTomTom(query);
       }
     } finally {
       setIsLoading(false);
-      // After search completes, merge matching history to the top
+      // Merge matching history to the top of search results
       setSuggestions(prev => {
         const nonHistory = prev.filter(s => !s.isHistory);
-        const matchingHistory = getMatchingHistory(query);
         if (matchingHistory.length === 0) return nonHistory;
         return [...matchingHistory, ...nonHistory];
       });
