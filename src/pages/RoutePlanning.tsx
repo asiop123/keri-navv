@@ -1219,8 +1219,9 @@ export default function RoutePlanning() {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Location detail card - Google Maps style */}
+
           {selectedLocation && (
             <div ref={locationCardRef} className="absolute left-4 right-4 z-30 max-w-sm mx-auto animate-in slide-in-from-bottom-4 fade-in duration-300"
               style={{ top: '50%', transform: 'translateY(-50%)' }}
