@@ -20,7 +20,7 @@ import { geocode, calculateRoute, generateTimeline, reverseGeocode, RouteResult,
 import { SavedTrip, getSavedTrips, saveTrip, saveDrivenTrip } from '@/services/tripStorage';
 import TomTomMap, { TomTomMapHandle } from '@/components/TomTomMap';
 import TripHistory from '@/components/TripHistory';
-import AddressAutocomplete from '@/components/AddressAutocomplete';
+import AddressAutocomplete, { AddressSuggestion } from '@/components/AddressAutocomplete';
 
 interface TripLeg {
   id: string;
