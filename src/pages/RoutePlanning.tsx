@@ -1390,11 +1390,13 @@ export default function RoutePlanning() {
                   <div className="mt-3 flex gap-2">
                     <button
                       onClick={() => {
+                        const loc = selectedLocation;
                         setSelectedLocation(null);
-                        setDestination(selectedLocation.name);
-                        setDestinationCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng });
-                        pendingDestCoordsRef.current = { lat: selectedLocation.lat, lng: selectedLocation.lng, name: selectedLocation.name };
-                        handleSearch();
+                        setDestination(loc.name);
+                        setDestinationCoords({ lat: loc.lat, lng: loc.lng });
+                        pendingDestCoordsRef.current = { lat: loc.lat, lng: loc.lng, name: loc.name };
+                        // Allow state to update before searching
+                        setTimeout(() => handleSearch(), 50);
                       }}
                       className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground rounded-xl py-2 text-xs font-medium hover:opacity-90 transition-opacity"
                     >
