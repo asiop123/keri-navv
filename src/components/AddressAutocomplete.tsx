@@ -7,7 +7,7 @@ declare global {
   }
 }
 import { Input } from '@/components/ui/input';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, History } from 'lucide-react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 
@@ -41,7 +41,10 @@ interface Suggestion {
   address: string;
   lat: number;
   lng: number;
+  isHistory?: boolean;
 }
+
+export type { Suggestion as AddressSuggestion };
 
 interface AddressAutocompleteProps {
   value: string;
@@ -53,6 +56,7 @@ interface AddressAutocompleteProps {
   biasLng?: number;
   onInputFocus?: () => void;
   onInputBlur?: () => void;
+  initialSuggestions?: Suggestion[];
 }
 
 export default function AddressAutocomplete({
@@ -65,6 +69,7 @@ export default function AddressAutocomplete({
   biasLng,
   onInputFocus,
   onInputBlur,
+  initialSuggestions = [],
 }: AddressAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -252,7 +257,16 @@ export default function AddressAutocomplete({
           value={value}
           onChange={e => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => { suggestions.length > 0 && setIsOpen(true); onInputFocus?.(); }}
+          onFocus={() => {
+            if (suggestions.length > 0) {
+              setIsOpen(true);
+            } else if (value.length < 2 && initialSuggestions.length > 0) {
+              setSuggestions(initialSuggestions);
+              setIsOpen(true);
+              setSelectedIndex(-1);
+            }
+            onInputFocus?.();
+          }}
           onBlur={() => onInputBlur?.()}
           placeholder={placeholder}
           className={`h-10 text-sm pr-8 ${className}`}
@@ -273,7 +287,7 @@ export default function AddressAutocomplete({
                 i === selectedIndex ? 'bg-accent' : ''
               } ${i > 0 ? 'border-t border-border/50' : ''}`}
             >
-              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+              {s.isHistory ? <History className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" /> : <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />}
               <div className="min-w-0">
                 <div className="font-medium text-foreground truncate">{s.name}</div>
                 {s.address && s.address !== s.name && (
@@ -282,9 +296,11 @@ export default function AddressAutocomplete({
               </div>
             </button>
           ))}
-          <div className="px-3 py-1.5 text-[9px] text-muted-foreground/60 text-right border-t border-border/30">
-            Powered by Google
-          </div>
+          {!suggestions.some(s => s.isHistory) && (
+            <div className="px-3 py-1.5 text-[9px] text-muted-foreground/60 text-right border-t border-border/30">
+              Powered by Google
+            </div>
+          )}
         </div>
       )}
     </div>

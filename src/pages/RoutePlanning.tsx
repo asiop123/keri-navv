@@ -20,7 +20,7 @@ import { geocode, calculateRoute, generateTimeline, reverseGeocode, RouteResult,
 import { SavedTrip, getSavedTrips, saveTrip, saveDrivenTrip } from '@/services/tripStorage';
 import TomTomMap, { TomTomMapHandle } from '@/components/TomTomMap';
 import TripHistory from '@/components/TripHistory';
-import AddressAutocomplete from '@/components/AddressAutocomplete';
+import AddressAutocomplete, { AddressSuggestion } from '@/components/AddressAutocomplete';
 
 interface TripLeg {
   id: string;
@@ -627,6 +627,18 @@ export default function RoutePlanning() {
                   value={destination}
                   onChange={setDestination}
                   onSelect={(suggestion) => {
+                    if (suggestion.isHistory) {
+                      const trip = savedTrips.find(t => t.id === suggestion.id);
+                      if (trip) {
+                        setRouteResult(trip.route);
+                        setTimeline(trip.timeline);
+                        setDestination(trip.endName);
+                        const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
+                        setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
+                        setViewState('details');
+                        return;
+                      }
+                    }
                     if (suggestion.lat && suggestion.lng) {
                       setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
                       pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
@@ -639,6 +651,14 @@ export default function RoutePlanning() {
                   biasLng={userPosition?.lng}
                   onInputFocus={() => setSearchFocused(true)}
                   onInputBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                  initialSuggestions={savedTrips.slice(0, 5).map(t => ({
+                    id: t.id,
+                    name: `${t.startName} → ${t.endName}`,
+                    address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round((t.travelTimeSeconds % 3600) / 60)}min`,
+                    lat: t.route.waypoints[t.route.waypoints.length - 1].lat,
+                    lng: t.route.waypoints[t.route.waypoints.length - 1].lng,
+                    isHistory: true,
+                  }))}
                 />
                 {destination && (
                   <button onClick={() => setDestination('')} className="text-muted-foreground hover:text-foreground">
@@ -876,50 +896,6 @@ export default function RoutePlanning() {
               </div>
 
               {/* Saved trips panel */}
-              {savedTrips.length > 0 && searchFocused && destination.length < 2 && (
-                <div className="bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden">
-                  <div className="px-4 py-2.5 border-b border-border/50 flex items-center gap-2">
-                    <History className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-semibold text-foreground">Sökhistorik</span>
-                    <span className="text-[10px] text-muted-foreground">({savedTrips.length})</span>
-                  </div>
-                  <div className="max-h-[200px] overflow-y-auto">
-                    {savedTrips.slice(0, 10).map((trip) => (
-                      <button
-                        key={trip.id}
-                        onClick={() => {
-                          setRouteResult(trip.route);
-                          setTimeline(trip.timeline);
-                          setDestination(trip.endName);
-                          const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
-                          setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
-                          setViewState('details');
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-accent transition-colors border-b border-border/30 last:border-b-0"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <Route className="h-4 w-4 text-primary shrink-0" />
-                            <div className="min-w-0">
-                              <div className="text-xs font-medium truncate">
-                                {trip.startName} → {trip.endName}
-                              </div>
-                              <div className="text-[10px] text-muted-foreground flex items-center gap-2 mt-0.5">
-                                <span>{trip.distanceKm} km</span>
-                                <span>·</span>
-                                <span>{Math.floor(trip.travelTimeSeconds / 3600)}h {Math.round((trip.travelTimeSeconds % 3600) / 60)}min</span>
-                                <span>·</span>
-                                <span>{new Date(trip.createdAt).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <ArrowLeft className="h-3.5 w-3.5 text-muted-foreground rotate-180 shrink-0" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </>
