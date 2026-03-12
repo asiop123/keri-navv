@@ -42,6 +42,7 @@ interface Suggestion {
   lat: number;
   lng: number;
   isHistory?: boolean;
+  matchText?: string;
 }
 
 export type { Suggestion as AddressSuggestion };
@@ -174,8 +175,8 @@ export default function AddressAutocomplete({
     if (!initialSuggestions.length) return [];
     const q = query.toLowerCase();
     return initialSuggestions.filter(s => {
-      // Match if any word in the name starts with the query
-      const words = s.name.toLowerCase().split(/[\s→]+/);
+      const text = (s.matchText || s.name).toLowerCase();
+      const words = text.split(/\s+/);
       return words.some(word => word.startsWith(q));
     });
   }, [initialSuggestions]);
