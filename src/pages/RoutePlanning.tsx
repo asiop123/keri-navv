@@ -1389,8 +1389,21 @@ export default function RoutePlanning() {
                   {/* Action buttons */}
                   <div className="mt-3 flex gap-2">
                     <button
-                      onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
+                      onClick={() => {
+                        setSelectedLocation(null);
+                        setDestination(selectedLocation.name);
+                        setDestinationCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng });
+                        pendingDestCoordsRef.current = { lat: selectedLocation.lat, lng: selectedLocation.lng, name: selectedLocation.name };
+                        handleSearch();
+                      }}
                       className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground rounded-xl py-2 text-xs font-medium hover:opacity-90 transition-opacity"
+                    >
+                      <Navigation className="h-3.5 w-3.5" />
+                      Åk hit
+                    </button>
+                    <button
+                      onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
+                      className="flex items-center justify-center gap-1.5 bg-muted rounded-xl px-4 py-2 text-xs font-medium hover:bg-accent transition-colors"
                     >
                       <Eye className="h-3.5 w-3.5" />
                       Street View
@@ -1402,7 +1415,6 @@ export default function RoutePlanning() {
                       className="flex items-center justify-center gap-1.5 bg-muted rounded-xl px-4 py-2 text-xs font-medium hover:bg-accent transition-colors"
                     >
                       <Locate className="h-3.5 w-3.5" />
-                      Zooma in
                     </button>
                   </div>
 
