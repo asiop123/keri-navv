@@ -301,7 +301,6 @@ export default function AddressAutocomplete({
               Powered by Google
             </div>
           )}
-          </div>
         </div>
       )}
     </div>
