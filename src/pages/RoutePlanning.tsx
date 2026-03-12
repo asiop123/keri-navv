@@ -1248,6 +1248,13 @@ export default function RoutePlanning() {
 
 
           {selectedLocation && (
+            <>
+            {/* Invisible backdrop to dismiss location card */}
+            <div
+              className="absolute inset-0 z-25"
+              onClick={() => setSelectedLocation(null)}
+              onPointerDown={() => setSelectedLocation(null)}
+            />
             <div ref={locationCardRef} className="absolute left-4 right-4 z-30 max-w-sm mx-auto animate-in slide-in-from-bottom-4 fade-in duration-300"
               style={{ top: '50%', transform: 'translateY(-50%)' }}
             >
