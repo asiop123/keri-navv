@@ -41,7 +41,10 @@ interface Suggestion {
   address: string;
   lat: number;
   lng: number;
+  isHistory?: boolean;
 }
+
+export type { Suggestion as AddressSuggestion };
 
 interface AddressAutocompleteProps {
   value: string;
@@ -53,6 +56,7 @@ interface AddressAutocompleteProps {
   biasLng?: number;
   onInputFocus?: () => void;
   onInputBlur?: () => void;
+  initialSuggestions?: Suggestion[];
 }
 
 export default function AddressAutocomplete({
