@@ -249,8 +249,9 @@ export default function RoutePlanning() {
 
   const pendingDestCoordsRef = useRef<{ lat: number; lng: number; name: string } | null>(null);
 
-  const handleSearch = async () => {
-    if (!destination.trim()) return;
+  const handleSearch = async (overrideDest?: string) => {
+    const destToUse = overrideDest || destination;
+    if (!destToUse.trim()) return;
     setIsLoading(true);
     setIsSaved(false);
 
@@ -885,7 +886,7 @@ export default function RoutePlanning() {
               {destination && (
                 <div className="px-4 pb-3">
                   <Button
-                    onClick={handleSearch}
+                    onClick={() => handleSearch()}
                     disabled={isLoading}
                     className="w-full h-10 bg-primary text-primary-foreground font-semibold rounded-xl"
                   >
@@ -1389,8 +1390,22 @@ export default function RoutePlanning() {
                   {/* Action buttons */}
                   <div className="mt-3 flex gap-2">
                     <button
-                      onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
+                      onClick={() => {
+                        const loc = selectedLocation;
+                        setSelectedLocation(null);
+                        setDestination(loc.name);
+                        setDestinationCoords({ lat: loc.lat, lng: loc.lng });
+                        pendingDestCoordsRef.current = { lat: loc.lat, lng: loc.lng, name: loc.name };
+                        handleSearch(loc.name);
+                      }}
                       className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground rounded-xl py-2 text-xs font-medium hover:opacity-90 transition-opacity"
+                    >
+                      <Navigation className="h-3.5 w-3.5" />
+                      Åk hit
+                    </button>
+                    <button
+                      onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
+                      className="flex items-center justify-center gap-1.5 bg-muted rounded-xl px-4 py-2 text-xs font-medium hover:bg-accent transition-colors"
                     >
                       <Eye className="h-3.5 w-3.5" />
                       Street View
@@ -1402,7 +1417,6 @@ export default function RoutePlanning() {
                       className="flex items-center justify-center gap-1.5 bg-muted rounded-xl px-4 py-2 text-xs font-medium hover:bg-accent transition-colors"
                     >
                       <Locate className="h-3.5 w-3.5" />
-                      Zooma in
                     </button>
                   </div>
 
