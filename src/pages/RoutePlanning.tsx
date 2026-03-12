@@ -813,8 +813,6 @@ export default function RoutePlanning() {
                         </p>
                       )}
                     </div>
-                  )}
-
 
                     {/* BK status */}
                     {bkResults.length > 0 && (
