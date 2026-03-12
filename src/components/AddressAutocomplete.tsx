@@ -51,6 +51,8 @@ interface AddressAutocompleteProps {
   className?: string;
   biasLat?: number;
   biasLng?: number;
+  onInputFocus?: () => void;
+  onInputBlur?: () => void;
 }
 
 export default function AddressAutocomplete({
