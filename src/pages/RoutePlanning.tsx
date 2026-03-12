@@ -812,8 +812,8 @@ export default function RoutePlanning() {
                           Bara rastplatser med valda faciliteter visas
                         </p>
                       )}
-          </div>
-          )}
+                    </div>
+                  )}
 
 
                     {/* BK status */}
