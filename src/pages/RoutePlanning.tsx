@@ -536,6 +536,12 @@ export default function RoutePlanning() {
     <div
       className="relative w-full -m-4 md:-m-6"
       style={{ height: 'calc(100vh - 3.5rem)' }}
+      onPointerDownCapture={(e) => {
+        if (viewState !== 'details') return;
+        const target = e.target as Node;
+        if (bottomSheetRef.current?.contains(target) || locationCardRef.current?.contains(target)) return;
+        dismissPanels();
+      }}
     >
       {/* Map */}
       <TomTomMap
@@ -956,8 +962,13 @@ export default function RoutePlanning() {
 
           {/* Bottom sheet - compact by default */}
           {showBottomSheet && (
-          <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none">
-            <div ref={bottomSheetRef} className="max-w-lg mx-auto pointer-events-auto">
+          <div
+            className="absolute bottom-0 left-0 right-0 z-20"
+            onPointerDown={(e) => {
+              if (e.target === e.currentTarget) dismissPanels();
+            }}
+          >
+            <div ref={bottomSheetRef} className="max-w-lg mx-auto">
               <div className={`bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden transition-all ${showDetails ? 'max-h-[75vh]' : ''}`}>
                 
                 {/* Route alternatives - horizontal scroll, always visible */}
