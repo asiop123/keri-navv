@@ -174,11 +174,24 @@ export default function AddressAutocomplete({
   const getMatchingHistory = useCallback((query: string) => {
     if (!initialSuggestions.length) return [];
     const q = query.toLowerCase();
-    return initialSuggestions.filter(s => {
-      const text = (s.matchText || s.name).toLowerCase();
-      const words = text.split(/\s+/);
-      return words.some(word => word.startsWith(q));
-    });
+    const results: Suggestion[] = [];
+    const seenLocations = new Set<string>();
+
+    for (const s of initialSuggestions) {
+      const locations = (s.matchText || s.name).split('|');
+      for (const loc of locations) {
+        const locLower = loc.trim().toLowerCase();
+        const words = locLower.split(/\s+/);
+        if (words.some(w => w.startsWith(q)) && !seenLocations.has(locLower)) {
+          seenLocations.add(locLower);
+          results.push({
+            ...s,
+            name: loc.trim(), // Show only the matched location
+          });
+        }
+      }
+    }
+    return results;
   }, [initialSuggestions]);
 
   const search = useCallback(async (query: string) => {
