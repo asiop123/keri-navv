@@ -658,6 +658,7 @@ export default function RoutePlanning() {
                     lat: t.route.waypoints[t.route.waypoints.length - 1].lat,
                     lng: t.route.waypoints[t.route.waypoints.length - 1].lng,
                     isHistory: true,
+                    matchText: t.endName,
                   }))}
                 />
                 {destination && (
