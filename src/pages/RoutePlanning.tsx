@@ -636,6 +636,8 @@ export default function RoutePlanning() {
                         const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
                         setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
                         setViewState('details');
+                        setShowBottomSheet(true);
+                        setShowDetails(false);
                         return;
                       }
                     }
