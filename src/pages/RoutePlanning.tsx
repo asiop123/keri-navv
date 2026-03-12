@@ -631,11 +631,14 @@ export default function RoutePlanning() {
                       setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
                       pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
                     }
+                    setSearchFocused(false);
                   }}
                   placeholder="Vart vill du åka?"
                   className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-base placeholder:text-muted-foreground/60"
                   biasLat={userPosition?.lat}
                   biasLng={userPosition?.lng}
+                  onInputFocus={() => setSearchFocused(true)}
+                  onInputBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                 />
                 {destination && (
                   <button onClick={() => setDestination('')} className="text-muted-foreground hover:text-foreground">
