@@ -42,6 +42,7 @@ interface Suggestion {
   lat: number;
   lng: number;
   isHistory?: boolean;
+  matchText?: string;
 }
 
 export type { Suggestion as AddressSuggestion };
