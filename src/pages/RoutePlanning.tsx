@@ -652,23 +652,30 @@ export default function RoutePlanning() {
                   onInputFocus={() => setSearchFocused(true)}
                   onInputBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                   initialSuggestions={(() => {
-                    const seen = new Set<string>();
-                    return savedTrips.reduce<Array<{ id: string; name: string; address: string; lat: number; lng: number; isHistory: boolean; matchText: string }>>((acc, t) => {
+                    // Build two types: full trips (for empty search) + individual locations (for matching)
+                    const tripSuggestions: Array<{ id: string; name: string; address: string; lat: number; lng: number; isHistory: boolean; matchText: string }> = [];
+                    const seenTrips = new Set<string>();
+                    const seenLocations = new Set<string>();
+
+                    // Full trips (deduped by destination) - shown when no search
+                    for (const t of savedTrips) {
                       const key = t.endName.toLowerCase();
-                      if (seen.has(key)) return acc;
-                      seen.add(key);
+                      if (seenTrips.has(key)) continue;
+                      seenTrips.add(key);
+                      const allStops = [t.startName, ...t.waypointNames, t.endName].join(' → ');
                       const destWp = t.route.waypoints[t.route.waypoints.length - 1];
-                      acc.push({
+                      tripSuggestions.push({
                         id: t.id,
-                        name: t.endName,
+                        name: allStops,
                         address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round((t.travelTimeSeconds % 3600) / 60)}min`,
                         lat: destWp.lat,
                         lng: destWp.lng,
                         isHistory: true,
-                        matchText: t.endName,
+                        matchText: [t.endName, ...t.waypointNames].join('|'),
                       });
-                      return acc;
-                    }, []).slice(0, 5);
+                    }
+
+                    return tripSuggestions.slice(0, 5);
                   })()}
                 />
                 {destination && (
