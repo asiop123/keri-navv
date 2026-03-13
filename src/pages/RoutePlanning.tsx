@@ -928,45 +928,60 @@ export default function RoutePlanning() {
           {/* Map search card (when no step is active) */}
           {!searchStep && (
             <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
-              <div className="bg-card rounded-2xl shadow-xl border border-border">
+              <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
                 {/* Start point */}
-                <div className="flex items-center gap-2 px-4 pt-3 pb-1">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                  <AddressAutocomplete
-                    value={start}
-                    onChange={setStart}
-                    placeholder="Min position (GPS)"
-                    className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-xs text-muted-foreground placeholder:text-muted-foreground/50"
-                    biasLat={userPosition?.lat}
-                    biasLng={userPosition?.lng}
-                  />
+                <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
+                    <div className="w-0.5 h-4 bg-border" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Från</span>
+                    <AddressAutocomplete
+                      value={start}
+                      onChange={setStart}
+                      placeholder="Min position (GPS)"
+                      className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-sm text-foreground placeholder:text-muted-foreground/50 px-0"
+                      biasLat={userPosition?.lat}
+                      biasLng={userPosition?.lng}
+                    />
+                  </div>
                   {userPosition && (
                     <button
                       onClick={async () => {
                         const name = await reverseGeocode(userPosition.lat, userPosition.lng);
                         setStart(name);
                       }}
-                      className="shrink-0 p-1 rounded-md hover:bg-accent"
+                      className="shrink-0 p-2 rounded-xl hover:bg-accent bg-muted transition-colors"
                       title="Min position"
                     >
-                      <Locate className="h-3.5 w-3.5 text-primary" />
+                      <Locate className="h-4 w-4 text-primary" />
                     </button>
                   )}
                 </div>
 
                 {/* Destination - clicking opens step 1 */}
                 <div
-                  className="flex items-center gap-3 px-4 py-2 cursor-pointer"
+                  className="flex items-center gap-3 px-4 pb-4 pt-0 cursor-pointer group"
                   onClick={() => setSearchStep('search')}
                 >
-                  <Search className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <span className={`text-base flex-1 ${destination ? 'text-foreground' : 'text-muted-foreground/60'}`}>
-                    {destination || 'Vart vill du åka?'}
-                  </span>
-                  {destination && (
-                    <button onClick={(e) => { e.stopPropagation(); setDestination(''); }} className="text-muted-foreground hover:text-foreground">
+                  <div className="flex flex-col items-center">
+                    <div className="w-3 h-3 rounded-full bg-destructive ring-2 ring-destructive/20" />
+                  </div>
+                  <div className="flex-1 min-w-0 bg-muted/50 rounded-xl px-3 py-2.5 group-hover:bg-accent transition-colors">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Till</span>
+                    <div className={`text-sm ${destination ? 'text-foreground font-medium' : 'text-muted-foreground/60'}`}>
+                      {destination || 'Vart vill du åka?'}
+                    </div>
+                  </div>
+                  {destination ? (
+                    <button onClick={(e) => { e.stopPropagation(); setDestination(''); }} className="shrink-0 p-2 rounded-xl hover:bg-accent bg-muted text-muted-foreground hover:text-foreground transition-colors">
                       <X className="h-4 w-4" />
                     </button>
+                  ) : (
+                    <div className="shrink-0 p-2 rounded-xl bg-primary text-primary-foreground">
+                      <Search className="h-4 w-4" />
+                    </div>
                   )}
                 </div>
               </div>
