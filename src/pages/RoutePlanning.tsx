@@ -74,8 +74,9 @@ export default function RoutePlanning() {
   });
   const [trips, setTrips] = useState<TripLeg[]>([]);
   const [addingNewLeg, setAddingNewLeg] = useState(false);
+  const [draggingStopIdx, setDraggingStopIdx] = useState<number | null>(null);
+  const [dragOverStopIdx, setDragOverStopIdx] = useState<number | null>(null);
 
-  // GPS & Navigation
   const [userPosition, setUserPosition] = useState<{lat: number;lng: number;} | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [gpsWatchId, setGpsWatchId] = useState<number | null>(null);
