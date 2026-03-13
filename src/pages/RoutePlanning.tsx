@@ -1196,31 +1196,32 @@ export default function RoutePlanning() {
                 className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
                 
                   {/* Från rad */}
-                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[400px]">
+                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[280px]">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                     <span className="truncate text-sm px-0 text-primary my-[2px] mx-[10px] bg-gray-200">{start || 'Min position'}</span>
                   </div>
                   
                   {/* Till rad */}
-                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[400px]">
+                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[280px]">
                     <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
                     <span className="truncate text-sm px-0 text-primary my-[2px] mx-[10px] bg-gray-200">{destination}</span>
                   </div>
                 </button>
 
-                <div className="shrink-0 flex flex-col bg-muted/60 rounded-lg px-3 py-1.5 gap-0.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] text-muted-foreground">Körtid</span>
-                    <span className="text-xs font-bold text-primary">
+                <div className="shrink-0 flex flex-col bg-foreground/90 rounded-lg px-4 py-2 min-w-[120px] ml-auto">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] text-muted/70 font-medium">Körtid</span>
+                    <span className="text-sm font-extrabold text-background">
                       {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}m` : `${totalDriveTimeH}h ${totalDriveTimeMin}m`}
                     </span>
                   </div>
-                  <div className="text-[9px] text-center text-muted-foreground font-medium">
+                  <div className="text-[10px] text-center text-muted/60 font-semibold">
                     {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
                   </div>
-                  <div className="flex items-center justify-between gap-2 border-t border-border pt-0.5">
-                    <span className="text-[10px] text-muted-foreground">Framme</span>
-                    <span className="text-xs font-bold text-primary">
+                  <div className="border-t border-muted/30 my-0.5" />
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] text-muted/70 font-medium">Framme</span>
+                    <span className="text-sm font-extrabold text-background">
                       {(() => {
                         const travelSec = trips.length > 1
                           ? (combinedTimeH * 3600 + combinedTimeMin * 60)
