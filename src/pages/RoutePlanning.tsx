@@ -1182,7 +1182,7 @@ export default function RoutePlanning() {
                       <span className="truncate text-base text-foreground mx-[66px] my-0 ml-0 mr-[360px] py-0">{start || 'Min position'}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 my-0.5">
+                  <div className="flex items-center gap-2 my-0.5 ml-0 px-[2px]">
                     <button
                     onClick={(e) => {
                       e.stopPropagation();
