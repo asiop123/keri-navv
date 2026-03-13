@@ -7,7 +7,7 @@ declare global {
   }
 }
 import { Input } from '@/components/ui/input';
-import { MapPin, Loader2, History } from 'lucide-react';
+import { MapPin, Loader2, History, ChevronDown } from 'lucide-react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 
@@ -60,6 +60,7 @@ interface AddressAutocompleteProps {
   initialSuggestions?: Suggestion[];
   inlineResults?: boolean;
   autoFocus?: boolean;
+  maxInitialVisible?: number;
 }
 
 export default function AddressAutocomplete({
@@ -75,8 +76,10 @@ export default function AddressAutocomplete({
   initialSuggestions = [],
   inlineResults = false,
   autoFocus = false,
+  maxInitialVisible,
 }: AddressAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [expandedHistory, setExpandedHistory] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -322,12 +325,17 @@ export default function AddressAutocomplete({
         )}
       </div>
 
-      {isOpen && suggestions.length > 0 && (
+      {isOpen && suggestions.length > 0 && (() => {
+        const allHistory = suggestions.every(s => s.isHistory);
+        const shouldLimit = maxInitialVisible && allHistory && !expandedHistory;
+        const visibleSuggestions = shouldLimit ? suggestions.slice(0, maxInitialVisible) : suggestions;
+        const hasMore = shouldLimit && suggestions.length > maxInitialVisible;
+        return (
         <div className={inlineResults
           ? "flex-1 overflow-y-auto"
           : "absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden max-h-[240px] overflow-y-auto"
         }>
-          {suggestions.map((s, i) => (
+          {visibleSuggestions.map((s, i) => (
             <button
               key={s.id + i}
               type="button"
@@ -361,13 +369,23 @@ export default function AddressAutocomplete({
               </div>
             </button>
           ))}
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => setExpandedHistory(true)}
+              className="w-full px-3 py-2 flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:bg-accent transition-colors border-t border-border/50">
+              <ChevronDown className="h-3.5 w-3.5" />
+              Visa fler ({suggestions.length - maxInitialVisible!} till)
+            </button>
+          )}
           {!suggestions.some(s => s.isHistory) && (
             <div className="px-3 py-1.5 text-[9px] text-muted-foreground/60 text-right border-t border-border/30">
               Powered by Google
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

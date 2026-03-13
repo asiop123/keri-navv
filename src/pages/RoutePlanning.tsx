@@ -708,6 +708,7 @@ export default function RoutePlanning() {
                       placeholder="Sök destination..."
                       autoFocus={true}
                       inlineResults={true}
+                      maxInitialVisible={3}
                       className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 px-0"
                       biasLat={userPosition?.lat}
                       biasLng={userPosition?.lng}
