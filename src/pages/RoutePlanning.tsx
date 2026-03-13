@@ -1047,7 +1047,7 @@ export default function RoutePlanning() {
                   </div>
                   
                   {/* Till rad */}
-                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200">
+                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[200px]">
                     <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
                     <span className="truncate text-sm px-0 text-primary my-[2px] mx-[10px] bg-gray-200">{destination}</span>
                   </div>
