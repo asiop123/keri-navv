@@ -1183,6 +1183,12 @@ export default function RoutePlanning() {
                                 {diffKm > 0 ? '+' : ''}{diffKm}km
                               </span>
                             </div>
+                            <div className="text-[9px] font-medium text-primary whitespace-nowrap mt-0.5">
+                              Framme {(() => {
+                                const arr = new Date(new Date(departureTime).getTime() + alt.travelTimeSeconds * 1000);
+                                return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                              })()}
+                            </div>
                           </button>);
 
                   })}
