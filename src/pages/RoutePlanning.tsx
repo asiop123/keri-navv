@@ -1306,7 +1306,7 @@ export default function RoutePlanning() {
                   className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-2xl text-lg flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/30 transition-all">
                   
                     <Navigation className="h-6 w-6" />
-                    Kör hit
+                    KÖR
                   </button>
                 </div>
 
