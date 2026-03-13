@@ -596,6 +596,18 @@ export default function RoutePlanning() {
           {/* Full-screen search overlay when focused */}
           <div className={`${searchFocused ? 'absolute inset-0 z-30 bg-card flex flex-col' : 'absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto'}`}>
             <div className={`${searchFocused ? 'flex-1 flex flex-col' : 'bg-card rounded-2xl shadow-xl border border-border'}`}>
+              {/* Back button when fullscreen search */}
+              {searchFocused && (
+                <div className="flex items-center gap-2 px-4 pt-4 pb-1">
+                  <button
+                    onPointerDown={(e) => { e.preventDefault(); setSearchFocused(false); }}
+                    className="p-1.5 rounded-lg hover:bg-accent"
+                  >
+                    <ArrowLeft className="h-5 w-5 text-foreground" />
+                  </button>
+                  <span className="text-sm font-semibold text-foreground">Sök destination</span>
+                </div>
+              )}
               {/* Start point - always visible */}
               <div className="flex items-center gap-2 px-4 pt-3 pb-1">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
