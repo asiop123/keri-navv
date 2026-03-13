@@ -1395,55 +1395,56 @@ export default function RoutePlanning() {
                   </div>
               }
 
-                {/* Route stats */}
-                <div className="px-3 pt-2 pb-1 flex items-center justify-around gap-4">
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] text-muted-foreground font-medium">Körtid</span>
-                    <span className="text-sm font-bold text-foreground">
-                      {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
-                    </span>
+                {/* Route stats + KÖR + Resplan in one compact row-based layout */}
+                <div className="px-4 py-2 flex items-center gap-4">
+                  {/* Stats */}
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">Körtid</span>
+                      <span className="text-sm font-bold text-foreground">
+                        {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
+                      </span>
+                    </div>
+                    <div className="w-px h-4 bg-border" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">Distans</span>
+                      <span className="text-sm font-bold text-foreground">
+                        {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
+                      </span>
+                    </div>
+                    <div className="w-px h-4 bg-border" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">Ankomst</span>
+                      <span className="text-sm font-bold text-foreground">
+                        {(() => {
+                          const travelSec = trips.length > 1 ?
+                          combinedTimeH * 3600 + combinedTimeMin * 60 :
+                          routeResult.travelTimeSeconds;
+                          const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
+                          return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                        })()}
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-px h-6 bg-border" />
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] text-muted-foreground font-medium">Distans</span>
-                    <span className="text-sm font-bold text-foreground">
-                      {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
-                    </span>
-                  </div>
-                  <div className="w-px h-6 bg-border" />
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] text-muted-foreground font-medium">Ankomst</span>
-                    <span className="text-sm font-bold text-foreground">
-                      {(() => {
-                        const travelSec = trips.length > 1 ?
-                        combinedTimeH * 3600 + combinedTimeMin * 60 :
-                        routeResult.travelTimeSeconds;
-                        const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
-                        return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-                      })()}
-                    </span>
-                  </div>
-                </div>
 
-                {/* BIG START BUTTON - always visible */}
-                <div className="px-3 py-3">
+                  {/* KÖR button */}
                   <button
-                  onClick={handleStartNavigation}
-                  className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-2xl text-lg flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/30 transition-all">
-                  
-                    <Navigation className="h-6 w-6" />
+                    onClick={handleStartNavigation}
+                    className="shrink-0 h-10 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-base flex items-center gap-2 shadow-md shadow-emerald-600/25 transition-all"
+                  >
+                    <Navigation className="h-5 w-5" />
                     KÖR
                   </button>
                 </div>
 
-                {/* Secondary actions */}
-                <div className="px-3 pb-2">
+                {/* Resplan toggle */}
+                <div className="px-4 pb-1.5">
                   <button
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="w-full h-9 flex items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-medium text-foreground hover:bg-accent/50 transition-colors">
-                  
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="w-full h-7 flex items-center justify-center gap-1.5 rounded-lg text-[11px] font-medium text-muted-foreground hover:bg-accent/50 transition-colors"
+                  >
                     📋 Resplan
-                    {showDetails ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                    {showDetails ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
                   </button>
                 </div>
 
