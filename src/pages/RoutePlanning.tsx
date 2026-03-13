@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
   Navigation, Locate, Square, ChevronUp, ChevronDown, Search,
-  Car, ArrowLeft, Star, Info, Eye, Repeat } from
+  Car, ArrowLeft, Star, Info, Eye, Repeat, ArrowUpDown } from
 'lucide-react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
@@ -1023,16 +1023,16 @@ export default function RoutePlanning() {
                     <ArrowLeft className="h-4 w-4 text-foreground" />
                   </button>
                   <button
-                    onClick={() => {
-                      const tmpStart = start;
-                      const tmpDest = destination;
-                      setStart(tmpDest);
-                      setDestination(tmpStart);
-                    }}
-                    className="p-1 hover:bg-accent rounded-md transition-colors"
-                    title="Byt position och destination"
-                  >
-                    <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+                  onClick={() => {
+                    const tmpStart = start;
+                    const tmpDest = destination;
+                    setStart(tmpDest);
+                    setDestination(tmpStart);
+                  }}
+                  className="p-1 hover:bg-accent rounded-md transition-colors"
+                  title="Byt position och destination">
+                  
+                    <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                 </div>
 
