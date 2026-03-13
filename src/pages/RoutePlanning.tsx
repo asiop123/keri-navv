@@ -1172,14 +1172,14 @@ export default function RoutePlanning() {
               <div className="px-3 py-2 flex items-center gap-2">
                 <button
                 onClick={() => {setViewState('search');setSearchStep('search');}}
-                className="flex-1 min-w-0 hover:bg-accent/40 transition-colors flex flex-col gap-0 text-xs font-sans font-medium rounded-none px-0 mr-[4px]">
+                className="flex-1 min-w-0 hover:bg-accent/40 transition-colors gap-0 text-xs rounded-none px-0 mr-[4px] flex flex-col text-left font-thin font-sans">
                   <div className="flex items-center gap-2 my-0.5 ml-0 px-[2px]">
                     <button onClick={(e) => {e.stopPropagation();handleBack();}} className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors">
                       <ArrowLeft className="h-5 w-5 text-foreground" />
                     </button>
-                    <div className="rounded-lg border-border bg-muted/50 flex-1 min-w-0 flex-row my-0 py-[6px] flex items-start justify-start border-0 gap-0 mx-[2px] px-[21px]">
+                    <div className="rounded-lg border-border bg-muted/50 flex-1 min-w-0 flex-row my-0 flex items-start justify-start mx-[2px] px-[21px] py-0 gap-[11px] border">
                       <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0 my-0" />
-                      <span className="truncate text-base text-foreground mx-[66px] my-0 ml-0 mr-[360px] py-0">{start || 'Min position'}</span>
+                      <span className="truncate text-base text-foreground mx-[66px] my-0 ml-0 py-0 mr-[360px]">{start || 'Min position'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 my-0.5">
@@ -1200,9 +1200,9 @@ export default function RoutePlanning() {
                         <path d="M7 4v16" stroke="hsl(var(--destructive))" />
                       </svg>
                     </button>
-                    <div className="rounded-lg border border-border gap-3 bg-muted/50 flex-1 min-w-0 px-[16px] ml-px py-[6px] flex items-start justify-start">
+                    <div className="rounded-lg border-border bg-muted/50 flex-1 min-w-0 py-[6px] flex items-start justify-start px-[21px] mx-0 pb-0 pt-0 ml-[2px] pr-[21px] gap-[11px] border-2 mr-[360px]">
                       <div className="w-3 h-3 rounded-full bg-destructive shrink-0" />
-                      <span className="truncate text-base text-foreground mr-[360px]">{destination}</span>
+                      <span className="truncate text-base text-foreground mr-0">{destination}</span>
                     </div>
                   </div>
                   {/* Add stop button */}
