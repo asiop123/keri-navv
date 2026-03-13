@@ -1015,7 +1015,7 @@ export default function RoutePlanning() {
       {viewState === 'details' && routeResult && (
         <>
           {/* Top bar - compact route summary */}
-          <div className="absolute top-3 left-3 right-3 z-20 max-w-lg mx-auto">
+          <div className="absolute top-3 left-3 right-3 z-20 max-w-2xl mx-auto">
             <div className="bg-card rounded-xl shadow-lg border border-border flex items-center gap-2 px-2 py-1.5">
               <button onClick={handleBack} className="shrink-0 p-1.5 hover:bg-accent rounded-lg transition-colors">
                 <ArrowLeft className="h-4 w-4 text-foreground" />
