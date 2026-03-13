@@ -1017,30 +1017,24 @@ export default function RoutePlanning() {
           {/* Top bar - route summary stacked */}
           <div className="absolute top-2 left-2 right-2 z-20 max-w-xl mx-auto">
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
-              {/* Compact header: back + from/to + stats + filter */}
-              <div className="flex items-center gap-1.5 px-2 py-1">
+              <div className="flex items-center gap-1.5 px-2 py-1.5">
                 <button onClick={handleBack} className="shrink-0 p-1 hover:bg-accent rounded-md transition-colors">
                   <ArrowLeft className="h-4 w-4 text-foreground" />
                 </button>
 
-                {/* From */}
+                {/* From & To stacked */}
                 <button
                   onClick={() => { setViewState('search'); setSearchStep('search'); }}
-                  className="flex items-center gap-1.5 min-w-0 flex-1 px-2 py-1 hover:bg-accent/40 rounded-md transition-colors"
+                  className="flex-1 min-w-0 flex flex-col gap-0.5 px-2 py-0.5 hover:bg-accent/40 rounded-md transition-colors"
                 >
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="text-xs text-foreground truncate">{start || 'Min position'}</span>
-                </button>
-
-                <span className="text-muted-foreground text-[10px]">→</span>
-
-                {/* To */}
-                <button
-                  onClick={() => { setViewState('search'); setSearchStep('search'); }}
-                  className="flex items-center gap-1.5 min-w-0 flex-1 px-2 py-1 hover:bg-accent/40 rounded-md transition-colors"
-                >
-                  <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
-                  <span className="text-xs font-medium text-foreground truncate">{destination}</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-xs text-foreground truncate">{start || 'Min position'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
+                    <span className="text-xs font-medium text-foreground truncate">{destination}</span>
+                  </div>
                 </button>
 
                 <div className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-primary whitespace-nowrap">
