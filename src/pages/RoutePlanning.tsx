@@ -1223,7 +1223,22 @@ export default function RoutePlanning() {
                 </div>
 
                 {showDetails &&
-              <div className="overflow-y-auto" style={{ maxHeight: 'calc(75vh - 140px)' }}>
+              <div
+                className="overflow-y-auto"
+                style={{ maxHeight: 'calc(75vh - 140px)' }}
+                ref={(el) => { (window as any).__timelineScrollEl = el; }}
+                onDragOver={(e) => {
+                  // Auto-scroll when dragging near edges
+                  const container = e.currentTarget;
+                  const rect = container.getBoundingClientRect();
+                  const y = e.clientY - rect.top;
+                  const edgeZone = 60;
+                  if (y < edgeZone) {
+                    container.scrollBy({ top: -12, behavior: 'auto' });
+                  } else if (y > rect.height - edgeZone) {
+                    container.scrollBy({ top: 12, behavior: 'auto' });
+                  }
+                }}>
                     {/* Big clear summary cards */}
                     <div className="px-4 py-3 space-y-3">
                       {/* Quick overview - big numbers */}
