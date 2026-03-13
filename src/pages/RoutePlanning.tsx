@@ -1017,7 +1017,7 @@ export default function RoutePlanning() {
           {/* Top bar - route summary stacked */}
           <div className="absolute top-2 left-2 right-2 z-20 max-w-xl mx-auto">
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
-              <div className="gap-1.5 px-2 py-1.5 flex items-start justify-start">
+              <div className="gap-1.5 px-2 py-1.5 flex items-center">
                 <button onClick={handleBack} className="shrink-0 p-1 hover:bg-accent rounded-md transition-colors">
                   <ArrowLeft className="h-4 w-4 text-foreground" />
                 </button>
