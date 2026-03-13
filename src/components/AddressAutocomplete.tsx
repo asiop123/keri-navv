@@ -59,6 +59,7 @@ interface AddressAutocompleteProps {
   onInputBlur?: () => void;
   initialSuggestions?: Suggestion[];
   inlineResults?: boolean;
+  autoFocus?: boolean;
 }
 
 export default function AddressAutocomplete({
@@ -73,6 +74,7 @@ export default function AddressAutocomplete({
   onInputBlur,
   initialSuggestions = [],
   inlineResults = false,
+  autoFocus = false,
 }: AddressAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -300,6 +302,7 @@ export default function AddressAutocomplete({
           value={value}
           onChange={e => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
+          autoFocus={autoFocus}
           onFocus={() => {
             if (suggestions.length > 0) {
               setIsOpen(true);
