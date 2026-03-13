@@ -999,26 +999,55 @@ export default function RoutePlanning() {
       {/* ===== DETAILS VIEW ===== */}
       {viewState === 'details' && routeResult && (
         <>
-          {/* Top bar - compact */}
+          {/* Top bar - route summary with editable start & destination */}
           <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
             <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-2.5">
-                <button onClick={handleBack} className="shrink-0 p-1 hover:bg-accent rounded-lg">
+              {/* Header with back button & trip stats */}
+              <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
+                <button onClick={handleBack} className="shrink-0 p-1.5 hover:bg-accent rounded-lg">
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">
-                    {trips.length > 1 ? `${trips.length} turer` : destination}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground flex items-center gap-2">
-                    <span className="font-bold text-primary">{trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km</span>
+                <div className="flex-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                  <span className="font-bold text-primary text-xs">{trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km</span>
+                  <span>·</span>
+                  <span className="font-bold text-primary text-xs">{trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}</span>
+                  {trips.length <= 1 && <>
                     <span>·</span>
-                    <span className="font-bold text-primary">{trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}</span>
-                    {trips.length <= 1 && <>
-                      <span>·</span>
-                      <span>ank {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</span>
-                    </>}
-                  </div>
+                    <span>ank {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </>}
+                </div>
+              </div>
+
+              {/* Editable start & destination */}
+              <div className="px-3 pb-2.5 space-y-0.5">
+                {/* Start */}
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                  <input
+                    value={start}
+                    onChange={(e) => setStart(e.target.value)}
+                    placeholder="Min position"
+                    className="flex-1 bg-transparent text-xs text-muted-foreground truncate outline-none placeholder:text-muted-foreground/50 py-1"
+                  />
+                </div>
+                {/* Dotted connector */}
+                <div className="ml-[4px] border-l border-dashed border-border h-2" />
+                {/* Destination */}
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-destructive shrink-0" />
+                  <input
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    placeholder="Destination"
+                    className="flex-1 bg-transparent text-sm font-semibold text-foreground truncate outline-none placeholder:text-muted-foreground/50 py-1"
+                  />
+                  <button
+                    onClick={() => setSearchStep('search')}
+                    className="shrink-0 p-1 hover:bg-accent rounded-lg"
+                    title="Ändra sökning"
+                  >
+                    <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
                 </div>
               </div>
             </div>
