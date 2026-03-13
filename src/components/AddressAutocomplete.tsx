@@ -386,7 +386,6 @@ export default function AddressAutocomplete({
         </div>
         );
       })()}
-      )}
     </div>
   );
 }
