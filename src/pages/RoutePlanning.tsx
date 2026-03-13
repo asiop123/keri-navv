@@ -1208,20 +1208,20 @@ export default function RoutePlanning() {
                   </div>
                 </button>
 
-                <div className="shrink-0 flex flex-col bg-muted rounded-lg px-6 py-2 min-w-[160px] ml-auto">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm font-bold text-foreground">Körtid</span>
-                    <span className="text-lg font-extrabold text-foreground">
+                <div className="shrink-0 flex flex-col bg-muted rounded-lg px-6 py-3 min-w-[180px] ml-auto">
+                  <div className="flex items-center justify-between gap-6">
+                    <span className="text-base font-bold text-foreground">Körtid</span>
+                    <span className="text-xl font-extrabold text-foreground">
                       {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
                     </span>
                   </div>
-                  <div className="text-xs text-muted-foreground font-bold text-right">
+                  <div className="text-sm text-muted-foreground font-bold text-right">
                     {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
                   </div>
-                  <div className="border-t border-border w-full my-1" />
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm font-bold text-foreground">Ankomst</span>
-                    <span className="text-lg font-extrabold text-foreground">
+                  <div className="border-t-2 border-foreground/20 w-full my-2" />
+                  <div className="flex items-center justify-between gap-6">
+                    <span className="text-base font-bold text-foreground">Ankomst</span>
+                    <span className="text-xl font-extrabold text-foreground">
                       {(() => {
                         const travelSec = trips.length > 1
                           ? (combinedTimeH * 3600 + combinedTimeMin * 60)
