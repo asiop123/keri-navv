@@ -834,8 +834,14 @@ export default function RoutePlanning() {
                                 <p className="text-xs text-muted-foreground">{new Date(place.date).toLocaleDateString('sv-SE')}</p>
                               </div>
                               <span className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 text-white text-lg font-extrabold whitespace-nowrap shrink-0 mx-[24px] my-0 mr-0 pr-[8px] ml-[24px] pb-[12px] pl-[13px]">
-                                🚛 Kör
-                                <Navigation className="h-5 w-5" />
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+                                  <circle cx="12" cy="12" r="9" />
+                                  <circle cx="12" cy="12" r="2.5" />
+                                  <line x1="12" y1="2.5" x2="12" y2="9.5" />
+                                  <line x1="3.5" y1="15" x2="9.8" y2="13" />
+                                  <line x1="20.5" y1="15" x2="14.2" y2="13" />
+                                </svg>
+                                Kör
                               </span>
                             </button>
                           </div>
