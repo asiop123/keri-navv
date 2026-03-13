@@ -18,6 +18,7 @@ import { BK_LIMITS, BKClass, TimelineEntry, RestStopFacilities } from '@/types';
 import { toast } from 'sonner';
 import { geocode, calculateRoute, generateTimeline, reverseGeocode, RouteResult, VehicleParams } from '@/services/tomtom';
 import { SavedTrip, getSavedTrips, saveTrip, saveDrivenTrip } from '@/services/tripStorage';
+import { getSearchHistory, saveSearchHistory, SearchHistoryEntry } from '@/services/searchHistory';
 import TomTomMap, { TomTomMapHandle } from '@/components/TomTomMap';
 import TripHistory from '@/components/TripHistory';
 import AddressAutocomplete, { AddressSuggestion } from '@/components/AddressAutocomplete';
