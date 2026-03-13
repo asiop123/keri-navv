@@ -302,6 +302,7 @@ export default function AddressAutocomplete({
           value={value}
           onChange={e => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
+          autoFocus={autoFocus}
           onFocus={() => {
             if (suggestions.length > 0) {
               setIsOpen(true);
