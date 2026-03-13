@@ -836,10 +836,10 @@ export default function RoutePlanning() {
                               <span className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 text-white text-lg font-extrabold whitespace-nowrap shrink-0 mx-[24px] my-0 mr-0 pr-[8px] ml-[24px] pb-[12px] pl-[13px]">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
                                   <circle cx="12" cy="12" r="10" />
-                                  <circle cx="12" cy="10" r="2.5" />
-                                  <line x1="12" y1="2" x2="12" y2="7.5" />
-                                  <path d="M4.5 18.5 Q 8 13, 9.7 11.5" />
-                                  <path d="M19.5 18.5 Q 16 13, 14.3 11.5" />
+                                  <circle cx="12" cy="12" r="2.5" />
+                                  <line x1="12" y1="2" x2="12" y2="9.5" />
+                                  <line x1="14.2" y1="14" x2="19" y2="19" />
+                                  <line x1="9.8" y1="14" x2="5" y2="19" />
                                 </svg>
                                 Kör
                               </span>
