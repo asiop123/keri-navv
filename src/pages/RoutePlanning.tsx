@@ -1203,6 +1203,14 @@ export default function RoutePlanning() {
                     <div className="w-2.5 h-2.5 rounded-full bg-destructive shrink-0" />
                     <span className="truncate text-sm text-foreground">{destination}</span>
                   </div>
+                  {/* Add stop button */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setViewState('search'); setSearchStep('filters'); }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 my-0.5 w-full rounded border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-accent/30 transition-colors"
+                  >
+                    <Plus className="h-3 w-3 text-muted-foreground/60" />
+                    <span className="text-xs text-muted-foreground/60">Lägg till stopp</span>
+                  </button>
                 </button>
 
                 <button
