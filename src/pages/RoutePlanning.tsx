@@ -1166,23 +1166,23 @@ export default function RoutePlanning() {
       {viewState === 'details' && routeResult &&
       <>
           {/* Top bar - route summary stacked */}
-           <div className="absolute top-2 left-2 right-2 z-20">
+           <div className="absolute top-2 left-2 right-2 z-20 max-w-2xl mx-auto">
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
               {/* Row 1: Nav + Addresses + Vehicle button */}
               <div className="px-3 py-2 flex items-center gap-2">
                 <button
                 onClick={() => {setViewState('search');setSearchStep('search');}}
-                className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
+                className="flex-1 min-w-0 hover:bg-accent/40 transition-colors flex flex-col gap-0 text-xs font-sans font-medium rounded-none px-0 mr-[4px]">
                   <div className="flex items-center gap-2 my-0.5 ml-0 px-[2px]">
                     <button onClick={(e) => {e.stopPropagation();handleBack();}} className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors">
                       <ArrowLeft className="h-5 w-5 text-foreground" />
                     </button>
-                    <div className="rounded-lg border border-border bg-muted/50 flex-1 min-w-0 gap-[12px] px-[13px] my-0 mx-0 py-[6px] flex items-center">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
-                      <span className="truncate text-base text-foreground flex-1 min-w-0">{start || 'Min position'}</span>
+                    <div className="rounded-lg border-border bg-muted/50 flex-1 min-w-0 flex-row my-0 py-[6px] flex items-start justify-start border-0 gap-0 px-[200px] mx-[2px]">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0 my-0" />
+                      <span className="truncate text-base text-foreground mx-[66px] my-0 ml-0 mr-[360px] py-0">{start || 'Min position'}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 my-0.5 ml-0 px-[2px]">
+                  <div className="flex items-center gap-2 my-0.5">
                     <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1200,9 +1200,9 @@ export default function RoutePlanning() {
                         <path d="M7 4v16" stroke="hsl(var(--destructive))" />
                       </svg>
                     </button>
-                    <div className="rounded-lg border border-border bg-muted/50 flex-1 min-w-0 gap-[12px] px-[13px] my-0 mx-0 py-[6px] flex items-center">
+                    <div className="rounded-lg border border-border gap-3 bg-muted/50 flex-1 min-w-0 px-[16px] ml-px py-[6px] flex items-start justify-start">
                       <div className="w-3 h-3 rounded-full bg-destructive shrink-0" />
-                      <span className="truncate text-base text-foreground flex-1 min-w-0">{destination}</span>
+                      <span className="truncate text-base text-foreground mr-[360px]">{destination}</span>
                     </div>
                   </div>
                   {/* Add stop button */}
