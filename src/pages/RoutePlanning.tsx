@@ -1154,6 +1154,12 @@ export default function RoutePlanning() {
                         <div className="text-[9px] text-muted-foreground whitespace-nowrap">
                           {routeResult.distanceKm} km · {Math.floor(routeResult.travelTimeSeconds / 3600)}h {Math.round(routeResult.travelTimeSeconds % 3600 / 60)}min
                         </div>
+                        <div className="text-[9px] font-medium text-primary whitespace-nowrap mt-0.5">
+                          Framme {(() => {
+                            const arr = new Date(new Date(departureTime).getTime() + routeResult.travelTimeSeconds * 1000);
+                            return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                          })()}
+                        </div>
                       </button>
                       {alternativeRoutes.map((alt, i) => {
                     const diffMin = Math.round((alt.travelTimeSeconds - routeResult.travelTimeSeconds) / 60);
