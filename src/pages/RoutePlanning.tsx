@@ -1024,12 +1024,13 @@ export default function RoutePlanning() {
               {/* Route summary - click to open search */}
               <button
                 onClick={() => { setViewState('search'); setSearchStep('search'); }}
-                className="flex-1 min-w-0 flex items-center gap-2 hover:bg-accent/50 rounded-lg px-2 py-1 transition-colors"
+                className="flex-1 min-w-0 hover:bg-accent/50 rounded-lg px-2 py-1 transition-colors"
               >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="text-xs text-muted-foreground truncate max-w-[80px]">{start || 'GPS'}</span>
-                  <span className="text-muted-foreground text-[10px]">→</span>
+                  <span className="text-[11px] text-muted-foreground truncate">{start || 'GPS'}</span>
+                </div>
+                <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
                   <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
                   <span className="text-xs font-semibold text-foreground truncate">{destination}</span>
                 </div>
