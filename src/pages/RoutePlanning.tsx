@@ -57,6 +57,7 @@ export default function RoutePlanning() {
   const [showOptions, setShowOptions] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showBottomSheet, setShowBottomSheet] = useState(true);
+  const [showFilterCurtain, setShowFilterCurtain] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchStep, setSearchStep] = useState<'search' | 'filters' | null>('search');
 
@@ -1238,6 +1239,102 @@ export default function RoutePlanning() {
                       return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
                     })()}
                   </span>
+                </div>
+              </div>
+
+              {/* Curtain toggle arrow */}
+              <button
+                onClick={() => setShowFilterCurtain(!showFilterCurtain)}
+                className="w-full flex items-center justify-center py-0.5 hover:bg-muted/50 transition-colors border-t border-border/40"
+              >
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${showFilterCurtain ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Filter curtain */}
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilterCurtain ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}
+              >
+                <div className="border-t border-border/40 bg-card px-4 py-3 space-y-3">
+                  {/* Tur & retur */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsRoundTrip(!isRoundTrip)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                        isRoundTrip ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'
+                      }`}
+                    >
+                      <Repeat className="h-3.5 w-3.5" />
+                      Tur & retur
+                    </button>
+                  </div>
+
+                  {/* Vehicle & Load compact */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Fordon</Label>
+                      <Select value={vehicleId} onValueChange={setVehicleId}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Välj" /></SelectTrigger>
+                        <SelectContent>
+                          {mockVehicles.map((v) =>
+                            <SelectItem key={v.id} value={v.id}>{v.brand} {v.model}</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Last (kg)</Label>
+                      <Input type="number" value={loadWeight} onChange={(e) => setLoadWeight(e.target.value)} placeholder="0" className="h-8 text-xs" />
+                    </div>
+                  </div>
+
+                  {/* Route type */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setRouteType('normal')}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+                    >
+                      Normal (9h)
+                    </button>
+                    <button
+                      onClick={() => setRouteType('fastest')}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'fastest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+                    >
+                      Snabbast (10h)
+                    </button>
+                  </div>
+
+                  {/* Rest stop filters */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { key: 'toilet' as const, icon: '🚻', label: 'Toalett' },
+                      { key: 'food' as const, icon: '🍽️', label: 'Mat' },
+                      { key: 'shower' as const, icon: '🚿', label: 'Dusch' },
+                      { key: 'fuel' as const, icon: '⛽', label: 'Drivmedel' },
+                      { key: 'truckParking' as const, icon: '🅿️', label: 'Lastbilsp.' }
+                    ].map((f) =>
+                      <button
+                        key={f.key}
+                        onClick={() => setRestStopFilters((prev) => ({ ...prev, [f.key]: !prev[f.key] }))}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
+                          restStopFilters[f.key] ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                        }`}
+                      >
+                        <span>{f.icon}</span>
+                        {f.label}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Re-calculate button */}
+                  <Button
+                    onClick={() => { setShowFilterCurtain(false); handleSearch(); }}
+                    disabled={isLoading}
+                    size="sm"
+                    className="w-full bg-primary text-primary-foreground font-semibold rounded-lg"
+                  >
+                    {isLoading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Route className="h-3.5 w-3.5 mr-1.5" />}
+                    Beräkna om rutt
+                  </Button>
                 </div>
               </div>
             </div>
