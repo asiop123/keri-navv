@@ -1028,15 +1028,15 @@ export default function RoutePlanning() {
                 className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
                 
                   {/* Från rad */}
-                  <div className="flex items-center gap-1.5 px-2 py-0.5">
+                  <div className="py-0.5 pb-0 pt-0 border-none items-start justify-start shadow my-0 mx-0 px-0 pr-px gap-[8px] flex flex-row rounded-none border-0">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-xs text-foreground truncate">{start || 'Min position'}</span>
+                    <span className="text-foreground truncate text-sm">{start || 'Min position'}</span>
                   </div>
                   
                   {/* Till rad */}
-                  <div className="flex items-center gap-1.5 px-2 py-0.5">
+                  <div className="gap-1.5 px-0 flex-col flex items-start justify-start py-0 pr-[8px]">
                     <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
-                    <span className="text-xs font-medium text-foreground truncate">{destination}</span>
+                    <span className="font-medium text-foreground truncate text-sm">{destination}</span>
                   </div>
                 </button>
 
