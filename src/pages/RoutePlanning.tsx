@@ -57,6 +57,7 @@ export default function RoutePlanning() {
   const [showDetails, setShowDetails] = useState(false);
   const [showBottomSheet, setShowBottomSheet] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchStep, setSearchStep] = useState<'search' | 'filters' | null>(null);
   
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -593,22 +594,20 @@ export default function RoutePlanning() {
       {/* ===== SEARCH VIEW ===== */}
       {viewState === 'search' && (
         <>
-          {/* Full-screen search overlay when focused */}
-          <div className={`${searchFocused ? 'absolute inset-0 z-30 bg-card flex flex-col' : 'absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto'}`}>
-            <div className={`${searchFocused ? 'flex-1 flex flex-col' : 'bg-card rounded-2xl shadow-xl border border-border'}`}>
-              {/* Back button when fullscreen search */}
-              {searchFocused && (
-                <div className="flex items-center gap-2 px-4 pt-4 pb-1">
-                  <button
-                    onPointerDown={(e) => { e.preventDefault(); setSearchFocused(false); }}
-                    className="p-1.5 rounded-lg hover:bg-accent"
-                  >
-                    <ArrowLeft className="h-5 w-5 text-foreground" />
-                  </button>
-                  <span className="text-sm font-semibold text-foreground">Sök destination</span>
-                </div>
-              )}
-              {/* Start point - always visible */}
+          {/* STEP 1: Full-screen SEARCH page */}
+          {searchStep === 'search' && (
+            <div className="absolute inset-0 z-30 bg-card flex flex-col">
+              <div className="flex items-center gap-2 px-4 pt-4 pb-1">
+                <button
+                  onPointerDown={(e) => { e.preventDefault(); setSearchStep(null); setSearchFocused(false); }}
+                  className="p-1.5 rounded-lg hover:bg-accent"
+                >
+                  <ArrowLeft className="h-5 w-5 text-foreground" />
+                </button>
+                <span className="text-sm font-semibold text-foreground">Sök destination</span>
+              </div>
+
+              {/* Start point */}
               <div className="flex items-center gap-2 px-4 pt-3 pb-1">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
                 <AddressAutocomplete
@@ -634,7 +633,7 @@ export default function RoutePlanning() {
               </div>
 
               {/* Destination field */}
-              <div className="flex items-center gap-3 px-4 py-2">
+              <div className="flex items-center gap-3 px-4 py-2 border-b border-border/50">
                 <Search className="h-5 w-5 text-muted-foreground shrink-0" />
                 <AddressAutocomplete
                   value={destination}
@@ -651,6 +650,8 @@ export default function RoutePlanning() {
                         setViewState('details');
                         setShowBottomSheet(true);
                         setShowDetails(false);
+                        setSearchStep(null);
+                        setSearchFocused(false);
                         return;
                       }
                     }
@@ -658,22 +659,20 @@ export default function RoutePlanning() {
                       setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
                       pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
                     }
+                    // Move to filters step
+                    setSearchStep('filters');
                     setSearchFocused(false);
                   }}
                   placeholder="Vart vill du åka?"
                   className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-base placeholder:text-muted-foreground/60"
                   biasLat={userPosition?.lat}
                   biasLng={userPosition?.lng}
-                  onInputFocus={() => { setSearchFocused(true); setShowOptions(true); }}
-                  onInputBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                  inlineResults={searchFocused}
+                  onInputFocus={() => setSearchFocused(true)}
+                  onInputBlur={() => {}}
+                  inlineResults={true}
                   initialSuggestions={(() => {
-                    // Build two types: full trips (for empty search) + individual locations (for matching)
                     const tripSuggestions: Array<{ id: string; name: string; address: string; lat: number; lng: number; isHistory: boolean; matchText: string }> = [];
                     const seenTrips = new Set<string>();
-                    const seenLocations = new Set<string>();
-
-                    // Full trips (deduped by destination) - shown when no search
                     for (const t of savedTrips) {
                       const key = t.endName.toLowerCase();
                       if (seenTrips.has(key)) continue;
@@ -690,7 +689,6 @@ export default function RoutePlanning() {
                         matchText: [t.endName, ...t.waypointNames].join('|'),
                       });
                     }
-
                     return tripSuggestions.slice(0, 5);
                   })()}
                 />
@@ -701,221 +699,282 @@ export default function RoutePlanning() {
                 )}
               </div>
 
-              {/* Expandable options */}
-              <div className="border-t border-border/50">
-                {/* Tur & retur toggle + options toggle */}
-                <div className="flex items-center justify-between px-4 py-2">
-                  <button
-                    onClick={() => setIsRoundTrip(!isRoundTrip)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                      isRoundTrip
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-accent'
-                    }`}
+              {/* If destination is set, show "Nästa" button */}
+              {destination && (
+                <div className="px-4 py-3">
+                  <Button
+                    onClick={() => setSearchStep('filters')}
+                    className="w-full h-10 bg-primary text-primary-foreground font-semibold rounded-xl"
                   >
-                    <Repeat className="h-3.5 w-3.5" />
-                    Tur & retur
+                    Nästa – Anpassa rutt
+                    <ChevronDown className="h-4 w-4 ml-2 rotate-[-90deg]" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 2: Full-screen FILTERS page */}
+          {searchStep === 'filters' && (
+            <div className="absolute inset-0 z-30 bg-card flex flex-col overflow-y-auto">
+              <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-border/50">
+                <button
+                  onClick={() => setSearchStep('search')}
+                  className="p-1.5 rounded-lg hover:bg-accent"
+                >
+                  <ArrowLeft className="h-5 w-5 text-foreground" />
+                </button>
+                <div className="flex-1">
+                  <span className="text-sm font-semibold text-foreground">Anpassa rutt</span>
+                  <p className="text-xs text-muted-foreground truncate">{start || 'Min position'} → {destination}</p>
+                </div>
+              </div>
+
+              <div className="flex-1 px-4 py-4 space-y-4">
+                {/* Tur & retur */}
+                <button
+                  onClick={() => setIsRoundTrip(!isRoundTrip)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    isRoundTrip
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-accent'
+                  }`}
+                >
+                  <Repeat className="h-3.5 w-3.5" />
+                  Tur & retur
+                </button>
+
+                {/* Waypoints */}
+                {waypoints.map((wp, i) => (
+                  <div key={i} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
+                      <AddressAutocomplete
+                        value={wp.address}
+                        onChange={(val) => { const n = [...waypoints]; n[i] = { ...n[i], address: val }; setWaypoints(n); }}
+                        placeholder={`Stopp ${i + 1}`}
+                        className="h-9 text-sm"
+                        biasLat={userPosition?.lat}
+                        biasLng={userPosition?.lng}
+                      />
+                      <button onClick={() => setWaypoints(waypoints.filter((_, j) => j !== i))} className="p-1 hover:bg-accent rounded">
+                        <X className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
+                    </div>
+                    <div className="ml-5 flex items-center gap-2">
+                      <Clock className="h-3 w-3 text-muted-foreground" />
+                      <input
+                        type="number"
+                        min={0}
+                        value={wp.stopMinutes}
+                        onChange={(e) => { const n = [...waypoints]; n[i] = { ...n[i], stopMinutes: Number(e.target.value) }; setWaypoints(n); }}
+                        className="w-16 h-7 rounded-md border border-input bg-background px-2 text-xs text-center"
+                      />
+                      <span className="text-[10px] text-muted-foreground">min lasttid</span>
+                    </div>
+                  </div>
+                ))}
+
+                <button onClick={() => setWaypoints([...waypoints, { address: '', stopMinutes: 30 }])} className="text-xs text-primary hover:underline flex items-center gap-1">
+                  <Plus className="h-3 w-3" /> Lägg till stopp
+                </button>
+
+                {/* Vehicle & Load */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px] text-muted-foreground">Fordon</Label>
+                    <Select value={vehicleId} onValueChange={setVehicleId}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Välj" /></SelectTrigger>
+                      <SelectContent>
+                        {mockVehicles.map(v => (
+                          <SelectItem key={v.id} value={v.id}>{v.brand} {v.model}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] text-muted-foreground">Last (kg)</Label>
+                    <Input type="number" value={loadWeight} onChange={e => setLoadWeight(e.target.value)} placeholder="0" className="h-8 text-xs" />
+                  </div>
+                </div>
+
+                {/* Departure time */}
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">Avgångstid</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="datetime-local"
+                      value={departureTime}
+                      onChange={e => setDepartureTime(e.target.value)}
+                      className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs"
+                    />
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    {(() => {
+                      const d = new Date(departureTime);
+                      const dayName = d.toLocaleDateString('sv-SE', { weekday: 'long' });
+                      const dateStr = d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
+                      const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                      return (
+                        <span className={isWeekend ? 'text-amber-500 font-medium' : ''}>
+                          {dayName} {dateStr} {isWeekend && '(helg – annan trafik)'}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* Route type */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setRouteType('normal')}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+                  >
+                    Normal (9h)
                   </button>
                   <button
-                    onClick={() => setShowOptions(!showOptions)}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setRouteType('fastest')}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'fastest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
                   >
-                    <Car className="h-3.5 w-3.5" />
-                    {selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model}` : 'Fordon & mer'}
-                    {showOptions ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                    Snabbast (10h)
                   </button>
                 </div>
 
-                {showOptions && (
-                  <div className="px-4 pb-4 space-y-3 border-t border-border/30">
+                {/* Remaining drive time */}
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">Körtid redan använd idag</Label>
+                  <div className="flex items-center gap-3 mt-1">
+                    <input
+                      type="range"
+                      min={0}
+                      max={9}
+                      step={0.5}
+                      value={usedDriveHours}
+                      onChange={e => setUsedDriveHours(Number(e.target.value))}
+                      className="flex-1 h-2 accent-primary"
+                    />
+                    <span className="text-sm font-bold text-foreground min-w-[3rem] text-right">
+                      {usedDriveHours}h
+                    </span>
+                  </div>
+                  {usedDriveHours > 0 && (
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                      ⏱ {routeType === 'fastest' ? 10 - usedDriveHours : 9 - usedDriveHours}h körtid kvar idag
+                    </p>
+                  )}
+                </div>
 
-                    {/* Waypoints */}
-                    {waypoints.map((wp, i) => (
-                      <div key={i} className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
-                          <AddressAutocomplete
-                            value={wp.address}
-                            onChange={(val) => { const n = [...waypoints]; n[i] = { ...n[i], address: val }; setWaypoints(n); }}
-                            placeholder={`Stopp ${i + 1}`}
-                            className="h-9 text-sm"
-                            biasLat={userPosition?.lat}
-                            biasLng={userPosition?.lng}
-                          />
-                          <button onClick={() => setWaypoints(waypoints.filter((_, j) => j !== i))} className="p-1 hover:bg-accent rounded">
-                            <X className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                        </div>
-                        <div className="ml-5 flex items-center gap-2">
-                          <Clock className="h-3 w-3 text-muted-foreground" />
-                          <input
-                            type="number"
-                            min={0}
-                            value={wp.stopMinutes}
-                            onChange={(e) => { const n = [...waypoints]; n[i] = { ...n[i], stopMinutes: Number(e.target.value) }; setWaypoints(n); }}
-                            className="w-16 h-7 rounded-md border border-input bg-background px-2 text-xs text-center"
-                          />
-                          <span className="text-[10px] text-muted-foreground">min lasttid</span>
-                        </div>
-                      </div>
+                {/* Rest stop facility filters */}
+                <div className="space-y-2">
+                  <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Krav på rastplatser</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {([
+                      { key: 'toilet' as const, icon: '🚻', label: 'Toalett' },
+                      { key: 'food' as const, icon: '🍽️', label: 'Mat' },
+                      { key: 'shower' as const, icon: '🚿', label: 'Dusch' },
+                      { key: 'fuel' as const, icon: '⛽', label: 'Drivmedel' },
+                      { key: 'truckParking' as const, icon: '🅿️', label: 'Lastbilsp.' },
+                    ]).map(f => (
+                      <button
+                        key={f.key}
+                        onClick={() => setRestStopFilters(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
+                          restStopFilters[f.key]
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                        }`}
+                      >
+                        <span>{f.icon}</span>
+                        {f.label}
+                      </button>
                     ))}
+                  </div>
+                  {Object.values(restStopFilters).some(Boolean) && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Bara rastplatser med valda faciliteter visas
+                    </p>
+                  )}
+                </div>
 
-                    <button onClick={() => setWaypoints([...waypoints, { address: '', stopMinutes: 30 }])} className="text-xs text-primary hover:underline flex items-center gap-1">
-                      <Plus className="h-3 w-3" /> Lägg till stopp
-                    </button>
-
-                    {/* Vehicle & Load */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-[10px] text-muted-foreground">Fordon</Label>
-                        <Select value={vehicleId} onValueChange={setVehicleId}>
-                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Välj" /></SelectTrigger>
-                          <SelectContent>
-                            {mockVehicles.map(v => (
-                              <SelectItem key={v.id} value={v.id}>{v.brand} {v.model}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-[10px] text-muted-foreground">Last (kg)</Label>
-                        <Input type="number" value={loadWeight} onChange={e => setLoadWeight(e.target.value)} placeholder="0" className="h-8 text-xs" />
-                      </div>
-                    </div>
-
-                    {/* Departure time */}
-                    <div>
-                      <Label className="text-[10px] text-muted-foreground">Avgångstid</Label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="datetime-local"
-                          value={departureTime}
-                          onChange={e => setDepartureTime(e.target.value)}
-                          className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs"
-                        />
-                      </div>
-                      <div className="text-[10px] text-muted-foreground mt-1">
-                        {(() => {
-                          const d = new Date(departureTime);
-                          const dayName = d.toLocaleDateString('sv-SE', { weekday: 'long' });
-                          const dateStr = d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
-                          const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                          return (
-                            <span className={isWeekend ? 'text-amber-500 font-medium' : ''}>
-                              {dayName} {dateStr} {isWeekend && '(helg – annan trafik)'}
-                            </span>
-                          );
-                        })()}
-                      </div>
-                    </div>
-
-                    {/* Route type */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setRouteType('normal')}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-                      >
-                        Normal (9h)
-                      </button>
-                      <button
-                        onClick={() => setRouteType('fastest')}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'fastest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-                      >
-                        Snabbast (10h)
-                      </button>
-                    </div>
-
-                    {/* Remaining drive time */}
-                    <div>
-                      <Label className="text-[10px] text-muted-foreground">Körtid redan använd idag</Label>
-                      <div className="flex items-center gap-3 mt-1">
-                        <input
-                          type="range"
-                          min={0}
-                          max={9}
-                          step={0.5}
-                          value={usedDriveHours}
-                          onChange={e => setUsedDriveHours(Number(e.target.value))}
-                          className="flex-1 h-2 accent-primary"
-                        />
-                        <span className="text-sm font-bold text-foreground min-w-[3rem] text-right">
-                          {usedDriveHours}h
-                        </span>
-                      </div>
-                      {usedDriveHours > 0 && (
-                        <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
-                          ⏱ {routeType === 'fastest' ? 10 - usedDriveHours : 9 - usedDriveHours}h körtid kvar idag
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Rest stop facility filters */}
-                    <div className="space-y-2">
-                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Krav på rastplatser</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {([
-                          { key: 'toilet' as const, icon: '🚻', label: 'Toalett' },
-                          { key: 'food' as const, icon: '🍽️', label: 'Mat' },
-                          { key: 'shower' as const, icon: '🚿', label: 'Dusch' },
-                          { key: 'fuel' as const, icon: '⛽', label: 'Drivmedel' },
-                          { key: 'truckParking' as const, icon: '🅿️', label: 'Lastbilsp.' },
-                        ]).map(f => (
-                          <button
-                            key={f.key}
-                            onClick={() => setRestStopFilters(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
-                            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
-                              restStopFilters[f.key]
-                                ? 'bg-primary text-primary-foreground border-primary'
-                                : 'bg-muted text-muted-foreground border-border hover:bg-accent'
-                            }`}
-                          >
-                            <span>{f.icon}</span>
-                            {f.label}
-                          </button>
-                        ))}
-                      </div>
-                      {Object.values(restStopFilters).some(Boolean) && (
-                        <p className="text-[10px] text-muted-foreground">
-                          Bara rastplatser med valda faciliteter visas
-                        </p>
-                      )}
-                    </div>
-
-                    {/* BK status */}
-                    {bkResults.length > 0 && (
-                      <div className="flex gap-1.5 flex-wrap">
-                        {bkResults.map(r => (
-                          <Badge key={r.bk} className={`${statusColor(r.status)} text-[10px] px-1.5 py-0`}>
-                            {r.bk} {r.status === 'green' ? '✓' : r.status === 'yellow' ? '⚠' : '✗'}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                {/* BK status */}
+                {bkResults.length > 0 && (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {bkResults.map(r => (
+                      <Badge key={r.bk} className={`${statusColor(r.status)} text-[10px] px-1.5 py-0`}>
+                        {r.bk} {r.status === 'green' ? '✓' : r.status === 'yellow' ? '⚠' : '✗'}
+                      </Badge>
+                    ))}
                   </div>
                 )}
               </div>
 
               {/* Search button */}
-              {destination && (
-                <div className="px-4 pb-3">
-                  <Button
-                    onClick={() => handleSearch()}
-                    disabled={isLoading}
-                    className="w-full h-10 bg-primary text-primary-foreground font-semibold rounded-xl"
-                  >
-                    {isLoading ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Beräknar rutt...</>
-                    ) : (
-                      <><Route className="h-4 w-4 mr-2" /> Sök rutt</>
-                    )}
-                  </Button>
-                </div>
-              )}
+              <div className="px-4 pb-4 pt-2 border-t border-border/50">
+                <Button
+                  onClick={() => { setSearchStep(null); setSearchFocused(false); handleSearch(); }}
+                  disabled={isLoading || !destination}
+                  className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl text-base"
+                >
+                  {isLoading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Beräknar rutt...</>
+                  ) : (
+                    <><Route className="h-4 w-4 mr-2" /> Sök rutt</>
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Map search card (when no step is active) */}
+          {!searchStep && (
+            <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
+              <div className="bg-card rounded-2xl shadow-xl border border-border">
+                {/* Start point */}
+                <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                  <AddressAutocomplete
+                    value={start}
+                    onChange={setStart}
+                    placeholder="Min position (GPS)"
+                    className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-xs text-muted-foreground placeholder:text-muted-foreground/50"
+                    biasLat={userPosition?.lat}
+                    biasLng={userPosition?.lng}
+                  />
+                  {userPosition && (
+                    <button
+                      onClick={async () => {
+                        const name = await reverseGeocode(userPosition.lat, userPosition.lng);
+                        setStart(name);
+                      }}
+                      className="shrink-0 p-1 rounded-md hover:bg-accent"
+                      title="Min position"
+                    >
+                      <Locate className="h-3.5 w-3.5 text-primary" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Destination - clicking opens step 1 */}
+                <div
+                  className="flex items-center gap-3 px-4 py-2 cursor-pointer"
+                  onClick={() => setSearchStep('search')}
+                >
+                  <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <span className={`text-base flex-1 ${destination ? 'text-foreground' : 'text-muted-foreground/60'}`}>
+                    {destination || 'Vart vill du åka?'}
+                  </span>
+                  {destination && (
+                    <button onClick={(e) => { e.stopPropagation(); setDestination(''); }} className="text-muted-foreground hover:text-foreground">
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Quick actions + Trip history - bottom (hidden during fullscreen search) */}
-          {!searchFocused && (
+          {!searchStep && (
             <div className="absolute bottom-0 left-0 right-0 z-20">
               <div className="max-w-lg mx-auto">
                 {/* GPS button */}
