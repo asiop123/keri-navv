@@ -833,8 +833,8 @@ export default function RoutePlanning() {
                                 <p className="text-sm font-medium text-foreground truncate">{place.name}</p>
                                 <p className="text-xs text-muted-foreground">{new Date(place.date).toLocaleDateString('sv-SE')}</p>
                               </div>
-                              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-semibold whitespace-nowrap shrink-0">
-                                <Navigation className="h-3 w-3" />
+                              <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 text-white text-xs font-semibold whitespace-nowrap shrink-0">
+                                <Navigation className="h-3.5 w-3.5" />
                                 Kör hit
                               </span>
                             </button>
