@@ -743,13 +743,13 @@ export default function RoutePlanning() {
                   </div>
                 </div>
 
-                {/* Senaste - shown below search results when no active search */}
-                {!destination && (searchHistoryEntries.length > 0 || savedTrips.length > 0) &&
+                {/* Senaste reseplaner - full trips with all stops */}
+                {!destination && savedTrips.length > 0 &&
                 <div className="px-4 pt-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste</p>
-                  <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste reseplaner</p>
+                  <div className="space-y-2">
                     {savedTrips.slice(0, 5).map((trip) => {
-                      const allStops = [trip.startName, ...trip.waypointNames, trip.endName].join(' → ');
+                      const stops = [trip.startName, ...trip.waypointNames, trip.endName];
                       return (
                         <button
                           key={trip.id}
@@ -765,33 +765,27 @@ export default function RoutePlanning() {
                             setSearchStep(null);
                             setSearchFocused(false);
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-colors text-left">
-                          <History className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-foreground truncate">{allStops}</p>
-                            <p className="text-xs text-muted-foreground">{trip.distanceKm} km · {Math.floor(trip.travelTimeSeconds / 3600)}h {Math.round(trip.travelTimeSeconds % 3600 / 60)}min</p>
+                          className="w-full flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-accent transition-colors text-left border border-border/40 bg-card/50">
+                          <div className="flex flex-col items-center pt-1 gap-0.5 shrink-0">
+                            {stops.map((_, i) => (
+                              <div key={i}>
+                                <div className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-emerald-500' : i === stops.length - 1 ? 'bg-destructive' : 'bg-primary'}`} />
+                                {i < stops.length - 1 && <div className="w-0.5 h-3 bg-border mx-auto" />}
+                              </div>
+                            ))}
                           </div>
+                          <div className="flex-1 min-w-0">
+                            {stops.map((stop, i) => (
+                              <p key={i} className={`text-sm truncate ${i === stops.length - 1 ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                                {stop}
+                              </p>
+                            ))}
+                            <p className="text-xs text-muted-foreground mt-1">{trip.distanceKm} km · {Math.floor(trip.travelTimeSeconds / 3600)}h {Math.round(trip.travelTimeSeconds % 3600 / 60)}min</p>
+                          </div>
+                          <Route className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
                         </button>
                       );
                     })}
-                    {searchHistoryEntries.filter(h => !savedTrips.some(t => t.endName.toLowerCase() === h.name.toLowerCase())).slice(0, 5).map((h) => (
-                      <button
-                        key={h.id}
-                        onClick={() => {
-                          setDestination(h.name);
-                          setDestinationCoords({ lat: h.lat, lng: h.lng });
-                          pendingDestCoordsRef.current = { lat: h.lat, lng: h.lng, name: h.name };
-                          setSearchStep('filters');
-                          setSearchFocused(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-colors text-left">
-                        <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-foreground truncate">{h.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{h.address}</p>
-                        </div>
-                      </button>
-                    ))}
                   </div>
                 </div>
                 }
