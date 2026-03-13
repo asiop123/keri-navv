@@ -1166,7 +1166,7 @@ export default function RoutePlanning() {
       {viewState === 'details' && routeResult &&
       <>
           {/* Top bar - route summary stacked */}
-           <div className="absolute top-2 left-2 right-2 z-20 max-w-2xl mx-auto">
+           <div className="absolute top-2 left-2 right-2 z-20">
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
               {/* Row 1: Nav + Addresses + Vehicle button */}
               <div className="px-3 py-2 flex items-center gap-2">
