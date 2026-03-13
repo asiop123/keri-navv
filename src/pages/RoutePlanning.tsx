@@ -108,6 +108,7 @@ export default function RoutePlanning() {
   const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
 
   useEffect(() => {getSavedTrips().then(setSavedTrips);}, []);
+  useEffect(() => {getSearchHistory(15).then(setSearchHistoryEntries);}, []);
 
   // Click outside to dismiss panels
   const dismissPanels = useCallback(() => {
@@ -115,8 +116,6 @@ export default function RoutePlanning() {
     setShowBottomSheet(false);
     setSelectedLocation(null);
   }, []);
-
-  const [searchHistoryEntries, setSearchHistoryEntries] = useState<SearchHistoryEntry[]>([]);
 
   // Auto-start GPS watch for smooth position
   const gpsInitRef = useRef(false);
