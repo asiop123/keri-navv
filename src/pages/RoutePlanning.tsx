@@ -681,100 +681,102 @@ export default function RoutePlanning() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Till</span>
-                <Search className="h-5 w-5 text-muted-foreground shrink-0" />
-                <AddressAutocomplete
-              value={destination}
-              onChange={setDestination}
-              onSelect={(suggestion) => {
-                // Save to search history (non-blocking)
-                if (suggestion.lat && suggestion.lng && !suggestion.isHistory) {
-                  saveSearchHistory({
-                    name: suggestion.name,
-                    address: suggestion.address || suggestion.name,
-                    lat: suggestion.lat,
-                    lng: suggestion.lng,
-                  }).then(() => getSearchHistory(15).then(setSearchHistoryEntries));
-                }
-
-                if (suggestion.isHistory) {
-                  const trip = savedTrips.find((t) => t.id === suggestion.id);
-                  if (trip) {
-                    setRouteResult(trip.route);
-                    setTimeline(trip.timeline);
-                    setDestination(trip.endName);
-                    const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
-                    setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
-                    setViewState('details');
-                    setShowBottomSheet(true);
-                    setShowDetails(false);
-                    setSearchStep(null);
-                    setSearchFocused(false);
-                    return;
+                    <div className="flex items-center gap-2">
+                      <AddressAutocomplete
+                    value={destination}
+                    onChange={setDestination}
+                    onSelect={(suggestion) => {
+                      if (suggestion.lat && suggestion.lng && !suggestion.isHistory) {
+                        saveSearchHistory({
+                          name: suggestion.name,
+                          address: suggestion.address || suggestion.name,
+                          lat: suggestion.lat,
+                          lng: suggestion.lng,
+                        }).then(() => getSearchHistory(15).then(setSearchHistoryEntries));
+                      }
+                      if (suggestion.isHistory) {
+                        const trip = savedTrips.find((t) => t.id === suggestion.id);
+                        if (trip) {
+                          setRouteResult(trip.route);
+                          setTimeline(trip.timeline);
+                          setDestination(trip.endName);
+                          const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
+                          setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
+                          setViewState('details');
+                          setShowBottomSheet(true);
+                          setShowDetails(false);
+                          setSearchStep(null);
+                          setSearchFocused(false);
+                          return;
+                        }
+                      }
+                      if (suggestion.lat && suggestion.lng) {
+                        setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
+                        pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
+                      }
+                      setSearchStep('filters');
+                      setSearchFocused(false);
+                    }}
+                    placeholder="Vart vill du åka?"
+                    autoFocus={true}
+                    className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-sm text-foreground placeholder:text-muted-foreground/50 px-0"
+                    biasLat={userPosition?.lat}
+                    biasLng={userPosition?.lng}
+                    onInputFocus={() => setSearchFocused(true)}
+                    onInputBlur={() => {}}
+                    initialSuggestions={(() => {
+                      const suggestions: Array<{id: string;name: string;address: string;lat: number;lng: number;isHistory: boolean;matchText: string;}> = [];
+                      const seenKeys = new Set<string>();
+                      for (const t of savedTrips) {
+                        const key = t.endName.toLowerCase();
+                        if (seenKeys.has(key)) continue;
+                        seenKeys.add(key);
+                        const allStops = [t.startName, ...t.waypointNames, t.endName].join(' → ');
+                        const destWp = t.route.waypoints[t.route.waypoints.length - 1];
+                        suggestions.push({
+                          id: t.id,
+                          name: allStops,
+                          address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round(t.travelTimeSeconds % 3600 / 60)}min`,
+                          lat: destWp.lat,
+                          lng: destWp.lng,
+                          isHistory: true,
+                          matchText: [t.endName, ...t.waypointNames].join('|')
+                        });
+                      }
+                      for (const h of searchHistoryEntries) {
+                        const key = h.name.toLowerCase();
+                        if (seenKeys.has(key)) continue;
+                        seenKeys.add(key);
+                        suggestions.push({
+                          id: h.id,
+                          name: h.name,
+                          address: h.address,
+                          lat: h.lat,
+                          lng: h.lng,
+                          isHistory: true,
+                          matchText: h.name,
+                        });
+                      }
+                      return suggestions.slice(0, 8);
+                    })()} />
+                  
+                      {destination &&
+                  <button onClick={() => setDestination('')} className="shrink-0 text-muted-foreground hover:text-foreground">
+                          <X className="h-4 w-4" />
+                        </button>
                   }
-                }
-                if (suggestion.lat && suggestion.lng) {
-                  setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
-                  pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
-                }
-                setSearchStep('filters');
-                setSearchFocused(false);
-              }}
-              placeholder="Vart vill du åka?"
-              autoFocus={true}
-              className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-base placeholder:text-muted-foreground/60"
-              biasLat={userPosition?.lat}
-              biasLng={userPosition?.lng}
-              onInputFocus={() => setSearchFocused(true)}
-              onInputBlur={() => {}}
-              inlineResults={true}
-              initialSuggestions={(() => {
-                // Merge trip history + search history
-                const suggestions: Array<{id: string;name: string;address: string;lat: number;lng: number;isHistory: boolean;matchText: string;}> = [];
-                const seenKeys = new Set<string>();
-
-                // Trip history first
-                for (const t of savedTrips) {
-                  const key = t.endName.toLowerCase();
-                  if (seenKeys.has(key)) continue;
-                  seenKeys.add(key);
-                  const allStops = [t.startName, ...t.waypointNames, t.endName].join(' → ');
-                  const destWp = t.route.waypoints[t.route.waypoints.length - 1];
-                  suggestions.push({
-                    id: t.id,
-                    name: allStops,
-                    address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round(t.travelTimeSeconds % 3600 / 60)}min`,
-                    lat: destWp.lat,
-                    lng: destWp.lng,
-                    isHistory: true,
-                    matchText: [t.endName, ...t.waypointNames].join('|')
-                  });
-                }
-
-                // Search history entries
-                for (const h of searchHistoryEntries) {
-                  const key = h.name.toLowerCase();
-                  if (seenKeys.has(key)) continue;
-                  seenKeys.add(key);
-                  suggestions.push({
-                    id: h.id,
-                    name: h.name,
-                    address: h.address,
-                    lat: h.lat,
-                    lng: h.lng,
-                    isHistory: true,
-                    matchText: h.name,
-                  });
-                }
-
-                return suggestions.slice(0, 8);
-              })()} />
-            
-                {destination &&
-            <button onClick={() => setDestination('')} className="text-muted-foreground hover:text-foreground">
-                    <X className="h-4 w-4" />
-                  </button>
-            }
+                    </div>
+                  </div>
+                  {!destination &&
+              <div className="shrink-0 p-2 rounded-xl bg-primary text-primary-foreground">
+                      <Search className="h-4 w-4" />
+                    </div>
+              }
+                </div>
               </div>
+
+              {/* Inline results below card */}
+              <div className="flex-1 mx-4 mt-2 overflow-y-auto" />
 
               {/* If destination is set, show "Nästa" button */}
               {destination &&
