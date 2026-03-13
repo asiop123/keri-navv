@@ -1020,7 +1020,7 @@ export default function RoutePlanning() {
               <div className="gap-1.5 px-2 py-1.5 flex items-center">
                 <div className="shrink-0 flex flex-col items-center gap-1 self-start mt-0.5">
                   <button onClick={handleBack} className="p-1 hover:bg-accent rounded-md transition-colors mx-[4px] my-[4px] border-dashed">
-                    <ArrowLeft className="h-5 w-5 text-foreground" />
+                    <ArrowLeft className="h-5 text-foreground w-[34px] border-dashed" />
                   </button>
                   <button
                   onClick={() => {
