@@ -1041,13 +1041,13 @@ export default function RoutePlanning() {
                 className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
                 
                   {/* Från rad */}
-                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[360px]">
+                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[420px]">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                     <span className="truncate text-sm px-0 text-primary my-[2px] mx-[10px] bg-gray-200">{start || 'Min position'}</span>
                   </div>
                   
                   {/* Till rad */}
-                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[360px]">
+                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[420px]">
                     <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
                     <span className="truncate text-sm px-0 text-primary my-[2px] mx-[10px] bg-gray-200">{destination}</span>
                   </div>
