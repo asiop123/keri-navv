@@ -1014,54 +1014,50 @@ export default function RoutePlanning() {
       {/* ===== DETAILS VIEW ===== */}
       {viewState === 'details' && routeResult && (
         <>
-          {/* Top bar - route summary */}
-          <div className="absolute top-3 left-3 right-3 z-20 max-w-2xl mx-auto">
+          {/* Top bar - route summary stacked */}
+          <div className="absolute top-3 left-3 right-3 z-20 max-w-lg mx-auto">
             <div className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
-              <div className="flex items-stretch">
-                {/* Back button */}
-                <button onClick={handleBack} className="shrink-0 flex items-center px-3 hover:bg-accent transition-colors border-r border-border/50">
+              {/* Top row: back + stats + filter */}
+              <div className="flex items-center justify-between px-2 py-1.5">
+                <button onClick={handleBack} className="shrink-0 p-1.5 hover:bg-accent rounded-lg transition-colors">
                   <ArrowLeft className="h-5 w-5 text-foreground" />
                 </button>
-
-                {/* Start - left half */}
-                <button
-                  onClick={() => { setViewState('search'); setSearchStep('search'); }}
-                  className="flex-1 flex items-center gap-2.5 px-4 py-3 hover:bg-accent/40 transition-colors border-r border-border/50 min-w-0"
-                >
-                  <div className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20 shrink-0" />
-                  <div className="min-w-0">
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Från</div>
-                    <div className="text-sm text-foreground truncate">{start || 'Min position'}</div>
-                  </div>
-                </button>
-
-                {/* Destination - right half */}
-                <button
-                  onClick={() => { setViewState('search'); setSearchStep('search'); }}
-                  className="flex-1 flex items-center gap-2.5 px-4 py-3 hover:bg-accent/40 transition-colors border-r border-border/50 min-w-0"
-                >
-                  <div className="w-3 h-3 rounded-full bg-destructive ring-2 ring-destructive/20 shrink-0" />
-                  <div className="min-w-0">
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Till</div>
-                    <div className="text-sm font-semibold text-foreground truncate">{destination}</div>
-                  </div>
-                </button>
-
-                {/* Stats + filter */}
-                <div className="shrink-0 flex items-center gap-2 px-3">
-                  <div className="text-right">
-                    <div className="text-xs font-bold text-primary">{trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km</div>
-                    <div className="text-[10px] font-bold text-primary">{trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}</div>
-                  </div>
-                  <button
-                    onClick={() => { setViewState('search'); setSearchStep('filters'); }}
-                    className="p-2 hover:bg-accent rounded-lg transition-colors"
-                    title="Filter"
-                  >
-                    <Car className="h-4 w-4 text-muted-foreground" />
-                  </button>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-bold text-primary">{trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="font-bold text-primary">{trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}</span>
                 </div>
+                <button
+                  onClick={() => { setViewState('search'); setSearchStep('filters'); }}
+                  className="shrink-0 p-1.5 hover:bg-accent rounded-lg transition-colors"
+                >
+                  <Car className="h-4 w-4 text-muted-foreground" />
+                </button>
               </div>
+
+              {/* Start row */}
+              <button
+                onClick={() => { setViewState('search'); setSearchStep('search'); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent/40 transition-colors border-t border-border/40"
+              >
+                <div className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20 shrink-0" />
+                <div className="min-w-0 text-left">
+                  <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Från</div>
+                  <div className="text-sm text-foreground truncate">{start || 'Min position'}</div>
+                </div>
+              </button>
+
+              {/* Destination row */}
+              <button
+                onClick={() => { setViewState('search'); setSearchStep('search'); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent/40 transition-colors border-t border-border/40"
+              >
+                <div className="w-3 h-3 rounded-full bg-destructive ring-2 ring-destructive/20 shrink-0" />
+                <div className="min-w-0 text-left">
+                  <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Till</div>
+                  <div className="text-sm font-semibold text-foreground truncate">{destination}</div>
+                </div>
+              </button>
             </div>
           </div>
 
