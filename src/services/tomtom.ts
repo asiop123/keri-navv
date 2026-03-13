@@ -643,6 +643,32 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/**
+ * EU driving & rest time regulations (EC 561/2006):
+ *
+ * DRIVING TIME:
+ * - Max 4.5h continuous → mandatory break
+ * - Max 9h/day (extendable to 10h, max 2 times per week)
+ * - Max 56h/week
+ * - Max 90h per 2-week period
+ *
+ * BREAKS (after 4.5h driving):
+ * - At least 45 min in one block, OR split: 15 min + 30 min
+ * - After 45 min total break → new 4.5h driving period
+ *
+ * DAILY REST (within each 24h period):
+ * - Normal: at least 11h uninterrupted
+ * - Reduced: minimum 9h (max 3 times between two weekly rests, i.e. within 144h)
+ * - Split: 3h + 9h (total 12h within 24h)
+ *
+ * WEEKLY REST (starts latest after 6 × 24h = 144h):
+ * - Normal: at least 45h uninterrupted
+ * - Reduced: minimum 24h (every other week)
+ * - Compensation: lost hours (21h if 24h rest) must be taken before end of 3rd following week,
+ *   attached to a rest of at least 9h
+ *
+ * A 10-minute safety margin is applied to all driving limits.
+ */
 export async function generateTimeline(
   route: RouteResult,
   routeType: 'normal' | 'fastest',
@@ -652,70 +678,198 @@ export async function generateTimeline(
   usedDriveMinutesToday?: number
 ): Promise<TimelineEntry[]> {
   const timeline: TimelineEntry[] = [];
-  const SAFETY_MARGIN = 10;
-  const MAX_DRIVE_BEFORE_REST = 4.5 * 60 - SAFETY_MARGIN;
-  const REST_DURATION = 45;
-  const MAX_DAILY_DRIVE = (routeType === 'fastest' ? 10 : 9) * 60 - SAFETY_MARGIN;
-  const OVERNIGHT_REST = 11 * 60;
+  const SAFETY_MARGIN = 10; // minutes
 
+  // --- EU regulation constants (in minutes) ---
+  const MAX_CONTINUOUS_DRIVE = 4.5 * 60 - SAFETY_MARGIN;   // 260 min
+  const BREAK_DURATION = 45;
+  const SPLIT_BREAK_FIRST = 15;
+  const SPLIT_BREAK_SECOND = 30;
+
+  const MAX_DAILY_DRIVE_NORMAL = 9 * 60 - SAFETY_MARGIN;    // 530 min
+  const MAX_DAILY_DRIVE_EXTENDED = 10 * 60 - SAFETY_MARGIN;  // 590 min
+  const MAX_EXTENDED_DAYS_PER_WEEK = 2;
+
+  const DAILY_REST_NORMAL = 11 * 60;    // 660 min
+  const DAILY_REST_REDUCED = 9 * 60;    // 540 min
+  const MAX_REDUCED_DAILY_RESTS = 3;    // max between two weekly rests
+
+  const WEEKLY_REST_NORMAL = 45 * 60;   // 2700 min
+  const WEEKLY_REST_REDUCED = 24 * 60;  // 1440 min
+  const MAX_HOURS_BEFORE_WEEKLY_REST = 144 * 60; // 8640 min (6 × 24h)
+
+  // --- State tracking ---
   let currentTime = new Date(route.departureTime);
-  let drivingSinceRest = 0;
+  let drivingSinceBreak = 0;            // minutes since last 45-min break
   let dailyDriving = usedDriveMinutesToday ? usedDriveMinutesToday * 60 : 0;
   let totalDrivenMinutes = 0;
-  const totalTravelMinutes = Math.round(route.travelTimeSeconds / 60);
+  let splitBreakTaken = false;          // whether 15-min split break was taken in current period
+  let reducedDailyRestCount = 0;        // count of 9h rests between weekly rests
+  let extendedDayCount = 0;             // count of 10h days this week
+  let timeSinceWeeklyRest = 0;          // minutes since last weekly rest
+  let dayCount = 0;                     // days since last weekly rest
 
-  const restBreakPoints: { index: number; fraction: number; type: 'rest' | 'overnight' }[] = [];
+  const totalTravelMinutes = Math.round(route.travelTimeSeconds / 60);
+  const restBreakPoints: { index: number; fraction: number; type: 'rest' | 'overnight' | 'weekly' }[] = [];
+
+  // Determine max daily drive for current day
+  const getMaxDailyDrive = (): number => {
+    if (extendedDayCount < MAX_EXTENDED_DAYS_PER_WEEK) {
+      // Can potentially use extended day, but prefer normal unless needed
+      return MAX_DAILY_DRIVE_NORMAL;
+    }
+    return MAX_DAILY_DRIVE_NORMAL;
+  };
+
+  // Check if we can use a reduced daily rest
+  const canUseReducedDailyRest = (): boolean => {
+    return reducedDailyRestCount < MAX_REDUCED_DAILY_RESTS;
+  };
+
+  // Check if weekly rest is needed
+  const needsWeeklyRest = (): boolean => {
+    return timeSinceWeeklyRest >= MAX_HOURS_BEFORE_WEEKLY_REST;
+  };
 
   const addEntry = (type: TimelineEntry['type'], label: string, durationMinutes: number, location?: string) => {
     const startTime = new Date(currentTime);
     const endTime = new Date(currentTime.getTime() + durationMinutes * 60000);
-    timeline.push({ type, label, startTime: startTime.toISOString(), endTime: endTime.toISOString(), durationMinutes, location });
+    timeline.push({
+      type, label,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      durationMinutes,
+      location,
+    });
     currentTime = endTime;
+
+    // Track time for weekly rest calculations (all time counts, not just driving)
+    if (type !== 'overnight' && type !== 'rest') {
+      timeSinceWeeklyRest += durationMinutes;
+    }
   };
 
   for (let i = 0; i < route.legs.length; i++) {
     const leg = route.legs[i];
     let remainingDriveMin = Math.round(leg.travelTimeSeconds / 60);
 
+    // Waypoint stop
     if (i > 0) {
       const stopDuration = waypointStopMinutes?.[i - 1] ?? 30;
       addEntry('stop', `Stopp: ${leg.startLabel} (${stopDuration} min)`, stopDuration, leg.startLabel);
     }
 
     while (remainingDriveMin > 0) {
-      const driveUntilRest = MAX_DRIVE_BEFORE_REST - drivingSinceRest;
-      const driveUntilDaily = MAX_DAILY_DRIVE - dailyDriving;
-      const maxDrive = Math.min(driveUntilRest, driveUntilDaily, remainingDriveMin);
+      // Check if weekly rest is needed before driving
+      if (needsWeeklyRest()) {
+        const fraction = Math.min(totalDrivenMinutes / totalTravelMinutes, 1);
+        const entryIndex = timeline.length;
+        const weeklyRestDuration = WEEKLY_REST_NORMAL; // use normal weekly rest
+        addEntry('overnight', `Veckovila (${Math.round(weeklyRestDuration / 60)}h)`, weeklyRestDuration);
+        restBreakPoints.push({ index: entryIndex, fraction, type: 'weekly' });
+        timeSinceWeeklyRest = 0;
+        drivingSinceBreak = 0;
+        dailyDriving = 0;
+        dayCount = 0;
+        reducedDailyRestCount = 0;
+        extendedDayCount = 0;
+        splitBreakTaken = false;
+      }
+
+      // Calculate how much we can drive before hitting a limit
+      const driveUntilBreak = MAX_CONTINUOUS_DRIVE - drivingSinceBreak;
+      const maxDailyDrive = getMaxDailyDrive();
+      const driveUntilDaily = maxDailyDrive - dailyDriving;
+      const maxDrive = Math.min(driveUntilBreak, driveUntilDaily, remainingDriveMin);
       const driveChunk = Math.max(maxDrive, 1);
 
+      // Drive
       addEntry('drive', `Körning ${leg.startLabel} → ${leg.endLabel}`, driveChunk);
       remainingDriveMin -= driveChunk;
-      drivingSinceRest += driveChunk;
+      drivingSinceBreak += driveChunk;
       dailyDriving += driveChunk;
       totalDrivenMinutes += driveChunk;
+      timeSinceWeeklyRest += driveChunk;
 
       if (remainingDriveMin <= 0) break;
 
       const fraction = Math.min(totalDrivenMinutes / totalTravelMinutes, 1);
 
-      if (dailyDriving >= MAX_DAILY_DRIVE) {
+      // Check what triggered the stop
+      if (dailyDriving >= maxDailyDrive) {
+        // Daily driving limit reached → daily rest needed
+        // Check if we can extend the day (max 2 per week)
+        if (dailyDriving >= MAX_DAILY_DRIVE_NORMAL && dailyDriving < MAX_DAILY_DRIVE_EXTENDED && extendedDayCount < MAX_EXTENDED_DAYS_PER_WEEK) {
+          // We could extend this day — but we already hit the normal limit
+          // Check if remaining drive is small enough to justify extending
+          const remainingAfterExtension = remainingDriveMin - (MAX_DAILY_DRIVE_EXTENDED - dailyDriving);
+          if (remainingAfterExtension <= 0 || remainingDriveMin <= (MAX_DAILY_DRIVE_EXTENDED - dailyDriving)) {
+            // Extending this day would help finish or significantly reduce remaining
+            extendedDayCount++;
+            // Continue driving — don't take rest yet
+            continue;
+          }
+        }
+
+        // Take daily rest
         const entryIndex = timeline.length;
-        addEntry('overnight', 'Dygnsvila (11h)', OVERNIGHT_REST);
+        let restDuration: number;
+        let restLabel: string;
+
+        if (canUseReducedDailyRest()) {
+          // Use reduced rest (9h) to save time
+          restDuration = DAILY_REST_REDUCED;
+          restLabel = `Dygnsvila (9h – reducerad ${reducedDailyRestCount + 1}/3)`;
+          reducedDailyRestCount++;
+        } else {
+          // Must use normal rest (11h)
+          restDuration = DAILY_REST_NORMAL;
+          restLabel = 'Dygnsvila (11h)';
+        }
+
+        addEntry('overnight', restLabel, restDuration);
         restBreakPoints.push({ index: entryIndex, fraction, type: 'overnight' });
-        drivingSinceRest = 0;
+        drivingSinceBreak = 0;
         dailyDriving = 0;
-      } else if (drivingSinceRest >= MAX_DRIVE_BEFORE_REST) {
+        dayCount++;
+        splitBreakTaken = false;
+
+      } else if (drivingSinceBreak >= MAX_CONTINUOUS_DRIVE) {
+        // 4.5h continuous driving limit reached → break needed
         const entryIndex = timeline.length;
-        addEntry('rest', 'Rast (45 min)', REST_DURATION);
-        restBreakPoints.push({ index: entryIndex, fraction, type: 'rest' });
-        drivingSinceRest = 0;
+
+        if (!splitBreakTaken) {
+          // Option to use split break: take 15 min now, 30 min later
+          // Use split break if remaining drive is substantial
+          if (remainingDriveMin > MAX_CONTINUOUS_DRIVE) {
+            // Take 15 min first part of split break
+            addEntry('rest', 'Rast (15 min – del 1 av delad rast)', SPLIT_BREAK_FIRST);
+            restBreakPoints.push({ index: entryIndex, fraction, type: 'rest' });
+            splitBreakTaken = true;
+            drivingSinceBreak = 0;
+            // Note: next break must be 30 min
+          } else {
+            // Take full 45 min break
+            addEntry('rest', 'Rast (45 min)', BREAK_DURATION);
+            restBreakPoints.push({ index: entryIndex, fraction, type: 'rest' });
+            drivingSinceBreak = 0;
+            splitBreakTaken = false;
+          }
+        } else {
+          // Must take 30 min second part of split break
+          addEntry('rest', 'Rast (30 min – del 2 av delad rast)', SPLIT_BREAK_SECOND);
+          restBreakPoints.push({ index: entryIndex, fraction, type: 'rest' });
+          drivingSinceBreak = 0;
+          splitBreakTaken = false; // Split break cycle complete, new period starts
+        }
       }
     }
   }
 
+  // Arrival
   addEntry('arrival', `Ankomst ${route.waypoints[route.waypoints.length - 1].name}`, 0, route.waypoints[route.waypoints.length - 1].name);
 
-  // Search for rest stops along the route corridor
+  // Search for rest stops along the route corridor for all break points
   if (restBreakPoints.length > 0 && route.routePoints.length > 0) {
     const results = await Promise.all(
       restBreakPoints.map(async (bp) => {
@@ -737,14 +891,13 @@ export async function generateTimeline(
 
       let validStops = stops;
 
-      // For overnight stops, require actual truck parking or rest area — never a random road coordinate
-      if (bp.type === 'overnight') {
+      // For overnight/weekly stops, require actual truck parking or rest area
+      if (bp.type === 'overnight' || bp.type === 'weekly') {
         validStops = stops.filter(s => {
           const cat = (s.category || '').toLowerCase();
           return cat.includes('lastbil') || cat.includes('truck') || cat.includes('rast') || cat.includes('rest') || cat.includes('parkering') || cat.includes('parking');
         });
 
-        // If no suitable overnight stops found, do an extended search (up to 10km)
         if (validStops.length === 0) {
           const widerStops = await searchRestStopsAlongRoute(
             route.routePoints,
@@ -758,7 +911,6 @@ export async function generateTimeline(
             const cat = (s.category || '').toLowerCase();
             return cat.includes('lastbil') || cat.includes('truck') || cat.includes('rast') || cat.includes('rest') || cat.includes('parkering') || cat.includes('parking');
           });
-          // If still nothing, accept any real POI result (not a fabricated coordinate)
           if (validStops.length === 0 && widerStops.length > 0) {
             validStops = widerStops;
           }
@@ -769,16 +921,19 @@ export async function generateTimeline(
         const bestStop = { ...validStops[0], alternatives: validStops.slice(1) };
         entry.restStop = bestStop;
         entry.location = bestStop.name;
-        entry.label = bp.type === 'overnight'
-          ? `Dygnsvila (11h) – ${bestStop.name}`
-          : `Rast (45 min) – ${bestStop.name}`;
+        const typeLabel = bp.type === 'weekly'
+          ? `Veckovila – ${bestStop.name}`
+          : bp.type === 'overnight'
+            ? `${entry.label.split(' –')[0]} – ${bestStop.name}`
+            : `${entry.label.split(' –')[0]} – ${bestStop.name}`;
+        entry.label = typeLabel;
       } else {
-        // Never place a marker on the road — mark as "no safe stop found"
-        entry.label = bp.type === 'overnight'
-          ? 'Dygnsvila (11h) – ⚠️ Ingen säker plats hittades'
-          : 'Rast (45 min) – ⚠️ Ingen rastplats hittades';
+        entry.label = bp.type === 'weekly'
+          ? 'Veckovila – ⚠️ Ingen säker plats hittades'
+          : bp.type === 'overnight'
+            ? `${entry.label.split(' –')[0]} – ⚠️ Ingen säker plats hittades`
+            : `${entry.label.split(' –')[0]} – ⚠️ Ingen rastplats hittades`;
         entry.location = 'Ingen plats hittad';
-        // Don't set restStop at all — no marker on the map for a fake location
       }
     }
   }
