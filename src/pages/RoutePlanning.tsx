@@ -1226,18 +1226,47 @@ export default function RoutePlanning() {
               <div
                 className="overflow-y-auto"
                 style={{ maxHeight: 'calc(75vh - 140px)' }}
-                ref={(el) => { (window as any).__timelineScrollEl = el; }}
+                ref={(el) => {
+                  if (el) (el as any).__scrollRef = true;
+                  (window as any).__timelineScrollEl = el;
+                }}
                 onDragOver={(e) => {
-                  // Auto-scroll when dragging near edges
+                  e.preventDefault();
+                  // Store mouse Y for the scroll interval
                   const container = e.currentTarget;
-                  const rect = container.getBoundingClientRect();
-                  const y = e.clientY - rect.top;
-                  const edgeZone = 60;
-                  if (y < edgeZone) {
-                    container.scrollBy({ top: -12, behavior: 'auto' });
-                  } else if (y > rect.height - edgeZone) {
-                    container.scrollBy({ top: 12, behavior: 'auto' });
+                  (container as any).__dragClientY = e.clientY;
+                }}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  const container = e.currentTarget;
+                  if ((container as any).__scrollInterval) return;
+                  (container as any).__scrollInterval = setInterval(() => {
+                    const cy = (container as any).__dragClientY;
+                    if (cy == null) return;
+                    const rect = container.getBoundingClientRect();
+                    const y = cy - rect.top;
+                    const edgeZone = 80;
+                    if (y < edgeZone) {
+                      const speed = Math.max(4, Math.round((1 - y / edgeZone) * 20));
+                      container.scrollBy({ top: -speed });
+                    } else if (y > rect.height - edgeZone) {
+                      const dist = y - (rect.height - edgeZone);
+                      const speed = Math.max(4, Math.round((dist / edgeZone) * 20));
+                      container.scrollBy({ top: speed });
+                    }
+                  }, 16);
+                }}
+                onDragLeave={(e) => {
+                  const container = e.currentTarget;
+                  if (!container.contains(e.relatedTarget as Node)) {
+                    clearInterval((container as any).__scrollInterval);
+                    (container as any).__scrollInterval = null;
                   }
+                }}
+                onDrop={(e) => {
+                  const container = e.currentTarget;
+                  clearInterval((container as any).__scrollInterval);
+                  (container as any).__scrollInterval = null;
                 }}>
                     {/* Big clear summary cards */}
                     <div className="px-4 py-3 space-y-3">
@@ -1354,6 +1383,9 @@ export default function RoutePlanning() {
                                 onDragOver={entry.type === 'stop' ? (e) => {
                                   e.preventDefault();
                                   e.dataTransfer.dropEffect = 'move';
+                                  // Propagate clientY to scroll container for auto-scroll
+                                  const scrollEl = (window as any).__timelineScrollEl;
+                                  if (scrollEl) (scrollEl as any).__dragClientY = e.clientY;
                                   const stopEntries = leg.timeline.filter(t => t.type === 'stop');
                                   const overIdx = stopEntries.indexOf(entry);
                                   if (overIdx !== dragOverStopIdx) setDragOverStopIdx(overIdx);
