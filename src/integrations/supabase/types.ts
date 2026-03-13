@@ -175,6 +175,39 @@ export type Database = {
         }
         Relationships: []
       }
+      search_history: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          search_count: number
+          user_id: string
+        }
+        Insert: {
+          address?: string
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          search_count?: number
+          user_id?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          search_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       vehicle_positions: {
         Row: {
           accuracy_m: number | null
