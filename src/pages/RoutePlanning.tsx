@@ -707,6 +707,7 @@ export default function RoutePlanning() {
                 setSearchFocused(false);
               }}
               placeholder="Vart vill du åka?"
+              autoFocus={true}
               className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-base placeholder:text-muted-foreground/60"
               biasLat={userPosition?.lat}
               biasLng={userPosition?.lng}
