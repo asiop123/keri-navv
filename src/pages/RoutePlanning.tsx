@@ -1208,8 +1208,28 @@ export default function RoutePlanning() {
                   </div>
                 </button>
 
-                <div className="shrink-0 items-center gap-1 text-[11px] font-semibold text-primary whitespace-nowrap flex flex-row">
-                  {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km · {trips.length > 1 ? `${combinedTimeH}h${combinedTimeMin}m` : `${totalDriveTimeH}h${totalDriveTimeMin}m`}
+                <div className="shrink-0 flex flex-col bg-muted/60 rounded-lg px-3 py-1.5 gap-0.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-muted-foreground">Körtid</span>
+                    <span className="text-xs font-bold text-primary">
+                      {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}m` : `${totalDriveTimeH}h ${totalDriveTimeMin}m`}
+                    </span>
+                  </div>
+                  <div className="text-[9px] text-center text-muted-foreground font-medium">
+                    {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
+                  </div>
+                  <div className="flex items-center justify-between gap-2 border-t border-border pt-0.5">
+                    <span className="text-[10px] text-muted-foreground">Framme</span>
+                    <span className="text-xs font-bold text-primary">
+                      {(() => {
+                        const travelSec = trips.length > 1
+                          ? (combinedTimeH * 3600 + combinedTimeMin * 60)
+                          : routeResult.travelTimeSeconds;
+                        const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
+                        return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                      })()}
+                    </span>
+                  </div>
                 </div>
 
                 <button
