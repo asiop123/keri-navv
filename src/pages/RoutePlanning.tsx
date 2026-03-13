@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
   Navigation, Locate, Square, ChevronUp, ChevronDown, Search,
-  Car, ArrowLeft, Star, Info, Eye, Repeat, ArrowUpDown } from
+  Car, ArrowLeft, Star, Info, Eye, Repeat, ArrowUpDown, SlidersHorizontal } from
 'lucide-react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
@@ -1213,11 +1213,20 @@ export default function RoutePlanning() {
                   </button>
                 </button>
 
-                <button
-                onClick={() => {setViewState('search');setSearchStep('filters');}}
-                className="shrink-0 p-2 hover:bg-accent rounded-md transition-colors">
-                  <Car className="h-4 w-4 text-muted-foreground" />
-                </button>
+                <div className="shrink-0 flex flex-col items-center gap-1.5 ml-1">
+                  <button
+                    onClick={handleStartNavigation}
+                    className="p-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-lg transition-colors shadow-sm"
+                  >
+                    <Navigation className="h-4 w-4 text-white" />
+                  </button>
+                  <button
+                    onClick={() => {setViewState('search');setSearchStep('filters');}}
+                    className="p-2 hover:bg-accent rounded-md transition-colors"
+                  >
+                    <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </div>
               </div>
 
               {/* Curtain toggle arrow */}
