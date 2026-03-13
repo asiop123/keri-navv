@@ -57,6 +57,7 @@ export default function RoutePlanning() {
   const [showDetails, setShowDetails] = useState(false);
   const [showBottomSheet, setShowBottomSheet] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchStep, setSearchStep] = useState<'search' | 'filters' | null>(null);
   
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
