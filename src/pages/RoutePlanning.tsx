@@ -1017,9 +1017,9 @@ export default function RoutePlanning() {
           {/* Top bar - route summary stacked */}
           <div className="absolute top-2 left-2 right-2 z-20 max-w-xl mx-auto">
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
-              <div className="gap-1 px-1.5 py-1 flex items-center">
-                <div className="shrink-0 flex flex-col items-center justify-evenly gap-0.5 self-stretch">
-                  <button onClick={handleBack} className="p-1 hover:bg-accent rounded-md transition-colors">
+              <div className="gap-1.5 px-1.5 py-1 flex items-center">
+                <div className="shrink-0 flex flex-col items-center gap-0.5">
+                  <button onClick={handleBack} className="p-1 hover:bg-accent rounded-md transition-colors h-[26px] flex items-center justify-center">
                     <ArrowLeft className="h-4 w-4 text-foreground" />
                   </button>
                   <button
@@ -1029,7 +1029,7 @@ export default function RoutePlanning() {
                     setStart(tmpDest);
                     setDestination(tmpStart);
                   }}
-                  className="p-1 hover:bg-accent rounded-md transition-colors"
+                  className="p-1 hover:bg-accent rounded-md transition-colors h-[26px] flex items-center justify-center"
                   title="Byt position och destination">
                     <ArrowUpDown className="h-4 w-4 text-foreground" />
                   </button>
@@ -1038,11 +1038,11 @@ export default function RoutePlanning() {
                 <button
                 onClick={() => {setViewState('search');setSearchStep('search');}}
                 className="flex-1 min-w-0 flex flex-col gap-0.5 hover:bg-accent/40 rounded-md transition-colors">
-                  <div className="rounded border border-primary flex items-center gap-1.5 px-1.5 py-0.5 bg-muted">
+                  <div className="rounded border border-primary flex items-center gap-1.5 px-1.5 h-[26px] bg-muted">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                     <span className="truncate text-xs text-primary">{start || 'Min position'}</span>
                   </div>
-                  <div className="rounded border border-primary flex items-center gap-1.5 px-1.5 py-0.5 bg-muted">
+                  <div className="rounded border border-primary flex items-center gap-1.5 px-1.5 h-[26px] bg-muted">
                     <div className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
                     <span className="truncate text-xs text-primary">{destination}</span>
                   </div>
