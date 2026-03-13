@@ -1014,79 +1014,41 @@ export default function RoutePlanning() {
       {/* ===== DETAILS VIEW ===== */}
       {viewState === 'details' && routeResult && (
         <>
-          {/* Top bar - route summary with editable start & destination */}
-          <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
-            <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
-              {/* Back button row */}
-              <div className="flex items-center gap-2 px-3 pt-3 pb-0">
-                <button onClick={handleBack} className="shrink-0 p-2 hover:bg-accent rounded-xl bg-muted transition-colors">
-                  <ArrowLeft className="h-4 w-4 text-foreground" />
-                </button>
-                <div className="flex-1" />
-                <button
-                  onClick={() => { setViewState('search'); setSearchStep('filters'); }}
-                  className="shrink-0 p-2 hover:bg-accent rounded-xl bg-muted transition-colors"
-                  title="Ändra inställningar"
-                >
-                  <Car className="h-4 w-4 text-muted-foreground" />
-                </button>
-                <button
-                  onClick={() => { setViewState('search'); setSearchStep('search'); }}
-                  className="shrink-0 p-2 hover:bg-accent rounded-xl bg-primary text-primary-foreground transition-colors"
-                  title="Ny sökning"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
+          {/* Top bar - compact route summary */}
+          <div className="absolute top-3 left-3 right-3 z-20 max-w-lg mx-auto">
+            <div className="bg-card rounded-xl shadow-lg border border-border flex items-center gap-2 px-2 py-1.5">
+              <button onClick={handleBack} className="shrink-0 p-1.5 hover:bg-accent rounded-lg transition-colors">
+                <ArrowLeft className="h-4 w-4 text-foreground" />
+              </button>
+
+              {/* Route summary - click to open search */}
+              <button
+                onClick={() => { setViewState('search'); setSearchStep('search'); }}
+                className="flex-1 min-w-0 flex items-center gap-2 hover:bg-accent/50 rounded-lg px-2 py-1 transition-colors"
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="text-xs text-muted-foreground truncate max-w-[80px]">{start || 'GPS'}</span>
+                  <span className="text-muted-foreground text-[10px]">→</span>
+                  <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
+                  <span className="text-xs font-semibold text-foreground truncate">{destination}</span>
+                </div>
+              </button>
+
+              {/* Stats */}
+              <div className="shrink-0 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <span className="font-bold text-primary">{trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km</span>
+                <span>·</span>
+                <span className="font-bold text-primary">{trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}</span>
               </div>
 
-              {/* Route points */}
-              <div className="px-4 pt-2 pb-3">
-                <div className="flex gap-3">
-                  {/* Dots + connector */}
-                  <div className="flex flex-col items-center pt-1.5">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
-                    <div className="w-0.5 flex-1 bg-border my-1" />
-                    <div className="w-3 h-3 rounded-full bg-destructive ring-2 ring-destructive/20" />
-                  </div>
-
-                  {/* Inputs */}
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div>
-                      <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Från</span>
-                      <input
-                        value={start}
-                        onChange={(e) => setStart(e.target.value)}
-                        placeholder="Min position"
-                        className="block w-full bg-transparent text-xs text-foreground truncate outline-none placeholder:text-muted-foreground/50 py-0.5"
-                      />
-                    </div>
-                    <div>
-                      <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Till</span>
-                      <input
-                        value={destination}
-                        onChange={(e) => setDestination(e.target.value)}
-                        placeholder="Destination"
-                        className="block w-full bg-transparent text-sm font-semibold text-foreground truncate outline-none placeholder:text-muted-foreground/50 py-0.5"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Trip stats pills */}
-                <div className="flex items-center gap-1.5 mt-2 ml-6">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">
-                    📏 {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">
-                    🕐 {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
-                  </span>
-                  {trips.length <= 1 && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-medium">
-                      🏁 ank {new Date(routeResult.arrivalTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  )}
-                </div>
-              </div>
+              <button
+                onClick={() => { setViewState('search'); setSearchStep('filters'); }}
+                className="shrink-0 p-1.5 hover:bg-accent rounded-lg transition-colors"
+                title="Filter"
+              >
+                <Car className="h-4 w-4 text-muted-foreground" />
+              </button>
             </div>
           </div>
 
