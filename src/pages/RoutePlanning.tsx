@@ -759,51 +759,53 @@ export default function RoutePlanning() {
                   </div>
                 </div>
 
-                {/* Senaste reseplaner - full trips with all stops */}
-                {!destination && savedTrips.length > 0 &&
-                <div className="px-4 pt-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste besökta platser</p>
-                  <div className="space-y-2">
-                    {savedTrips.slice(0, 5).map((trip) => {
-                      const stops = [trip.startName, ...trip.waypointNames, trip.endName];
-                      return (
-                        <button
-                          key={trip.id}
-                          onClick={() => {
-                            setRouteResult(trip.route);
-                            setTimeline(trip.timeline);
-                            setDestination(trip.endName);
-                            const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
-                            setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
-                            setViewState('details');
-                            setShowBottomSheet(true);
-                            setShowDetails(false);
-                            setSearchStep(null);
-                            setSearchFocused(false);
-                          }}
-                          className="w-full flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-accent transition-colors text-left border border-border/40 bg-card/50">
-                          <div className="flex flex-col items-center pt-1 gap-0.5 shrink-0">
-                            {stops.map((_, i) => (
-                              <div key={i}>
-                                <div className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-emerald-500' : i === stops.length - 1 ? 'bg-destructive' : 'bg-primary'}`} />
-                                {i < stops.length - 1 && <div className="w-0.5 h-3 bg-border mx-auto" />}
-                              </div>
-                            ))}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            {stops.map((stop, i) => (
-                              <p key={i} className={`text-sm truncate ${i === stops.length - 1 ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
-                                {stop}
-                              </p>
-                            ))}
-                            <p className="text-xs text-muted-foreground mt-1">{trip.distanceKm} km · {Math.floor(trip.travelTimeSeconds / 3600)}h {Math.round(trip.travelTimeSeconds % 3600 / 60)}min</p>
-                          </div>
-                          <Route className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                {/* Senaste besökta platser - unique places from driven trips */}
+                {!destination && (() => {
+                  const visitedPlaces: Array<{name: string; lat: number; lng: number; date: string}> = [];
+                  const seenPlaces = new Set<string>();
+                  for (const trip of savedTrips.filter(t => t.tripSource === 'driven')) {
+                    const stops = [...trip.waypointNames, trip.endName];
+                    const waypoints = trip.route.waypoints;
+                    for (let i = 0; i < stops.length; i++) {
+                      const key = stops[i].toLowerCase();
+                      if (seenPlaces.has(key)) continue;
+                      seenPlaces.add(key);
+                      const wpIdx = Math.min(i + 1, waypoints.length - 1);
+                      visitedPlaces.push({
+                        name: stops[i],
+                        lat: waypoints[wpIdx]?.lat ?? 0,
+                        lng: waypoints[wpIdx]?.lng ?? 0,
+                        date: trip.createdAt,
+                      });
+                    }
+                  }
+                  if (visitedPlaces.length === 0) return null;
+                  return (
+                    <div className="px-4 pt-4">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste besökta platser</p>
+                      <div className="space-y-1">
+                        {visitedPlaces.slice(0, 8).map((place, i) => (
+                          <button
+                            key={place.name + i}
+                            onClick={() => {
+                              setDestination(place.name);
+                              setDestinationCoords({ lat: place.lat, lng: place.lng });
+                              pendingDestCoordsRef.current = { lat: place.lat, lng: place.lng, name: place.name };
+                              setSearchStep('filters');
+                              setSearchFocused(false);
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-colors text-left">
+                            <MapPin className="h-4 w-4 text-primary shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-foreground truncate">{place.name}</p>
+                              <p className="text-xs text-muted-foreground">{new Date(place.date).toLocaleDateString('sv-SE')}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()
                 }
               </div>
 
