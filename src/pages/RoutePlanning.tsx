@@ -1282,15 +1282,28 @@ export default function RoutePlanning() {
                               <div key={`${legIdx}-${i}`}
                                 draggable={entry.type === 'stop'}
                                 onDragStart={entry.type === 'stop' ? (e) => {
-                                  // Find which stop index this is (among stops only)
                                   const stopEntries = leg.timeline.filter(t => t.type === 'stop');
                                   const stopIdx = stopEntries.indexOf(entry);
                                   e.dataTransfer.effectAllowed = 'move';
                                   e.dataTransfer.setData('text/plain', `stop:${stopIdx}`);
-                                  (e.currentTarget as HTMLElement).style.opacity = '0.4';
+                                  setDraggingStopIdx(stopIdx);
                                 } : undefined}
-                                onDragEnd={entry.type === 'stop' ? (e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; } : undefined}
-                                onDragOver={entry.type === 'stop' ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } : undefined}
+                                onDragEnd={entry.type === 'stop' ? () => {
+                                  setDraggingStopIdx(null);
+                                  setDragOverStopIdx(null);
+                                } : undefined}
+                                onDragOver={entry.type === 'stop' ? (e) => {
+                                  e.preventDefault();
+                                  e.dataTransfer.dropEffect = 'move';
+                                  const stopEntries = leg.timeline.filter(t => t.type === 'stop');
+                                  const overIdx = stopEntries.indexOf(entry);
+                                  if (overIdx !== dragOverStopIdx) setDragOverStopIdx(overIdx);
+                                } : undefined}
+                                onDragLeave={entry.type === 'stop' ? () => {
+                                  const stopEntries = leg.timeline.filter(t => t.type === 'stop');
+                                  const overIdx = stopEntries.indexOf(entry);
+                                  if (dragOverStopIdx === overIdx) setDragOverStopIdx(null);
+                                } : undefined}
                                 onDrop={entry.type === 'stop' ? (e) => {
                                   e.preventDefault();
                                   const data = e.dataTransfer.getData('text/plain');
@@ -1298,16 +1311,26 @@ export default function RoutePlanning() {
                                   const fromStopIdx = Number(data.split(':')[1]);
                                   const stopEntries = leg.timeline.filter(t => t.type === 'stop');
                                   const toStopIdx = stopEntries.indexOf(entry);
+                                  setDraggingStopIdx(null);
+                                  setDragOverStopIdx(null);
                                   if (fromStopIdx === toStopIdx) return;
-                                  // Reorder waypoints
                                   const reordered = [...waypoints];
                                   const [moved] = reordered.splice(fromStopIdx, 1);
                                   reordered.splice(toStopIdx, 0, moved);
                                   setWaypoints(reordered);
-                                  // Recalculate route
                                   setTimeout(() => handleSearch(), 100);
                                 } : undefined}
-                                className={entry.type === 'stop' ? 'cursor-grab active:cursor-grabbing' : ''}
+                                className={`transition-all duration-200 ${
+                                  entry.type === 'stop' ? 'cursor-grab active:cursor-grabbing' : ''
+                                } ${
+                                  entry.type === 'stop' && draggingStopIdx !== null && (() => {
+                                    const stopEntries = leg.timeline.filter(t => t.type === 'stop');
+                                    const thisStopIdx = stopEntries.indexOf(entry);
+                                    if (thisStopIdx === draggingStopIdx) return 'opacity-30 scale-95';
+                                    if (thisStopIdx === dragOverStopIdx) return 'ring-2 ring-primary ring-inset bg-primary/10 scale-[1.02]';
+                                    return '';
+                                  })() || ''
+                                }`}
                               >
                                     {showDayHeader &&
                                 <div className="bg-muted/60 px-4 py-2 flex items-center gap-2">
