@@ -1072,7 +1072,7 @@ export default function RoutePlanning() {
               <div className="gap-1.5 px-2 py-1.5 flex items-center">
                 <div className="shrink-0 flex flex-col items-center justify-evenly gap-2 self-stretch">
                   <button onClick={handleBack} className="p-1.5 hover:bg-accent rounded-md transition-colors">
-                    <ArrowLeft className="h-5 w-5 text-destructive" />
+                    <ArrowLeft className="h-5 w-5 text-foreground" />
                   </button>
                   <button
                   onClick={() => {
@@ -1083,7 +1083,12 @@ export default function RoutePlanning() {
                   }}
                   className="p-1.5 hover:bg-accent rounded-md transition-colors"
                   title="Byt position och destination">
-                    <ArrowUpDown className="h-5 w-5 text-emerald-500" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                      <path d="m21 16-4 4-4-4" stroke="hsl(var(--destructive))" />
+                      <path d="M17 20V4" stroke="hsl(var(--destructive))" />
+                      <path d="m3 8 4-4 4 4" stroke="#10b981" />
+                      <path d="M7 4v16" stroke="#10b981" />
+                    </svg>
                   </button>
                 </div>
 
