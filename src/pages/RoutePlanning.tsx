@@ -1030,7 +1030,7 @@ export default function RoutePlanning() {
                   {/* Från rad */}
                   <div className="py-0.5 pb-0 pt-0 border-none items-start justify-start shadow my-0 mx-0 px-0 pr-px gap-[8px] flex flex-row rounded-none border-0">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-foreground truncate text-sm">{start || 'Min position'}</span>
+                    <span className="text-foreground truncate text-sm font-medium">{start || 'Min position'}</span>
                   </div>
                   
                   {/* Till rad */}
