@@ -9,8 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import {
   MapPin, Clock, Plus, X, Route, AlertTriangle, Loader2, Save, History,
   Navigation, Locate, Square, ChevronUp, ChevronDown, Search,
-  Car, ArrowLeft, Star, Info, Eye, Repeat,
-} from 'lucide-react';
+  Car, ArrowLeft, Star, Info, Eye, Repeat } from
+'lucide-react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 import { mockVehicles, getVehicleById } from '@/data/mockData';
@@ -42,7 +42,7 @@ export default function RoutePlanning() {
   const [viewState, setViewState] = useState<ViewState>('search');
   const [destination, setDestination] = useState('');
   const [start, setStart] = useState('');
-  const [waypoints, setWaypoints] = useState<{ address: string; stopMinutes: number }[]>([]);
+  const [waypoints, setWaypoints] = useState<{address: string;stopMinutes: number;}[]>([]);
   const [vehicleId, setVehicleId] = useState('');
   const [loadWeight, setLoadWeight] = useState('');
   const [routeType, setRouteType] = useState<'normal' | 'fastest'>('normal');
@@ -58,9 +58,9 @@ export default function RoutePlanning() {
   const [showBottomSheet, setShowBottomSheet] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchStep, setSearchStep] = useState<'search' | 'filters' | null>(null);
-  
-  const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  const [destinationCoords, setDestinationCoords] = useState<{lat: number;lng: number;} | null>(null);
+  const [mapClickCoords, setMapClickCoords] = useState<{lat: number;lng: number;} | null>(null);
 
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
   const [alternativeRoutes, setAlternativeRoutes] = useState<RouteResult[]>([]);
@@ -70,18 +70,18 @@ export default function RoutePlanning() {
   const [isRoundTrip, setIsRoundTrip] = useState(false);
   const [usedDriveHours, setUsedDriveHours] = useState(0);
   const [restStopFilters, setRestStopFilters] = useState<RestStopFacilities>({
-    toilet: false, food: false, shower: false, fuel: false, truckParking: false,
+    toilet: false, food: false, shower: false, fuel: false, truckParking: false
   });
   const [trips, setTrips] = useState<TripLeg[]>([]);
   const [addingNewLeg, setAddingNewLeg] = useState(false);
 
   // GPS & Navigation
-  const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [userPosition, setUserPosition] = useState<{lat: number;lng: number;} | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [gpsWatchId, setGpsWatchId] = useState<number | null>(null);
   const [distanceToNext, setDistanceToNext] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
-  const gpsPointsRef = useRef<{ lat: number; lng: number; time: string }[]>([]);
+  const gpsPointsRef = useRef<{lat: number;lng: number;time: string;}[]>([]);
   const [navStartTime, setNavStartTime] = useState<Date | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
     type: string;
@@ -95,7 +95,7 @@ export default function RoutePlanning() {
     endTime?: string;
     durationMinutes?: number;
     timelineIndex?: number;
-    alternatives?: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string; suitability?: string; suitabilityNote?: string; facilities?: RestStopFacilities }>;
+    alternatives?: Array<{name: string;lat: number;lng: number;distance?: string;category?: string;suitability?: string;suitabilityNote?: string;facilities?: RestStopFacilities;}>;
     suitability?: string;
     suitabilityNote?: string;
     facilities?: RestStopFacilities;
@@ -105,7 +105,7 @@ export default function RoutePlanning() {
   const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
   const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
 
-  useEffect(() => { getSavedTrips().then(setSavedTrips); }, []);
+  useEffect(() => {getSavedTrips().then(setSavedTrips);}, []);
 
   // Click outside to dismiss panels
   const dismissPanels = useCallback(() => {
@@ -128,10 +128,10 @@ export default function RoutePlanning() {
           try {
             const name = await reverseGeocode(coords.lat, coords.lng);
             setStart(name);
-          } catch { setStart('Min position'); }
+          } catch {setStart('Min position');}
         }
       },
-      () => { if (!start) setStart(''); },
+      () => {if (!start) setStart('');},
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
     return () => navigator.geolocation.clearWatch(id);
@@ -139,9 +139,9 @@ export default function RoutePlanning() {
 
   const haversineKm = useCallback((lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }, []);
 
@@ -150,7 +150,7 @@ export default function RoutePlanning() {
     const nextWp = routeResult.waypoints[Math.min(currentStep + 1, routeResult.waypoints.length - 1)];
     const dist = haversineKm(userPosition.lat, userPosition.lng, nextWp.lat, nextWp.lng);
     if (dist < 0.5 && currentStep < routeResult.waypoints.length - 1) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
       toast.success(`Passerade: ${nextWp.name}`);
     }
     setDistanceToNext(dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`);
@@ -172,11 +172,11 @@ export default function RoutePlanning() {
   }, []);
 
   const stopGpsTracking = useCallback(() => {
-    if (gpsWatchId !== null) { navigator.geolocation.clearWatch(gpsWatchId); setGpsWatchId(null); }
+    if (gpsWatchId !== null) {navigator.geolocation.clearWatch(gpsWatchId);setGpsWatchId(null);}
   }, [gpsWatchId]);
 
   useEffect(() => {
-    return () => { if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId); };
+    return () => {if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId);};
   }, [gpsWatchId]);
 
   const handleStartNavigation = useCallback(() => {
@@ -207,13 +207,13 @@ export default function RoutePlanning() {
         id: crypto.randomUUID(), createdAt: new Date().toISOString(),
         startName: routeResult.waypoints[0].name,
         endName: routeResult.waypoints[routeResult.waypoints.length - 1].name,
-        waypointNames: routeResult.waypoints.slice(1, -1).map(w => w.name),
+        waypointNames: routeResult.waypoints.slice(1, -1).map((w) => w.name),
         distanceKm: routeResult.distanceKm, travelTimeSeconds: routeResult.travelTimeSeconds,
         totalWeightKg: totalWeight, vehicleId,
         vehicleLabel: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.regNr})` : 'Okänt',
         routeType, timeline, route: routeResult, tripSource: 'driven',
         drivenDistanceKm: Math.round(drivenDistanceKm * 10) / 10,
-        drivenTimeSeconds,
+        drivenTimeSeconds
       };
       await saveDrivenTrip(drivenTrip, drivenDistanceKm, drivenTimeSeconds, points);
       const updated = await getSavedTrips();
@@ -231,12 +231,12 @@ export default function RoutePlanning() {
 
 
   const getBKStatus = (weight: number) => {
-    const results: { bk: BKClass; limit: number; status: 'green' | 'yellow' | 'red' }[] = [];
+    const results: {bk: BKClass;limit: number;status: 'green' | 'yellow' | 'red';}[] = [];
     for (const [bk, limit] of Object.entries(BK_LIMITS) as [BKClass, number][]) {
       const ratio = weight / limit;
-      if (ratio > 1) results.push({ bk, limit, status: 'red' });
-      else if (ratio > 0.9) results.push({ bk, limit, status: 'yellow' });
-      else results.push({ bk, limit, status: 'green' });
+      if (ratio > 1) results.push({ bk, limit, status: 'red' });else
+      if (ratio > 0.9) results.push({ bk, limit, status: 'yellow' });else
+      results.push({ bk, limit, status: 'green' });
     }
     return results;
   };
@@ -248,7 +248,7 @@ export default function RoutePlanning() {
     return 'bg-success text-success-foreground';
   };
 
-  const pendingDestCoordsRef = useRef<{ lat: number; lng: number; name: string } | null>(null);
+  const pendingDestCoordsRef = useRef<{lat: number;lng: number;name: string;} | null>(null);
 
   const handleSearch = async (overrideDest?: string) => {
     const destToUse = overrideDest || destination;
@@ -262,30 +262,30 @@ export default function RoutePlanning() {
       pendingDestCoordsRef.current = null;
 
       const [startCoord, endCoord, ...waypointCoords] = await Promise.all([
-        userPosition && (!start || start === 'Min position')
-          ? Promise.resolve({ lat: userPosition.lat, lng: userPosition.lng, name: start || 'Min position' })
-          : geocode(startQuery),
-        destFromSelection
-          ? Promise.resolve(destFromSelection)
-          : geocode(destination),
-        ...waypoints.filter(w => w.address.trim()).map(w => geocode(w.address)),
-      ]);
+      userPosition && (!start || start === 'Min position') ?
+      Promise.resolve({ lat: userPosition.lat, lng: userPosition.lng, name: start || 'Min position' }) :
+      geocode(startQuery),
+      destFromSelection ?
+      Promise.resolve(destFromSelection) :
+      geocode(destination),
+      ...waypoints.filter((w) => w.address.trim()).map((w) => geocode(w.address))]
+      );
 
       // Round-trip: destination becomes waypoint, start becomes end
-      const finalWaypoints = isRoundTrip && !addingNewLeg
-        ? [...waypointCoords, endCoord]
-        : waypointCoords;
+      const finalWaypoints = isRoundTrip && !addingNewLeg ?
+      [...waypointCoords, endCoord] :
+      waypointCoords;
       const finalEnd = isRoundTrip && !addingNewLeg ? startCoord : endCoord;
 
-      const vehicleParams: VehicleParams | undefined = selectedVehicle
-        ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
-        : undefined;
+      const vehicleParams: VehicleParams | undefined = selectedVehicle ?
+      { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM } :
+      undefined;
 
       const result = await calculateRoute(startCoord, finalEnd, finalWaypoints, new Date(departureTime).toISOString(), vehicleParams);
-      const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
-      const finalStopMinutes = isRoundTrip && !addingNewLeg
-        ? [...stopMinutes, 30]
-        : stopMinutes;
+      const stopMinutes = waypoints.filter((w) => w.address.trim()).map((w) => w.stopMinutes);
+      const finalStopMinutes = isRoundTrip && !addingNewLeg ?
+      [...stopMinutes, 30] :
+      stopMinutes;
 
       const allRoutes = [result, ...(result.alternatives || [])];
       allRoutes.sort((a, b) => a.travelTimeSeconds - b.travelTimeSeconds);
@@ -293,7 +293,7 @@ export default function RoutePlanning() {
       delete bestRoute.alternatives;
 
       const otherRoutes = allRoutes.slice(1);
-      otherRoutes.forEach(r => delete r.alternatives);
+      otherRoutes.forEach((r) => delete r.alternatives);
 
       const tl = await generateTimeline(bestRoute, routeType, finalStopMinutes, vehicleParams, restStopFilters, usedDriveHours);
 
@@ -303,11 +303,11 @@ export default function RoutePlanning() {
         endName: isRoundTrip && !addingNewLeg ? `${endCoord.name} ↩ ${startCoord.name}` : endCoord.name,
         route: bestRoute,
         alternativeRoutes: otherRoutes,
-        timeline: tl,
+        timeline: tl
       };
 
       if (addingNewLeg) {
-        setTrips(prev => [...prev, newLeg]);
+        setTrips((prev) => [...prev, newLeg]);
         setAddingNewLeg(false);
       } else {
         setTrips([newLeg]);
@@ -328,17 +328,17 @@ export default function RoutePlanning() {
         id: crypto.randomUUID(), createdAt: new Date().toISOString(),
         startName: bestRoute.waypoints[0].name,
         endName: bestRoute.waypoints[bestRoute.waypoints.length - 1].name,
-        waypointNames: bestRoute.waypoints.slice(1, -1).map(w => w.name),
+        waypointNames: bestRoute.waypoints.slice(1, -1).map((w) => w.name),
         distanceKm: bestRoute.distanceKm, travelTimeSeconds: bestRoute.travelTimeSeconds,
         totalWeightKg: totalWeight, vehicleId,
         vehicleLabel: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.regNr})` : 'Okänt',
-        routeType, timeline: tl, route: bestRoute, tripSource: 'searched',
+        routeType, timeline: tl, route: bestRoute, tripSource: 'searched'
       };
       saveTrip(autoTrip).then(() => getSavedTrips().then(setSavedTrips));
       setIsSaved(true);
 
       const hours = Math.floor(bestRoute.travelTimeSeconds / 3600);
-      const mins = Math.round((bestRoute.travelTimeSeconds % 3600) / 60);
+      const mins = Math.round(bestRoute.travelTimeSeconds % 3600 / 60);
       const altInfo = otherRoutes.length > 0 ? ` · ${otherRoutes.length + 1} rutter` : '';
       toast.success(`${bestRoute.distanceKm} km · ${hours}h ${mins}min${altInfo}`);
     } catch (err: any) {
@@ -355,11 +355,11 @@ export default function RoutePlanning() {
       id: crypto.randomUUID(), createdAt: new Date().toISOString(),
       startName: routeResult.waypoints[0].name,
       endName: routeResult.waypoints[routeResult.waypoints.length - 1].name,
-      waypointNames: routeResult.waypoints.slice(1, -1).map(w => w.name),
+      waypointNames: routeResult.waypoints.slice(1, -1).map((w) => w.name),
       distanceKm: routeResult.distanceKm, travelTimeSeconds: routeResult.travelTimeSeconds,
       totalWeightKg: totalWeight, vehicleId,
       vehicleLabel: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.regNr})` : 'Okänt',
-      routeType, timeline, route: routeResult,
+      routeType, timeline, route: routeResult
     };
     await saveTrip(trip);
     const updated = await getSavedTrips();
@@ -410,26 +410,26 @@ export default function RoutePlanning() {
 
   const handleSwitchRoute = async (index: number) => {
     if (index === selectedRouteIndex) return;
-    
+
     // Collect all routes: [current main, ...alternatives]
     const allRoutes = [routeResult!, ...alternativeRoutes];
     const newMain = allRoutes[index];
     const newAlts = allRoutes.filter((_, i) => i !== index);
-    
-    const vehicleParams: VehicleParams | undefined = selectedVehicle
-      ? { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM }
-      : undefined;
-    const stopMinutes = waypoints.filter(w => w.address.trim()).map(w => w.stopMinutes);
+
+    const vehicleParams: VehicleParams | undefined = selectedVehicle ?
+    { weightKg: totalWeight, heightM: selectedVehicle.heightM, widthM: selectedVehicle.widthM, lengthM: selectedVehicle.lengthM } :
+    undefined;
+    const stopMinutes = waypoints.filter((w) => w.address.trim()).map((w) => w.stopMinutes);
     const tl = await generateTimeline(newMain, routeType, stopMinutes, vehicleParams, restStopFilters, usedDriveHours);
-    
+
     setRouteResult(newMain);
     setAlternativeRoutes(newAlts);
     setSelectedRouteIndex(0);
     setTimeline(tl);
     setIsSaved(false);
-    
+
     const hours = Math.floor(newMain.travelTimeSeconds / 3600);
-    const mins = Math.round((newMain.travelTimeSeconds % 3600) / 60);
+    const mins = Math.round(newMain.travelTimeSeconds % 3600 / 60);
     toast.success(`Bytte rutt: ${newMain.distanceKm} km · ${hours}h ${mins}min`);
   };
 
@@ -439,7 +439,7 @@ export default function RoutePlanning() {
     let name = entry.location || entry.label;
     let category = '';
     let distance = '';
-    let alternatives: Array<{ name: string; lat: number; lng: number; distance?: string; category?: string }> = [];
+    let alternatives: Array<{name: string;lat: number;lng: number;distance?: string;category?: string;}> = [];
 
     if (entry.restStop) {
       lat = entry.restStop.lat;
@@ -449,8 +449,8 @@ export default function RoutePlanning() {
       distance = entry.restStop.distance || '';
       alternatives = entry.restStop.alternatives || [];
     } else if (entry.type === 'stop' || entry.type === 'arrival') {
-      const wp = routeResult?.waypoints.find(w => entry.label.includes(w.name) || entry.location === w.name);
-      if (wp) { lat = wp.lat; lng = wp.lng; name = wp.name; }
+      const wp = routeResult?.waypoints.find((w) => entry.label.includes(w.name) || entry.location === w.name);
+      if (wp) {lat = wp.lat;lng = wp.lng;name = wp.name;}
     }
 
     if (lat !== undefined && lng !== undefined) {
@@ -467,13 +467,13 @@ export default function RoutePlanning() {
         suitability: entry.restStop?.suitability,
         suitabilityNote: entry.restStop?.suitabilityNote,
         facilities: entry.restStop?.facilities,
-        address: entry.restStop?.address,
+        address: entry.restStop?.address
       });
       mapHandleRef.current?.flyToLocation(lng, lat, 14);
     }
   };
 
-  const handleSwapRestStop = (alt: { name: string; lat: number; lng: number; distance?: string; category?: string }) => {
+  const handleSwapRestStop = (alt: {name: string;lat: number;lng: number;distance?: string;category?: string;}) => {
     if (selectedLocation?.timelineIndex === undefined) return;
     const idx = selectedLocation.timelineIndex;
     const updated = [...timeline];
@@ -486,21 +486,21 @@ export default function RoutePlanning() {
       lat: entry.restStop.lat,
       lng: entry.restStop.lng,
       distance: entry.restStop.distance,
-      category: entry.restStop.category,
+      category: entry.restStop.category
     };
-    const otherAlts = (entry.restStop.alternatives || []).filter(a => a.name !== alt.name);
-    
+    const otherAlts = (entry.restStop.alternatives || []).filter((a) => a.name !== alt.name);
+
     entry.restStop = {
       ...alt,
-      alternatives: [currentStop, ...otherAlts],
+      alternatives: [currentStop, ...otherAlts]
     };
     entry.location = alt.name;
-    entry.label = entry.type === 'overnight'
-      ? `Dygnsvila (11h) – ${alt.name}`
-      : `Rast (45 min) – ${alt.name}`;
+    entry.label = entry.type === 'overnight' ?
+    `Dygnsvila (11h) – ${alt.name}` :
+    `Rast (45 min) – ${alt.name}`;
 
     setTimeline(updated);
-    setSelectedLocation(prev => prev ? {
+    setSelectedLocation((prev) => prev ? {
       ...prev,
       name: alt.name,
       lat: alt.lat,
@@ -509,38 +509,38 @@ export default function RoutePlanning() {
       distance: alt.distance || '',
       suitability: (alt as any).suitability || 'good',
       suitabilityNote: (alt as any).suitabilityNote || '',
-      alternatives: [currentStop, ...otherAlts],
+      alternatives: [currentStop, ...otherAlts]
     } : null);
     mapHandleRef.current?.flyToLocation(alt.lng, alt.lat, 14);
     toast.success(`Bytte rastplats till ${alt.name}`);
   };
 
   const totalDriveTimeH = routeResult ? Math.floor(routeResult.travelTimeSeconds / 3600) : 0;
-  const totalDriveTimeMin = routeResult ? Math.round((routeResult.travelTimeSeconds % 3600) / 60) : 0;
+  const totalDriveTimeMin = routeResult ? Math.round(routeResult.travelTimeSeconds % 3600 / 60) : 0;
   const nextWaypoint = routeResult ? routeResult.waypoints[Math.min(currentStep + 1, routeResult.waypoints.length - 1)] : null;
   const elapsedMin = navStartTime ? Math.round((Date.now() - navStartTime.getTime()) / 60000) : 0;
 
   const combinedDistanceKm = trips.length > 1 ? trips.reduce((s, t) => s + t.route.distanceKm, 0) : routeResult?.distanceKm || 0;
   const combinedTimeSeconds = trips.length > 1 ? trips.reduce((s, t) => s + t.route.travelTimeSeconds, 0) : routeResult?.travelTimeSeconds || 0;
   const combinedTimeH = Math.floor(combinedTimeSeconds / 3600);
-  const combinedTimeMin = Math.round((combinedTimeSeconds % 3600) / 60);
+  const combinedTimeMin = Math.round(combinedTimeSeconds % 3600 / 60);
   const previousLegsForMap = trips.length > 1 ? trips.slice(0, -1).map((leg, i) => ({ route: leg.route, color: LEG_COLORS[i % LEG_COLORS.length] })) : [];
-  const allTimelineEntries = trips.length > 0 ? trips.flatMap(t => t.timeline) : timeline;
-  const allRestCount = allTimelineEntries.filter(t => t.type === 'rest' || t.type === 'overnight').length;
+  const allTimelineEntries = trips.length > 0 ? trips.flatMap((t) => t.timeline) : timeline;
+  const allRestCount = allTimelineEntries.filter((t) => t.type === 'rest' || t.type === 'overnight').length;
   const displayTrips: TripLeg[] = trips.length > 0 ? trips : routeResult ? [{
     id: 'current', startName: start, endName: destination,
-    route: routeResult, alternativeRoutes, timeline,
+    route: routeResult, alternativeRoutes, timeline
   }] : [];
 
   const timelineIcon = (type: TimelineEntry['type']) => {
-    switch (type) { case 'drive': return '🚛'; case 'rest': return '☕'; case 'overnight': return '🌙'; case 'stop': return '📦'; case 'arrival': return '🏁'; }
+    switch (type) {case 'drive':return '🚛';case 'rest':return '☕';case 'overnight':return '🌙';case 'stop':return '📦';case 'arrival':return '🏁';}
   };
 
   return (
     <div
       className="relative w-full -m-4 md:-m-6"
-      style={{ height: 'calc(100vh - 3.5rem)' }}
-    >
+      style={{ height: 'calc(100vh - 3.5rem)' }}>
+      
       {/* Map */}
       <TomTomMap
         ref={mapHandleRef}
@@ -554,26 +554,26 @@ export default function RoutePlanning() {
         defaultStyle="satellite"
         onMapClick={(lat, lng) => setMapClickCoords({ lat, lng })}
         onMapTap={dismissPanels}
-        onAlternativeClick={(i) => handleSwitchRoute(i + 1)}
-      />
+        onAlternativeClick={(i) => handleSwitchRoute(i + 1)} />
+      
 
-      {viewState === 'details' && showBottomSheet && !selectedLocation && (
-        <div
-          className="absolute inset-0 z-10"
-          onPointerDown={dismissPanels}
-          aria-hidden="true"
-        />
-      )}
+      {viewState === 'details' && showBottomSheet && !selectedLocation &&
+      <div
+        className="absolute inset-0 z-10"
+        onPointerDown={dismissPanels}
+        aria-hidden="true" />
 
-      {mapClickCoords && (
-        <div className="absolute inset-0 z-40 bg-background">
+      }
+
+      {mapClickCoords &&
+      <div className="absolute inset-0 z-40 bg-background">
           <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
             <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setMapClickCoords(null)}
-              className="gap-1.5 bg-background/90 backdrop-blur shadow-lg"
-            >
+            variant="secondary"
+            size="sm"
+            onClick={() => setMapClickCoords(null)}
+            className="gap-1.5 bg-background/90 backdrop-blur shadow-lg">
+            
               <ArrowLeft className="h-4 w-4" />
               Tillbaka till kartan
             </Button>
@@ -583,25 +583,25 @@ export default function RoutePlanning() {
             </Badge>
           </div>
           <StreetViewPanorama
-            lat={mapClickCoords.lat}
-            lng={mapClickCoords.lng}
-            className="w-full h-full"
-            showExpandButton={false}
-          />
+          lat={mapClickCoords.lat}
+          lng={mapClickCoords.lng}
+          className="w-full h-full"
+          showExpandButton={false} />
+        
         </div>
-      )}
+      }
 
       {/* ===== SEARCH VIEW ===== */}
-      {viewState === 'search' && (
-        <>
+      {viewState === 'search' &&
+      <>
           {/* STEP 1: Full-screen SEARCH page */}
-          {searchStep === 'search' && (
-            <div className="absolute inset-0 z-30 bg-card flex flex-col">
+          {searchStep === 'search' &&
+        <div className="absolute inset-0 z-30 bg-card flex flex-col">
               <div className="flex items-center gap-2 px-4 pt-4 pb-1">
                 <button
-                  onPointerDown={(e) => { e.preventDefault(); setSearchStep(null); setSearchFocused(false); }}
-                  className="p-1.5 rounded-lg hover:bg-accent"
-                >
+              onPointerDown={(e) => {e.preventDefault();setSearchStep(null);setSearchFocused(false);}}
+              className="p-1.5 rounded-lg hover:bg-accent">
+              
                   <ArrowLeft className="h-5 w-5 text-foreground" />
                 </button>
                 <span className="text-sm font-semibold text-foreground">Sök destination</span>
@@ -611,117 +611,117 @@ export default function RoutePlanning() {
               <div className="flex items-center gap-2 px-4 pt-3 pb-1">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
                 <AddressAutocomplete
-                  value={start}
-                  onChange={setStart}
-                  placeholder="Min position (GPS)"
-                  className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-xs text-muted-foreground placeholder:text-muted-foreground/50"
-                  biasLat={userPosition?.lat}
-                  biasLng={userPosition?.lng}
-                />
-                {userPosition && (
-                  <button
-                    onClick={async () => {
-                      const name = await reverseGeocode(userPosition.lat, userPosition.lng);
-                      setStart(name);
-                    }}
-                    className="shrink-0 p-1 rounded-md hover:bg-accent"
-                    title="Min position"
-                  >
+              value={start}
+              onChange={setStart}
+              placeholder="Min position (GPS)"
+              className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-xs text-muted-foreground placeholder:text-muted-foreground/50"
+              biasLat={userPosition?.lat}
+              biasLng={userPosition?.lng} />
+            
+                {userPosition &&
+            <button
+              onClick={async () => {
+                const name = await reverseGeocode(userPosition.lat, userPosition.lng);
+                setStart(name);
+              }}
+              className="shrink-0 p-1 rounded-md hover:bg-accent"
+              title="Min position">
+              
                     <Locate className="h-3.5 w-3.5 text-primary" />
                   </button>
-                )}
+            }
               </div>
 
               {/* Destination field */}
               <div className="flex items-center gap-3 px-4 py-2 border-b border-border/50">
                 <Search className="h-5 w-5 text-muted-foreground shrink-0" />
                 <AddressAutocomplete
-                  value={destination}
-                  onChange={setDestination}
-                  onSelect={(suggestion) => {
-                    if (suggestion.isHistory) {
-                      const trip = savedTrips.find(t => t.id === suggestion.id);
-                      if (trip) {
-                        setRouteResult(trip.route);
-                        setTimeline(trip.timeline);
-                        setDestination(trip.endName);
-                        const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
-                        setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
-                        setViewState('details');
-                        setShowBottomSheet(true);
-                        setShowDetails(false);
-                        setSearchStep(null);
-                        setSearchFocused(false);
-                        return;
-                      }
-                    }
-                    if (suggestion.lat && suggestion.lng) {
-                      setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
-                      pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
-                    }
-                    // Move to filters step
-                    setSearchStep('filters');
+              value={destination}
+              onChange={setDestination}
+              onSelect={(suggestion) => {
+                if (suggestion.isHistory) {
+                  const trip = savedTrips.find((t) => t.id === suggestion.id);
+                  if (trip) {
+                    setRouteResult(trip.route);
+                    setTimeline(trip.timeline);
+                    setDestination(trip.endName);
+                    const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
+                    setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
+                    setViewState('details');
+                    setShowBottomSheet(true);
+                    setShowDetails(false);
+                    setSearchStep(null);
                     setSearchFocused(false);
-                  }}
-                  placeholder="Vart vill du åka?"
-                  className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-base placeholder:text-muted-foreground/60"
-                  biasLat={userPosition?.lat}
-                  biasLng={userPosition?.lng}
-                  onInputFocus={() => setSearchFocused(true)}
-                  onInputBlur={() => {}}
-                  inlineResults={true}
-                  initialSuggestions={(() => {
-                    const tripSuggestions: Array<{ id: string; name: string; address: string; lat: number; lng: number; isHistory: boolean; matchText: string }> = [];
-                    const seenTrips = new Set<string>();
-                    for (const t of savedTrips) {
-                      const key = t.endName.toLowerCase();
-                      if (seenTrips.has(key)) continue;
-                      seenTrips.add(key);
-                      const allStops = [t.startName, ...t.waypointNames, t.endName].join(' → ');
-                      const destWp = t.route.waypoints[t.route.waypoints.length - 1];
-                      tripSuggestions.push({
-                        id: t.id,
-                        name: allStops,
-                        address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round((t.travelTimeSeconds % 3600) / 60)}min`,
-                        lat: destWp.lat,
-                        lng: destWp.lng,
-                        isHistory: true,
-                        matchText: [t.endName, ...t.waypointNames].join('|'),
-                      });
-                    }
-                    return tripSuggestions.slice(0, 5);
-                  })()}
-                />
-                {destination && (
-                  <button onClick={() => setDestination('')} className="text-muted-foreground hover:text-foreground">
+                    return;
+                  }
+                }
+                if (suggestion.lat && suggestion.lng) {
+                  setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
+                  pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
+                }
+                // Move to filters step
+                setSearchStep('filters');
+                setSearchFocused(false);
+              }}
+              placeholder="Vart vill du åka?"
+              className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-base placeholder:text-muted-foreground/60"
+              biasLat={userPosition?.lat}
+              biasLng={userPosition?.lng}
+              onInputFocus={() => setSearchFocused(true)}
+              onInputBlur={() => {}}
+              inlineResults={true}
+              initialSuggestions={(() => {
+                const tripSuggestions: Array<{id: string;name: string;address: string;lat: number;lng: number;isHistory: boolean;matchText: string;}> = [];
+                const seenTrips = new Set<string>();
+                for (const t of savedTrips) {
+                  const key = t.endName.toLowerCase();
+                  if (seenTrips.has(key)) continue;
+                  seenTrips.add(key);
+                  const allStops = [t.startName, ...t.waypointNames, t.endName].join(' → ');
+                  const destWp = t.route.waypoints[t.route.waypoints.length - 1];
+                  tripSuggestions.push({
+                    id: t.id,
+                    name: allStops,
+                    address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round(t.travelTimeSeconds % 3600 / 60)}min`,
+                    lat: destWp.lat,
+                    lng: destWp.lng,
+                    isHistory: true,
+                    matchText: [t.endName, ...t.waypointNames].join('|')
+                  });
+                }
+                return tripSuggestions.slice(0, 5);
+              })()} />
+            
+                {destination &&
+            <button onClick={() => setDestination('')} className="text-muted-foreground hover:text-foreground">
                     <X className="h-4 w-4" />
                   </button>
-                )}
+            }
               </div>
 
               {/* If destination is set, show "Nästa" button */}
-              {destination && (
-                <div className="px-4 py-3">
+              {destination &&
+          <div className="px-4 py-3">
                   <Button
-                    onClick={() => setSearchStep('filters')}
-                    className="w-full h-10 bg-primary text-primary-foreground font-semibold rounded-xl"
-                  >
+              onClick={() => setSearchStep('filters')}
+              className="w-full h-10 bg-primary text-primary-foreground font-semibold rounded-xl">
+              
                     Nästa – Anpassa rutt
                     <ChevronDown className="h-4 w-4 ml-2 rotate-[-90deg]" />
                   </Button>
                 </div>
-              )}
+          }
             </div>
-          )}
+        }
 
           {/* STEP 2: Full-screen FILTERS page */}
-          {searchStep === 'filters' && (
-            <div className="absolute inset-0 z-30 bg-card flex flex-col overflow-y-auto">
+          {searchStep === 'filters' &&
+        <div className="absolute inset-0 z-30 bg-card flex flex-col overflow-y-auto">
               <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-border/50">
                 <button
-                  onClick={() => setSearchStep('search')}
-                  className="p-1.5 rounded-lg hover:bg-accent"
-                >
+              onClick={() => setSearchStep('search')}
+              className="p-1.5 rounded-lg hover:bg-accent">
+              
                   <ArrowLeft className="h-5 w-5 text-foreground" />
                 </button>
                 <div className="flex-1">
@@ -733,30 +733,30 @@ export default function RoutePlanning() {
               <div className="flex-1 px-4 py-4 space-y-4">
                 {/* Tur & retur */}
                 <button
-                  onClick={() => setIsRoundTrip(!isRoundTrip)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    isRoundTrip
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-accent'
-                  }`}
-                >
+              onClick={() => setIsRoundTrip(!isRoundTrip)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              isRoundTrip ?
+              'bg-primary text-primary-foreground' :
+              'bg-muted text-muted-foreground hover:bg-accent'}`
+              }>
+              
                   <Repeat className="h-3.5 w-3.5" />
                   Tur & retur
                 </button>
 
                 {/* Waypoints */}
-                {waypoints.map((wp, i) => (
-                  <div key={i} className="space-y-1">
+                {waypoints.map((wp, i) =>
+            <div key={i} className="space-y-1">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
                       <AddressAutocomplete
-                        value={wp.address}
-                        onChange={(val) => { const n = [...waypoints]; n[i] = { ...n[i], address: val }; setWaypoints(n); }}
-                        placeholder={`Stopp ${i + 1}`}
-                        className="h-9 text-sm"
-                        biasLat={userPosition?.lat}
-                        biasLng={userPosition?.lng}
-                      />
+                  value={wp.address}
+                  onChange={(val) => {const n = [...waypoints];n[i] = { ...n[i], address: val };setWaypoints(n);}}
+                  placeholder={`Stopp ${i + 1}`}
+                  className="h-9 text-sm"
+                  biasLat={userPosition?.lat}
+                  biasLng={userPosition?.lng} />
+                
                       <button onClick={() => setWaypoints(waypoints.filter((_, j) => j !== i))} className="p-1 hover:bg-accent rounded">
                         <X className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
@@ -764,16 +764,16 @@ export default function RoutePlanning() {
                     <div className="ml-5 flex items-center gap-2">
                       <Clock className="h-3 w-3 text-muted-foreground" />
                       <input
-                        type="number"
-                        min={0}
-                        value={wp.stopMinutes}
-                        onChange={(e) => { const n = [...waypoints]; n[i] = { ...n[i], stopMinutes: Number(e.target.value) }; setWaypoints(n); }}
-                        className="w-16 h-7 rounded-md border border-input bg-background px-2 text-xs text-center"
-                      />
+                  type="number"
+                  min={0}
+                  value={wp.stopMinutes}
+                  onChange={(e) => {const n = [...waypoints];n[i] = { ...n[i], stopMinutes: Number(e.target.value) };setWaypoints(n);}}
+                  className="w-16 h-7 rounded-md border border-input bg-background px-2 text-xs text-center" />
+                
                       <span className="text-[10px] text-muted-foreground">min lasttid</span>
                     </div>
                   </div>
-                ))}
+            )}
 
                 <button onClick={() => setWaypoints([...waypoints, { address: '', stopMinutes: 30 }])} className="text-xs text-primary hover:underline flex items-center gap-1">
                   <Plus className="h-3 w-3" /> Lägg till stopp
@@ -786,15 +786,15 @@ export default function RoutePlanning() {
                     <Select value={vehicleId} onValueChange={setVehicleId}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Välj" /></SelectTrigger>
                       <SelectContent>
-                        {mockVehicles.map(v => (
-                          <SelectItem key={v.id} value={v.id}>{v.brand} {v.model}</SelectItem>
-                        ))}
+                        {mockVehicles.map((v) =>
+                    <SelectItem key={v.id} value={v.id}>{v.brand} {v.model}</SelectItem>
+                    )}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
                     <Label className="text-[10px] text-muted-foreground">Last (kg)</Label>
-                    <Input type="number" value={loadWeight} onChange={e => setLoadWeight(e.target.value)} placeholder="0" className="h-8 text-xs" />
+                    <Input type="number" value={loadWeight} onChange={(e) => setLoadWeight(e.target.value)} placeholder="0" className="h-8 text-xs" />
                   </div>
                 </div>
 
@@ -803,39 +803,39 @@ export default function RoutePlanning() {
                   <Label className="text-[10px] text-muted-foreground">Avgångstid</Label>
                   <div className="flex items-center gap-2">
                     <input
-                      type="datetime-local"
-                      value={departureTime}
-                      onChange={e => setDepartureTime(e.target.value)}
-                      className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs"
-                    />
+                  type="datetime-local"
+                  value={departureTime}
+                  onChange={(e) => setDepartureTime(e.target.value)}
+                  className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs" />
+                
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-1">
                     {(() => {
-                      const d = new Date(departureTime);
-                      const dayName = d.toLocaleDateString('sv-SE', { weekday: 'long' });
-                      const dateStr = d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
-                      const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                      return (
-                        <span className={isWeekend ? 'text-amber-500 font-medium' : ''}>
+                  const d = new Date(departureTime);
+                  const dayName = d.toLocaleDateString('sv-SE', { weekday: 'long' });
+                  const dateStr = d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
+                  const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                  return (
+                    <span className={isWeekend ? 'text-amber-500 font-medium' : ''}>
                           {dayName} {dateStr} {isWeekend && '(helg – annan trafik)'}
-                        </span>
-                      );
-                    })()}
+                        </span>);
+
+                })()}
                   </div>
                 </div>
 
                 {/* Route type */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setRouteType('normal')}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-                  >
+                onClick={() => setRouteType('normal')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                
                     Normal (9h)
                   </button>
                   <button
-                    onClick={() => setRouteType('fastest')}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'fastest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-                  >
+                onClick={() => setRouteType('fastest')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'fastest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                
                     Snabbast (10h)
                   </button>
                 </div>
@@ -845,89 +845,89 @@ export default function RoutePlanning() {
                   <Label className="text-[10px] text-muted-foreground">Körtid redan använd idag</Label>
                   <div className="flex items-center gap-3 mt-1">
                     <input
-                      type="range"
-                      min={0}
-                      max={9}
-                      step={0.5}
-                      value={usedDriveHours}
-                      onChange={e => setUsedDriveHours(Number(e.target.value))}
-                      className="flex-1 h-2 accent-primary"
-                    />
+                  type="range"
+                  min={0}
+                  max={9}
+                  step={0.5}
+                  value={usedDriveHours}
+                  onChange={(e) => setUsedDriveHours(Number(e.target.value))}
+                  className="flex-1 h-2 accent-primary" />
+                
                     <span className="text-sm font-bold text-foreground min-w-[3rem] text-right">
                       {usedDriveHours}h
                     </span>
                   </div>
-                  {usedDriveHours > 0 && (
-                    <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                  {usedDriveHours > 0 &&
+              <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
                       ⏱ {routeType === 'fastest' ? 10 - usedDriveHours : 9 - usedDriveHours}h körtid kvar idag
                     </p>
-                  )}
+              }
                 </div>
 
                 {/* Rest stop facility filters */}
                 <div className="space-y-2">
                   <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Krav på rastplatser</div>
                   <div className="flex flex-wrap gap-1.5">
-                    {([
-                      { key: 'toilet' as const, icon: '🚻', label: 'Toalett' },
-                      { key: 'food' as const, icon: '🍽️', label: 'Mat' },
-                      { key: 'shower' as const, icon: '🚿', label: 'Dusch' },
-                      { key: 'fuel' as const, icon: '⛽', label: 'Drivmedel' },
-                      { key: 'truckParking' as const, icon: '🅿️', label: 'Lastbilsp.' },
-                    ]).map(f => (
-                      <button
-                        key={f.key}
-                        onClick={() => setRestStopFilters(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
-                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
-                          restStopFilters[f.key]
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-muted text-muted-foreground border-border hover:bg-accent'
-                        }`}
-                      >
+                    {[
+                { key: 'toilet' as const, icon: '🚻', label: 'Toalett' },
+                { key: 'food' as const, icon: '🍽️', label: 'Mat' },
+                { key: 'shower' as const, icon: '🚿', label: 'Dusch' },
+                { key: 'fuel' as const, icon: '⛽', label: 'Drivmedel' },
+                { key: 'truckParking' as const, icon: '🅿️', label: 'Lastbilsp.' }].
+                map((f) =>
+                <button
+                  key={f.key}
+                  onClick={() => setRestStopFilters((prev) => ({ ...prev, [f.key]: !prev[f.key] }))}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
+                  restStopFilters[f.key] ?
+                  'bg-primary text-primary-foreground border-primary' :
+                  'bg-muted text-muted-foreground border-border hover:bg-accent'}`
+                  }>
+                  
                         <span>{f.icon}</span>
                         {f.label}
                       </button>
-                    ))}
+                )}
                   </div>
-                  {Object.values(restStopFilters).some(Boolean) && (
-                    <p className="text-[10px] text-muted-foreground">
+                  {Object.values(restStopFilters).some(Boolean) &&
+              <p className="text-[10px] text-muted-foreground">
                       Bara rastplatser med valda faciliteter visas
                     </p>
-                  )}
+              }
                 </div>
 
                 {/* BK status */}
-                {bkResults.length > 0 && (
-                  <div className="flex gap-1.5 flex-wrap">
-                    {bkResults.map(r => (
-                      <Badge key={r.bk} className={`${statusColor(r.status)} text-[10px] px-1.5 py-0`}>
+                {bkResults.length > 0 &&
+            <div className="flex gap-1.5 flex-wrap">
+                    {bkResults.map((r) =>
+              <Badge key={r.bk} className={`${statusColor(r.status)} text-[10px] px-1.5 py-0`}>
                         {r.bk} {r.status === 'green' ? '✓' : r.status === 'yellow' ? '⚠' : '✗'}
                       </Badge>
-                    ))}
+              )}
                   </div>
-                )}
+            }
               </div>
 
               {/* Search button */}
               <div className="px-4 pb-4 pt-2 border-t border-border/50">
                 <Button
-                  onClick={() => { setSearchStep(null); setSearchFocused(false); handleSearch(); }}
-                  disabled={isLoading || !destination}
-                  className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl text-base"
-                >
-                  {isLoading ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Beräknar rutt...</>
-                  ) : (
-                    <><Route className="h-4 w-4 mr-2" /> Sök rutt</>
-                  )}
+              onClick={() => {setSearchStep(null);setSearchFocused(false);handleSearch();}}
+              disabled={isLoading || !destination}
+              className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl text-base">
+              
+                  {isLoading ?
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Beräknar rutt...</> :
+
+              <><Route className="h-4 w-4 mr-2" /> Sök rutt</>
+              }
                 </Button>
               </div>
             </div>
-          )}
+        }
 
           {/* Map search card (when no step is active) */}
-          {!searchStep && (
-            <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
+          {!searchStep &&
+        <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
               <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
                 {/* Start point */}
                 <div className="flex items-center gap-3 px-4 pt-4 pb-2">
@@ -938,33 +938,33 @@ export default function RoutePlanning() {
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Från</span>
                     <AddressAutocomplete
-                      value={start}
-                      onChange={setStart}
-                      placeholder="Min position (GPS)"
-                      className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-sm text-foreground placeholder:text-muted-foreground/50 px-0"
-                      biasLat={userPosition?.lat}
-                      biasLng={userPosition?.lng}
-                    />
+                  value={start}
+                  onChange={setStart}
+                  placeholder="Min position (GPS)"
+                  className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-sm text-foreground placeholder:text-muted-foreground/50 px-0"
+                  biasLat={userPosition?.lat}
+                  biasLng={userPosition?.lng} />
+                
                   </div>
-                  {userPosition && (
-                    <button
-                      onClick={async () => {
-                        const name = await reverseGeocode(userPosition.lat, userPosition.lng);
-                        setStart(name);
-                      }}
-                      className="shrink-0 p-2 rounded-xl hover:bg-accent bg-muted transition-colors"
-                      title="Min position"
-                    >
+                  {userPosition &&
+              <button
+                onClick={async () => {
+                  const name = await reverseGeocode(userPosition.lat, userPosition.lng);
+                  setStart(name);
+                }}
+                className="shrink-0 p-2 rounded-xl hover:bg-accent bg-muted transition-colors"
+                title="Min position">
+                
                       <Locate className="h-4 w-4 text-primary" />
                     </button>
-                  )}
+              }
                 </div>
 
                 {/* Destination - clicking opens step 1 */}
                 <div
-                  className="flex items-center gap-3 px-4 pb-4 pt-0 cursor-pointer group"
-                  onClick={() => setSearchStep('search')}
-                >
+              className="flex items-center gap-3 px-4 pb-4 pt-0 cursor-pointer group"
+              onClick={() => setSearchStep('search')}>
+              
                   <div className="flex flex-col items-center">
                     <div className="w-3 h-3 rounded-full bg-destructive ring-2 ring-destructive/20" />
                   </div>
@@ -974,77 +974,77 @@ export default function RoutePlanning() {
                       {destination || 'Vart vill du åka?'}
                     </div>
                   </div>
-                  {destination ? (
-                    <button onClick={(e) => { e.stopPropagation(); setDestination(''); }} className="shrink-0 p-2 rounded-xl hover:bg-accent bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                  {destination ?
+              <button onClick={(e) => {e.stopPropagation();setDestination('');}} className="shrink-0 p-2 rounded-xl hover:bg-accent bg-muted text-muted-foreground hover:text-foreground transition-colors">
                       <X className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <div className="shrink-0 p-2 rounded-xl bg-primary text-primary-foreground">
+                    </button> :
+
+              <div className="shrink-0 p-2 rounded-xl bg-primary text-primary-foreground">
                       <Search className="h-4 w-4" />
                     </div>
-                  )}
+              }
                 </div>
               </div>
             </div>
-          )}
+        }
 
           {/* Quick actions + Trip history - bottom (hidden during fullscreen search) */}
-          {!searchStep && (
-            <div className="absolute bottom-0 left-0 right-0 z-20">
+          {!searchStep &&
+        <div className="absolute bottom-0 left-0 right-0 z-20">
               <div className="max-w-lg mx-auto">
                 {/* GPS button */}
                 <div className="flex gap-2 px-4 mb-2">
-                  {userPosition && (
-                    <button
-                      onClick={() => mapHandleRef.current?.centerOnUser()}
-                      className="bg-card shadow-lg rounded-full p-3 hover:bg-accent transition-colors border border-border"
-                    >
+                  {userPosition &&
+              <button
+                onClick={() => mapHandleRef.current?.centerOnUser()}
+                className="bg-card shadow-lg rounded-full p-3 hover:bg-accent transition-colors border border-border">
+                
                       <Locate className="h-5 w-5 text-primary" />
                     </button>
-                  )}
+              }
                 </div>
 
                 {/* Saved trips panel */}
               </div>
             </div>
-          )}
+        }
         </>
-      )}
+      }
 
       {/* ===== DETAILS VIEW ===== */}
-      {viewState === 'details' && routeResult && (
-        <>
+      {viewState === 'details' && routeResult &&
+      <>
           {/* Top bar - route summary stacked */}
           <div className="absolute top-2 left-2 right-2 z-20 max-w-xl mx-auto">
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
-              <div className="flex items-center gap-1.5 px-2 py-1.5">
+              <div className="gap-1.5 px-2 py-1.5 flex items-start justify-start">
                 <button onClick={handleBack} className="shrink-0 p-1 hover:bg-accent rounded-md transition-colors">
                   <ArrowLeft className="h-4 w-4 text-foreground" />
                 </button>
 
                 {/* From & To stacked */}
                 <button
-                  onClick={() => { setViewState('search'); setSearchStep('search'); }}
-                  className="flex-1 min-w-0 flex flex-col gap-0.5 px-2 py-0.5 hover:bg-accent/40 rounded-md transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
+                onClick={() => {setViewState('search');setSearchStep('search');}}
+                className="flex-1 min-w-0 flex flex-col gap-0.5 px-2 py-0.5 hover:bg-accent/40 rounded-md transition-colors">
+                
+                  <div className="flex-col border-2 rounded bg-gray-200 text-primary-foreground pl-[5px] my-0 mx-0 py-0 px-0 pb-0 gap-px border-primary flex items-start justify-start">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                     <span className="text-xs text-foreground truncate">{start || 'Min position'}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="items-start justify-start border-2 rounded shadow bg-gray-200 pl-[5px] pr-0 flex flex-col gap-px border-primary">
                     <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
                     <span className="text-xs font-medium text-foreground truncate">{destination}</span>
                   </div>
                 </button>
 
-                <div className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-primary whitespace-nowrap">
+                <div className="shrink-0 items-center gap-1 text-[11px] font-semibold text-primary whitespace-nowrap flex flex-row">
                   {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km · {trips.length > 1 ? `${combinedTimeH}h${combinedTimeMin}m` : `${totalDriveTimeH}h${totalDriveTimeMin}m`}
                 </div>
 
                 <button
-                  onClick={() => { setViewState('search'); setSearchStep('filters'); }}
-                  className="shrink-0 p-1 hover:bg-accent rounded-md transition-colors"
-                >
+                onClick={() => {setViewState('search');setSearchStep('filters');}}
+                className="shrink-0 p-1 hover:bg-accent rounded-md transition-colors">
+                
                   <Car className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
               </div>
@@ -1052,53 +1052,53 @@ export default function RoutePlanning() {
           </div>
 
           {/* Floating restore button when bottom sheet is hidden */}
-          {!showBottomSheet && (
-            <div className="absolute bottom-4 right-4 z-20">
+          {!showBottomSheet &&
+        <div className="absolute bottom-4 right-4 z-20">
               <Button
-                onClick={() => setShowBottomSheet(true)}
-                className="rounded-full shadow-lg px-4 py-2 gap-2"
-              >
+            onClick={() => setShowBottomSheet(true)}
+            className="rounded-full shadow-lg px-4 py-2 gap-2">
+            
                 <ChevronUp className="h-4 w-4" />
                 Visa resplan
               </Button>
             </div>
-          )}
+        }
 
           {/* Bottom sheet - compact by default */}
-          {showBottomSheet && (
-          <div
-            className="absolute bottom-0 left-0 right-0 z-20"
-            onPointerDown={(e) => {
-              if (e.target === e.currentTarget) dismissPanels();
-            }}
-          >
+          {showBottomSheet &&
+        <div
+          className="absolute bottom-0 left-0 right-0 z-20"
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) dismissPanels();
+          }}>
+          
             <div ref={bottomSheetRef} className="max-w-lg mx-auto">
               <div className={`bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden transition-all ${showDetails ? 'max-h-[75vh]' : ''}`}>
                 
                 {/* Route alternatives - horizontal scroll, always visible */}
-                {alternativeRoutes.length > 0 && (
-                  <div className="px-3 pt-3 pb-1">
+                {alternativeRoutes.length > 0 &&
+              <div className="px-3 pt-3 pb-1">
                     <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
                       <button
-                        className="shrink-0 rounded-lg px-2.5 py-1.5 text-left border-2 border-primary bg-primary/10 min-w-[80px]"
-                      >
+                    className="shrink-0 rounded-lg px-2.5 py-1.5 text-left border-2 border-primary bg-primary/10 min-w-[80px]">
+                    
                         <div className="text-[11px] font-semibold text-foreground">Rutt 1</div>
                         <div className="text-[9px] text-muted-foreground whitespace-nowrap">
-                          {routeResult.distanceKm} km · {Math.floor(routeResult.travelTimeSeconds / 3600)}h {Math.round((routeResult.travelTimeSeconds % 3600) / 60)}min
+                          {routeResult.distanceKm} km · {Math.floor(routeResult.travelTimeSeconds / 3600)}h {Math.round(routeResult.travelTimeSeconds % 3600 / 60)}min
                         </div>
                       </button>
                       {alternativeRoutes.map((alt, i) => {
-                        const diffMin = Math.round((alt.travelTimeSeconds - routeResult.travelTimeSeconds) / 60);
-                        const diffKm = alt.distanceKm - routeResult.distanceKm;
-                        return (
-                          <button
-                            key={i}
-                            onClick={() => handleSwitchRoute(i + 1)}
-                            className="shrink-0 rounded-lg px-2.5 py-1.5 text-left border border-border hover:border-primary/50 min-w-[80px]"
-                          >
+                    const diffMin = Math.round((alt.travelTimeSeconds - routeResult.travelTimeSeconds) / 60);
+                    const diffKm = alt.distanceKm - routeResult.distanceKm;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => handleSwitchRoute(i + 1)}
+                        className="shrink-0 rounded-lg px-2.5 py-1.5 text-left border border-border hover:border-primary/50 min-w-[80px]">
+                        
                             <div className="text-[11px] font-semibold text-foreground">Rutt {i + 2}</div>
                             <div className="text-[9px] text-muted-foreground whitespace-nowrap">
-                              {alt.distanceKm} km · {Math.floor(alt.travelTimeSeconds / 3600)}h {Math.round((alt.travelTimeSeconds % 3600) / 60)}min
+                              {alt.distanceKm} km · {Math.floor(alt.travelTimeSeconds / 3600)}h {Math.round(alt.travelTimeSeconds % 3600 / 60)}min
                             </div>
                             <div className="text-[9px] mt-0.5 whitespace-nowrap">
                               <span className={diffMin > 0 ? 'text-destructive' : 'text-emerald-600'}>
@@ -1109,19 +1109,19 @@ export default function RoutePlanning() {
                                 {diffKm > 0 ? '+' : ''}{diffKm}km
                               </span>
                             </div>
-                          </button>
-                        );
-                      })}
+                          </button>);
+
+                  })}
                     </div>
                   </div>
-                )}
+              }
 
                 {/* BIG START BUTTON - always visible */}
                 <div className="px-3 py-3">
                   <button
-                    onClick={handleStartNavigation}
-                    className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-2xl text-lg flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/30 transition-all"
-                  >
+                  onClick={handleStartNavigation}
+                  className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-2xl text-lg flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/30 transition-all">
+                  
                     <Navigation className="h-6 w-6" />
                     KÖR
                   </button>
@@ -1134,16 +1134,16 @@ export default function RoutePlanning() {
                     Lägg till tur
                   </Button>
                   <button
-                    onClick={() => setShowDetails(!showDetails)}
-                    className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-medium text-foreground hover:bg-accent/50 transition-colors"
-                  >
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-medium text-foreground hover:bg-accent/50 transition-colors">
+                  
                     📋 Resplan
                     {showDetails ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
                   </button>
                 </div>
 
-                {showDetails && (
-                  <div className="overflow-y-auto" style={{ maxHeight: 'calc(75vh - 140px)' }}>
+                {showDetails &&
+              <div className="overflow-y-auto" style={{ maxHeight: 'calc(75vh - 140px)' }}>
                     {/* Big clear summary cards */}
                     <div className="px-4 py-3 space-y-3">
                       {/* Quick overview - big numbers */}
@@ -1156,7 +1156,7 @@ export default function RoutePlanning() {
                         </div>
                         <div className="bg-primary/10 rounded-2xl p-3 text-center">
                           <div className="text-2xl font-black text-primary">
-                            {trips.length > 1 ? `${combinedTimeH}:${String(combinedTimeMin).padStart(2,'0')}` : `${totalDriveTimeH}:${String(totalDriveTimeMin).padStart(2,'0')}`}
+                            {trips.length > 1 ? `${combinedTimeH}:${String(combinedTimeMin).padStart(2, '0')}` : `${totalDriveTimeH}:${String(totalDriveTimeMin).padStart(2, '0')}`}
                           </div>
                           <div className="text-xs text-muted-foreground font-medium">körtid</div>
                         </div>
@@ -1166,8 +1166,8 @@ export default function RoutePlanning() {
                         </div>
                       </div>
 
-                      {usedDriveHours > 0 && (
-                        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-3 flex items-center gap-3">
+                      {usedDriveHours > 0 &&
+                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-3 flex items-center gap-3">
                           <span className="text-2xl">⏱</span>
                           <div>
                             <div className="text-sm font-bold text-amber-800 dark:text-amber-300">
@@ -1178,98 +1178,98 @@ export default function RoutePlanning() {
                             </div>
                           </div>
                         </div>
-                      )}
+                  }
 
                       {/* Step by step - visual journey */}
                       {displayTrips.map((leg, legIdx) => {
-                        const depTime = new Date(leg.route.departureTime);
-                        const arrTime = new Date(leg.route.arrivalTime);
-                        const firstEntry = leg.timeline[0];
-                        const lastEntry = leg.timeline[leg.timeline.length - 1];
-                        const totalTripMs = lastEntry ? new Date(lastEntry.endTime).getTime() - new Date(firstEntry.startTime).getTime() : 0;
-                        const totalTripH = Math.floor(totalTripMs / 3600000);
-                        const totalTripMin = Math.round((totalTripMs % 3600000) / 60000);
+                    const depTime = new Date(leg.route.departureTime);
+                    const arrTime = new Date(leg.route.arrivalTime);
+                    const firstEntry = leg.timeline[0];
+                    const lastEntry = leg.timeline[leg.timeline.length - 1];
+                    const totalTripMs = lastEntry ? new Date(lastEntry.endTime).getTime() - new Date(firstEntry.startTime).getTime() : 0;
+                    const totalTripH = Math.floor(totalTripMs / 3600000);
+                    const totalTripMin = Math.round(totalTripMs % 3600000 / 60000);
 
-                        return (
-                          <div key={leg.id} className="space-y-2">
-                            {displayTrips.length > 1 && (
-                              <div className="flex items-center gap-2 pt-2">
+                    return (
+                      <div key={leg.id} className="space-y-2">
+                            {displayTrips.length > 1 &&
+                        <div className="flex items-center gap-2 pt-2">
                                 <div className="w-3 h-3 rounded-full shrink-0" style={{ background: LEG_COLORS[legIdx % LEG_COLORS.length] }} />
                                 <span className="text-sm font-bold text-foreground">Tur {legIdx + 1}</span>
                               </div>
-                            )}
+                        }
 
                             {/* Visual journey steps */}
                             <div className="bg-card rounded-2xl border border-border overflow-hidden">
                               {leg.timeline.map((entry, i) => {
-                                const startT = new Date(entry.startTime);
-                                const endT = new Date(entry.endTime);
-                                const timeStr = startT.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-                                const endStr = endT.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-                                const entryDate = startT.toLocaleDateString('sv-SE');
-                                const prevDate = i > 0 ? new Date(leg.timeline[i - 1].startTime).toLocaleDateString('sv-SE') : null;
-                                const showDayHeader = i === 0 || entryDate !== prevDate;
+                            const startT = new Date(entry.startTime);
+                            const endT = new Date(entry.endTime);
+                            const timeStr = startT.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                            const endStr = endT.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                            const entryDate = startT.toLocaleDateString('sv-SE');
+                            const prevDate = i > 0 ? new Date(leg.timeline[i - 1].startTime).toLocaleDateString('sv-SE') : null;
+                            const showDayHeader = i === 0 || entryDate !== prevDate;
 
-                                // Simplified labels
-                                const getSimpleLabel = () => {
-                                  if (entry.type === 'drive') {
-                                    const h = Math.floor(entry.durationMinutes / 60);
-                                    const m = entry.durationMinutes % 60;
-                                    return `Kör ${h > 0 ? `${h}h ` : ''}${m}min`;
-                                  }
-                                  if (entry.type === 'rest') return 'Rast – 45 min';
-                                  if (entry.type === 'overnight') return 'Sov – 11 timmar';
-                                  if (entry.type === 'stop') return `Stopp: ${entry.location || 'Mellanstation'}`;
-                                  if (entry.type === 'arrival') return `Framme!`;
-                                  return entry.label;
-                                };
+                            // Simplified labels
+                            const getSimpleLabel = () => {
+                              if (entry.type === 'drive') {
+                                const h = Math.floor(entry.durationMinutes / 60);
+                                const m = entry.durationMinutes % 60;
+                                return `Kör ${h > 0 ? `${h}h ` : ''}${m}min`;
+                              }
+                              if (entry.type === 'rest') return 'Rast – 45 min';
+                              if (entry.type === 'overnight') return 'Sov – 11 timmar';
+                              if (entry.type === 'stop') return `Stopp: ${entry.location || 'Mellanstation'}`;
+                              if (entry.type === 'arrival') return `Framme!`;
+                              return entry.label;
+                            };
 
-                                const getBgColor = () => {
-                                  if (entry.type === 'drive') return '';
-                                  if (entry.type === 'rest') return 'bg-amber-50 dark:bg-amber-950/20';
-                                  if (entry.type === 'overnight') return 'bg-indigo-50 dark:bg-indigo-950/20';
-                                  if (entry.type === 'stop') return 'bg-orange-50 dark:bg-orange-950/20';
-                                  if (entry.type === 'arrival') return 'bg-emerald-50 dark:bg-emerald-950/20';
-                                  return '';
-                                };
+                            const getBgColor = () => {
+                              if (entry.type === 'drive') return '';
+                              if (entry.type === 'rest') return 'bg-amber-50 dark:bg-amber-950/20';
+                              if (entry.type === 'overnight') return 'bg-indigo-50 dark:bg-indigo-950/20';
+                              if (entry.type === 'stop') return 'bg-orange-50 dark:bg-orange-950/20';
+                              if (entry.type === 'arrival') return 'bg-emerald-50 dark:bg-emerald-950/20';
+                              return '';
+                            };
 
-                                const getIcon = () => {
-                                  if (entry.type === 'drive') return '🚛';
-                                  if (entry.type === 'rest') return '☕';
-                                  if (entry.type === 'overnight') return '🛏️';
-                                  if (entry.type === 'stop') return '📦';
-                                  if (entry.type === 'arrival') return '🏁';
-                                  return '📍';
-                                };
+                            const getIcon = () => {
+                              if (entry.type === 'drive') return '🚛';
+                              if (entry.type === 'rest') return '☕';
+                              if (entry.type === 'overnight') return '🛏️';
+                              if (entry.type === 'stop') return '📦';
+                              if (entry.type === 'arrival') return '🏁';
+                              return '📍';
+                            };
 
-                                return (
-                                  <div key={`${legIdx}-${i}`}>
-                                    {showDayHeader && (
-                                      <div className="bg-muted/60 px-4 py-2 flex items-center gap-2">
+                            return (
+                              <div key={`${legIdx}-${i}`}>
+                                    {showDayHeader &&
+                                <div className="bg-muted/60 px-4 py-2 flex items-center gap-2">
                                         <span className="text-lg">📅</span>
                                         <span className="text-sm font-bold text-foreground">
                                           {startT.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })}
                                         </span>
                                       </div>
-                                    )}
+                                }
                                     <button
-                                      onClick={() => handleTimelineEntryClick(entry, i)}
-                                      className={`w-full text-left px-4 py-3 flex items-center gap-4 border-b border-border/30 last:border-b-0 hover:bg-accent/30 transition-colors ${getBgColor()}`}
-                                    >
+                                  onClick={() => handleTimelineEntryClick(entry, i)}
+                                  className={`w-full text-left px-4 py-3 flex items-center gap-4 border-b border-border/30 last:border-b-0 hover:bg-accent/30 transition-colors ${getBgColor()}`}>
+                                  
                                       {/* Big icon */}
                                       <div className="text-2xl shrink-0 w-10 text-center">{getIcon()}</div>
                                       
                                       {/* Content */}
                                       <div className="flex-1 min-w-0">
                                         <div className="text-sm font-bold text-foreground">{getSimpleLabel()}</div>
-                                        {entry.restStop && (
-                                          <div className="text-xs text-primary font-medium mt-0.5 flex items-center gap-1">
+                                        {entry.restStop &&
+                                    <div className="text-xs text-primary font-medium mt-0.5 flex items-center gap-1">
                                             <MapPin className="h-3 w-3 shrink-0" />
                                             <span className="truncate">{entry.restStop.name}</span>
                                           </div>
-                                        )}
-                                        {entry.restStop?.facilities && Object.values(entry.restStop.facilities).some(Boolean) && (
-                                          <div className="flex items-center gap-1.5 mt-1">
+                                    }
+                                        {entry.restStop?.facilities && Object.values(entry.restStop.facilities).some(Boolean) &&
+                                    <div className="flex items-center gap-1.5 mt-1">
                                             <div className="flex gap-1">
                                               {entry.restStop.facilities.toilet && <span title="Toalett (uppskattat)">🚻</span>}
                                               {entry.restStop.facilities.food && <span title="Mat (uppskattat)">🍽️</span>}
@@ -1279,95 +1279,95 @@ export default function RoutePlanning() {
                                             </div>
                                             <span className="text-[9px] text-muted-foreground italic">~uppskattat</span>
                                           </div>
-                                        )}
-                                        {entry.type === 'arrival' && (
-                                          <div className="text-xs text-muted-foreground mt-0.5">{entry.location}</div>
-                                        )}
+                                    }
+                                        {entry.type === 'arrival' &&
+                                    <div className="text-xs text-muted-foreground mt-0.5">{entry.location}</div>
+                                    }
                                       </div>
 
                                       {/* Time on right side - big and clear */}
                                       <div className="text-right shrink-0">
                                         <div className="text-base font-black text-foreground">{timeStr}</div>
-                                        {entry.durationMinutes > 0 && entry.type !== 'drive' && (
-                                          <div className="text-[11px] text-muted-foreground">→ {endStr}</div>
-                                        )}
+                                        {entry.durationMinutes > 0 && entry.type !== 'drive' &&
+                                    <div className="text-[11px] text-muted-foreground">→ {endStr}</div>
+                                    }
                                       </div>
                                     </button>
-                                  </div>
-                                );
-                              })}
+                                  </div>);
+
+                          })}
                             </div>
 
                             {/* Total trip time for this leg */}
-                            {(totalTripH > 0 || totalTripMin > 0) && (
-                              <div className="bg-muted/40 rounded-2xl p-3 flex items-center justify-between">
+                            {(totalTripH > 0 || totalTripMin > 0) &&
+                        <div className="bg-muted/40 rounded-2xl p-3 flex items-center justify-between">
                                 <span className="text-xs font-semibold text-muted-foreground">Total tid inkl. pauser</span>
                                 <span className="text-sm font-black text-foreground">{totalTripH}h {totalTripMin}min</span>
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                        }
+                          </div>);
 
-                      {displayTrips.length > 1 && (
-                        <div className="bg-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                  })}
+
+                      {displayTrips.length > 1 &&
+                  <div className="bg-primary/10 rounded-2xl p-4 flex items-center justify-between">
                           <span className="text-sm font-bold text-foreground">🏁 Totalt alla turer</span>
                           <span className="text-sm font-black text-primary">
                             {combinedDistanceKm} km · {combinedTimeH}h {combinedTimeMin}min
                           </span>
                         </div>
-                      )}
+                  }
 
                       {/* EU rules - simple explanation */}
                       <div className="rounded-2xl bg-muted/40 p-3 space-y-1">
                         <div className="text-xs font-bold text-foreground">ℹ️ Så funkar pauserna</div>
                         <div className="text-xs text-muted-foreground leading-relaxed">
-                          Efter <span className="font-bold">4,5 timmars körning</span> → 45 min rast<br/>
-                          Max <span className="font-bold">{routeType === 'fastest' ? '10' : '9'} timmar</span> körning per dag<br/>
+                          Efter <span className="font-bold">4,5 timmars körning</span> → 45 min rast<br />
+                          Max <span className="font-bold">{routeType === 'fastest' ? '10' : '9'} timmar</span> körning per dag<br />
                           Sedan <span className="font-bold">11 timmars</span> vila (dygnsvila)
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
+              }
               </div>
             </div>
           </div>
-          )}
+        }
 
 
-          {selectedLocation && (
-            <>
+          {selectedLocation &&
+        <>
             {/* Invisible backdrop to dismiss location card */}
             <div
-              className="absolute inset-0"
-              style={{ zIndex: 25 }}
-              onClick={() => setSelectedLocation(null)}
-            />
+            className="absolute inset-0"
+            style={{ zIndex: 25 }}
+            onClick={() => setSelectedLocation(null)} />
+          
             <div ref={locationCardRef} className="absolute left-4 right-4 z-30 max-w-sm mx-auto animate-in slide-in-from-bottom-4 fade-in duration-300"
-              style={{ top: '50%', transform: 'translateY(-50%)' }}
-            >
+          style={{ top: '50%', transform: 'translateY(-50%)' }}>
+            
               <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
                 {/* Header with colored bar */}
                 <div className={`h-1.5 ${
-                  selectedLocation.type === 'rest' ? 'bg-amber-400' :
-                  selectedLocation.type === 'overnight' ? 'bg-indigo-500' :
-                  selectedLocation.type === 'stop' ? 'bg-orange-400' :
-                  selectedLocation.type === 'arrival' ? 'bg-emerald-500' :
-                  'bg-primary'
-                }`} />
+              selectedLocation.type === 'rest' ? 'bg-amber-400' :
+              selectedLocation.type === 'overnight' ? 'bg-indigo-500' :
+              selectedLocation.type === 'stop' ? 'bg-orange-400' :
+              selectedLocation.type === 'arrival' ? 'bg-emerald-500' :
+              'bg-primary'}`
+              } />
 
                 {/* Street View preview - click to fullscreen */}
                 <button
-                  onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
-                  className="relative w-full h-[160px] bg-muted block cursor-pointer group"
-                >
+                onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
+                className="relative w-full h-[160px] bg-muted block cursor-pointer group">
+                
                   <StreetViewPanorama
-                    lat={selectedLocation.lat}
-                    lng={selectedLocation.lng}
-                    className="w-full h-[160px] pointer-events-none"
-                    label="Street View"
-                  />
+                  lat={selectedLocation.lat}
+                  lng={selectedLocation.lng}
+                  className="w-full h-[160px] pointer-events-none"
+                  label="Street View" />
+                
                   <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors flex items-center justify-center">
                     <div className="bg-background/80 backdrop-blur rounded-full px-3 py-1.5 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
                       <Eye className="h-3.5 w-3.5" />
@@ -1379,53 +1379,53 @@ export default function RoutePlanning() {
                 <div className="p-4">
                   {/* Close button */}
                   <button
-                    onClick={() => setSelectedLocation(null)}
-                    className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-accent transition-colors"
-                  >
+                  onClick={() => setSelectedLocation(null)}
+                  className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-accent transition-colors">
+                  
                     <X className="h-4 w-4 text-muted-foreground" />
                   </button>
 
                   {/* Icon + Name */}
                   <div className="flex items-start gap-3 pr-8">
                     <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
-                      selectedLocation.type === 'rest' ? 'bg-amber-100 dark:bg-amber-950' :
-                      selectedLocation.type === 'overnight' ? 'bg-indigo-100 dark:bg-indigo-950' :
-                      selectedLocation.type === 'stop' ? 'bg-orange-100 dark:bg-orange-950' :
-                      selectedLocation.type === 'arrival' ? 'bg-emerald-100 dark:bg-emerald-950' :
-                      'bg-primary/10'
-                    }`}>
+                  selectedLocation.type === 'rest' ? 'bg-amber-100 dark:bg-amber-950' :
+                  selectedLocation.type === 'overnight' ? 'bg-indigo-100 dark:bg-indigo-950' :
+                  selectedLocation.type === 'stop' ? 'bg-orange-100 dark:bg-orange-950' :
+                  selectedLocation.type === 'arrival' ? 'bg-emerald-100 dark:bg-emerald-950' :
+                  'bg-primary/10'}`
+                  }>
                       {selectedLocation.type === 'rest' ? '☕' :
-                       selectedLocation.type === 'overnight' ? '🌙' :
-                       selectedLocation.type === 'stop' ? '📦' :
-                       selectedLocation.type === 'arrival' ? '🏁' : '📍'}
+                    selectedLocation.type === 'overnight' ? '🌙' :
+                    selectedLocation.type === 'stop' ? '📦' :
+                    selectedLocation.type === 'arrival' ? '🏁' : '📍'}
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-sm text-foreground leading-tight">{selectedLocation.name}</h3>
-                      {selectedLocation.category && (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{selectedLocation.category}</p>
-                      )}
+                      {selectedLocation.category &&
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{selectedLocation.category}</p>
+                    }
                       {/* Vehicle suitability badge */}
-                      {selectedLocation.suitability && (
-                        <div className="mt-1.5 flex items-center gap-1.5">
+                      {selectedLocation.suitability &&
+                    <div className="mt-1.5 flex items-center gap-1.5">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            selectedLocation.suitability === 'perfect' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' :
-                            selectedLocation.suitability === 'good' ? 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400' :
-                            selectedLocation.suitability === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400' :
-                            'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
-                          }`}>
+                      selectedLocation.suitability === 'perfect' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' :
+                      selectedLocation.suitability === 'good' ? 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400' :
+                      selectedLocation.suitability === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400' :
+                      'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'}`
+                      }>
                             {selectedLocation.suitability === 'perfect' ? '✓ Perfekt' :
-                             selectedLocation.suitability === 'good' ? '👍 Bra' :
-                             selectedLocation.suitability === 'warning' ? '⚠ Varning' :
-                             '✗ Olämplig'}
+                        selectedLocation.suitability === 'good' ? '👍 Bra' :
+                        selectedLocation.suitability === 'warning' ? '⚠ Varning' :
+                        '✗ Olämplig'}
                           </span>
                         </div>
-                      )}
-                      {selectedLocation.suitabilityNote && (
-                        <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{selectedLocation.suitabilityNote}</p>
-                      )}
+                    }
+                      {selectedLocation.suitabilityNote &&
+                    <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{selectedLocation.suitabilityNote}</p>
+                    }
                       {/* Facility badges */}
-                      {selectedLocation.facilities && Object.values(selectedLocation.facilities).some(Boolean) && (
-                        <div className="mt-2 space-y-1">
+                      {selectedLocation.facilities && Object.values(selectedLocation.facilities).some(Boolean) &&
+                    <div className="mt-2 space-y-1">
                           <div className="flex flex-wrap gap-1">
                             {selectedLocation.facilities.toilet && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🚻 Toalett</Badge>}
                             {selectedLocation.facilities.food && <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-0.5">🍽️ Mat</Badge>}
@@ -1438,46 +1438,46 @@ export default function RoutePlanning() {
                             Faciliteter är uppskattade baserat på platstyp — verifiera innan
                           </p>
                         </div>
-                      )}
-                      {selectedLocation.address && (
-                        <p className="text-[10px] text-muted-foreground mt-1">{selectedLocation.address}</p>
-                      )}
+                    }
+                      {selectedLocation.address &&
+                    <p className="text-[10px] text-muted-foreground mt-1">{selectedLocation.address}</p>
+                    }
                     </div>
                   </div>
 
                   {/* Details grid */}
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    {selectedLocation.startTime && (
-                      <div className="bg-muted/50 rounded-lg px-3 py-2">
+                    {selectedLocation.startTime &&
+                  <div className="bg-muted/50 rounded-lg px-3 py-2">
                         <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Tid</div>
                         <div className="text-xs font-medium mt-0.5">
                           {new Date(selectedLocation.startTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                           {selectedLocation.endTime && ` – ${new Date(selectedLocation.endTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}`}
                         </div>
                       </div>
-                    )}
-                    {selectedLocation.durationMinutes !== undefined && selectedLocation.durationMinutes > 0 && (
-                      <div className="bg-muted/50 rounded-lg px-3 py-2">
+                  }
+                    {selectedLocation.durationMinutes !== undefined && selectedLocation.durationMinutes > 0 &&
+                  <div className="bg-muted/50 rounded-lg px-3 py-2">
                         <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Varaktighet</div>
                         <div className="text-xs font-medium mt-0.5">
-                          {selectedLocation.durationMinutes >= 60
-                            ? `${Math.floor(selectedLocation.durationMinutes / 60)}h ${selectedLocation.durationMinutes % 60}min`
-                            : `${selectedLocation.durationMinutes} min`}
+                          {selectedLocation.durationMinutes >= 60 ?
+                      `${Math.floor(selectedLocation.durationMinutes / 60)}h ${selectedLocation.durationMinutes % 60}min` :
+                      `${selectedLocation.durationMinutes} min`}
                         </div>
                       </div>
-                    )}
-                    {selectedLocation.distance && (
-                      <div className="bg-muted/50 rounded-lg px-3 py-2">
+                  }
+                    {selectedLocation.distance &&
+                  <div className="bg-muted/50 rounded-lg px-3 py-2">
                         <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Avstånd från rutt</div>
                         <div className="text-xs font-medium mt-0.5">{selectedLocation.distance}</div>
                       </div>
-                    )}
+                  }
                     <div className="bg-muted/50 rounded-lg px-3 py-2">
                       <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Datum</div>
                       <div className="text-xs font-medium mt-0.5">
-                        {selectedLocation.startTime
-                          ? new Date(selectedLocation.startTime).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
-                          : '–'}
+                        {selectedLocation.startTime ?
+                      new Date(selectedLocation.startTime).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' }) :
+                      '–'}
                       </div>
                     </div>
                   </div>
@@ -1491,61 +1491,61 @@ export default function RoutePlanning() {
                   {/* Action buttons */}
                   <div className="mt-3 flex gap-2">
                     <button
-                      onClick={() => {
-                        const loc = selectedLocation;
-                        setSelectedLocation(null);
-                        setDestination(loc.name);
-                        setDestinationCoords({ lat: loc.lat, lng: loc.lng });
-                        pendingDestCoordsRef.current = { lat: loc.lat, lng: loc.lng, name: loc.name };
-                        handleSearch(loc.name);
-                      }}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground rounded-xl py-2 text-xs font-medium hover:opacity-90 transition-opacity"
-                    >
+                    onClick={() => {
+                      const loc = selectedLocation;
+                      setSelectedLocation(null);
+                      setDestination(loc.name);
+                      setDestinationCoords({ lat: loc.lat, lng: loc.lng });
+                      pendingDestCoordsRef.current = { lat: loc.lat, lng: loc.lng, name: loc.name };
+                      handleSearch(loc.name);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground rounded-xl py-2 text-xs font-medium hover:opacity-90 transition-opacity">
+                    
                       <Navigation className="h-3.5 w-3.5" />
                       Åk hit
                     </button>
                     <button
-                      onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
-                      className="flex items-center justify-center gap-1.5 bg-muted rounded-xl px-4 py-2 text-xs font-medium hover:bg-accent transition-colors"
-                    >
+                    onClick={() => setMapClickCoords({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
+                    className="flex items-center justify-center gap-1.5 bg-muted rounded-xl px-4 py-2 text-xs font-medium hover:bg-accent transition-colors">
+                    
                       <Eye className="h-3.5 w-3.5" />
                       Street View
                     </button>
                     <button
-                      onClick={() => {
-                        mapHandleRef.current?.flyToLocation(selectedLocation.lng, selectedLocation.lat, 16);
-                      }}
-                      className="flex items-center justify-center gap-1.5 bg-muted rounded-xl px-4 py-2 text-xs font-medium hover:bg-accent transition-colors"
-                    >
+                    onClick={() => {
+                      mapHandleRef.current?.flyToLocation(selectedLocation.lng, selectedLocation.lat, 16);
+                    }}
+                    className="flex items-center justify-center gap-1.5 bg-muted rounded-xl px-4 py-2 text-xs font-medium hover:bg-accent transition-colors">
+                    
                       <Locate className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
                   {/* Alternatives - swap rest stop */}
                   {selectedLocation.alternatives && selectedLocation.alternatives.length > 0 && (
-                    selectedLocation.type === 'rest' || selectedLocation.type === 'overnight'
-                  ) && (
-                    <div className="mt-3 border-t border-border/50 pt-3">
+                selectedLocation.type === 'rest' || selectedLocation.type === 'overnight') &&
+
+                <div className="mt-3 border-t border-border/50 pt-3">
                       <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                         Alternativa rastplatser
                       </div>
                       <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                        {selectedLocation.alternatives.map((alt, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => handleSwapRestStop(alt)}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-left ${
-                              alt.suitability === 'unsuitable' ? 'bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100/50' :
-                              alt.suitability === 'warning' ? 'bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50' :
-                              'bg-muted/40 hover:bg-accent'
-                            }`}
-                          >
+                        {selectedLocation.alternatives.map((alt, idx) =>
+                    <button
+                      key={idx}
+                      onClick={() => handleSwapRestStop(alt)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-left ${
+                      alt.suitability === 'unsuitable' ? 'bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100/50' :
+                      alt.suitability === 'warning' ? 'bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50' :
+                      'bg-muted/40 hover:bg-accent'}`
+                      }>
+                      
                             <div className={`shrink-0 w-2 h-2 rounded-full ${
-                              alt.suitability === 'perfect' ? 'bg-emerald-500' :
-                              alt.suitability === 'good' ? 'bg-sky-500' :
-                              alt.suitability === 'warning' ? 'bg-amber-500' :
-                              alt.suitability === 'unsuitable' ? 'bg-red-500' : 'bg-muted-foreground'
-                            }`} />
+                      alt.suitability === 'perfect' ? 'bg-emerald-500' :
+                      alt.suitability === 'good' ? 'bg-sky-500' :
+                      alt.suitability === 'warning' ? 'bg-amber-500' :
+                      alt.suitability === 'unsuitable' ? 'bg-red-500' : 'bg-muted-foreground'}`
+                      } />
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-medium truncate">{alt.name}</div>
                               <div className="text-[10px] text-muted-foreground flex items-center gap-1.5">
@@ -1556,30 +1556,30 @@ export default function RoutePlanning() {
                             </div>
                             <span className="text-[10px] text-primary font-medium shrink-0">Byt</span>
                           </button>
-                        ))}
+                    )}
                       </div>
                     </div>
-                  )}
+                }
                 </div>
               </div>
             </div>
             </>
-          )}
+        }
 
           {/* Map controls */}
           <div className="absolute right-4 bottom-[180px] z-20 flex flex-col gap-2">
-            {userPosition && (
-              <button onClick={() => mapHandleRef.current?.centerOnUser()} className="bg-card shadow-lg rounded-full p-3 hover:bg-accent border border-border">
+            {userPosition &&
+          <button onClick={() => mapHandleRef.current?.centerOnUser()} className="bg-card shadow-lg rounded-full p-3 hover:bg-accent border border-border">
                 <Locate className="h-5 w-5 text-primary" />
               </button>
-            )}
+          }
           </div>
         </>
-      )}
+      }
 
       {/* ===== NAVIGATION VIEW ===== */}
-      {viewState === 'navigating' && routeResult && (
-        <>
+      {viewState === 'navigating' && routeResult &&
+      <>
           {/* Top HUD - Big & Clear */}
           <div className="absolute top-0 left-0 right-0 z-30">
             <div className="bg-foreground/95 backdrop-blur-md text-background px-5 pt-5 pb-4 shadow-2xl">
@@ -1621,27 +1621,27 @@ export default function RoutePlanning() {
           <div className="absolute bottom-6 left-0 right-0 z-30">
             <div className="max-w-lg mx-auto px-4 flex items-center gap-3">
               {/* Center on user */}
-              {userPosition && (
-                <button
-                  onClick={() => mapHandleRef.current?.centerOnUser()}
-                  className="bg-card shadow-xl rounded-full p-4 border border-border shrink-0"
-                >
+              {userPosition &&
+            <button
+              onClick={() => mapHandleRef.current?.centerOnUser()}
+              className="bg-card shadow-xl rounded-full p-4 border border-border shrink-0">
+              
                   <Locate className="h-6 w-6 text-primary" />
                 </button>
-              )}
+            }
 
               {/* Stop button - prominent */}
               <button
-                onClick={handleStopNavigation}
-                className="flex-1 bg-destructive text-destructive-foreground shadow-xl rounded-2xl px-6 py-4 font-bold text-lg flex items-center justify-center gap-3"
-              >
+              onClick={handleStopNavigation}
+              className="flex-1 bg-destructive text-destructive-foreground shadow-xl rounded-2xl px-6 py-4 font-bold text-lg flex items-center justify-center gap-3">
+              
                 <Square className="h-6 w-6" />
                 Avsluta körning
               </button>
             </div>
           </div>
         </>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
