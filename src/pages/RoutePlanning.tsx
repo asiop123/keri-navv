@@ -679,7 +679,7 @@ export default function RoutePlanning() {
                             name: suggestion.name,
                             address: suggestion.address || suggestion.name,
                             lat: suggestion.lat,
-                            lng: suggestion.lng,
+                            lng: suggestion.lng
                           }).then(() => getSearchHistory(15).then(setSearchHistoryEntries));
                         }
                         if (suggestion.isHistory) {
@@ -744,7 +744,7 @@ export default function RoutePlanning() {
                             lat: h.lat,
                             lng: h.lng,
                             isHistory: true,
-                            matchText: h.name,
+                            matchText: h.name
                           });
                         }
                         return suggestions.slice(0, 8);
@@ -762,89 +762,89 @@ export default function RoutePlanning() {
 
                 {/* Senaste besökta platser - unique places from driven trips */}
                 {!destination && (() => {
-                  const visitedPlaces: Array<{name: string; lat: number; lng: number; date: string}> = [];
-                  const seenPlaces = new Set<string>();
-                  for (const trip of savedTrips.filter(t => t.tripSource === 'driven')) {
-                    // Add all waypoints and destination
-                    const stops = [...trip.waypointNames, trip.endName];
-                    const waypoints = trip.route.waypoints;
-                    for (let i = 0; i < stops.length; i++) {
-                      const key = stops[i].toLowerCase().trim();
-                      if (seenPlaces.has(key)) continue;
-                      seenPlaces.add(key);
-                      const wpIdx = Math.min(i + 1, waypoints.length - 1);
-                      visitedPlaces.push({
-                        name: stops[i],
-                        lat: waypoints[wpIdx]?.lat ?? 0,
-                        lng: waypoints[wpIdx]?.lng ?? 0,
-                        date: trip.createdAt,
-                      });
-                    }
-                    // Add rest stops and overnight stops from timeline
-                    for (const entry of trip.timeline) {
-                      if ((entry.type === 'rest' || entry.type === 'overnight' || entry.type === 'stop') && entry.restStop) {
-                        const key = entry.restStop.name.toLowerCase().trim();
-                        if (seenPlaces.has(key)) continue;
-                        seenPlaces.add(key);
-                        visitedPlaces.push({
-                          name: entry.restStop.name,
-                          lat: entry.restStop.lat,
-                          lng: entry.restStop.lng,
-                          date: trip.createdAt,
-                        });
-                      }
-                    }
+              const visitedPlaces: Array<{name: string;lat: number;lng: number;date: string;}> = [];
+              const seenPlaces = new Set<string>();
+              for (const trip of savedTrips.filter((t) => t.tripSource === 'driven')) {
+                // Add all waypoints and destination
+                const stops = [...trip.waypointNames, trip.endName];
+                const waypoints = trip.route.waypoints;
+                for (let i = 0; i < stops.length; i++) {
+                  const key = stops[i].toLowerCase().trim();
+                  if (seenPlaces.has(key)) continue;
+                  seenPlaces.add(key);
+                  const wpIdx = Math.min(i + 1, waypoints.length - 1);
+                  visitedPlaces.push({
+                    name: stops[i],
+                    lat: waypoints[wpIdx]?.lat ?? 0,
+                    lng: waypoints[wpIdx]?.lng ?? 0,
+                    date: trip.createdAt
+                  });
+                }
+                // Add rest stops and overnight stops from timeline
+                for (const entry of trip.timeline) {
+                  if ((entry.type === 'rest' || entry.type === 'overnight' || entry.type === 'stop') && entry.restStop) {
+                    const key = entry.restStop.name.toLowerCase().trim();
+                    if (seenPlaces.has(key)) continue;
+                    seenPlaces.add(key);
+                    visitedPlaces.push({
+                      name: entry.restStop.name,
+                      lat: entry.restStop.lat,
+                      lng: entry.restStop.lng,
+                      date: trip.createdAt
+                    });
                   }
-                  if (visitedPlaces.length === 0) return null;
-                  return (
-                    <div className="px-4 pt-4">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste besökta platser</p>
+                }
+              }
+              if (visitedPlaces.length === 0) return null;
+              return (
+                <div className="px-4 pt-4">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senast besökta platser</p>
                       <div className="space-y-2">
-                        {visitedPlaces.slice(0, 8).map((place, i) => (
-                          <div
-                            key={place.name + i}
-                            className="rounded-xl overflow-hidden border border-border/40 bg-card/50 hover:bg-accent/30 transition-colors">
+                        {visitedPlaces.slice(0, 8).map((place, i) =>
+                    <div
+                      key={place.name + i}
+                      className="rounded-xl overflow-hidden border border-border/40 bg-card/50 hover:bg-accent/30 transition-colors">
                             {/* Street View thumbnail */}
                             <div
-                              className="h-24 w-full bg-muted cursor-pointer relative group"
-                              onClick={() => setMapClickCoords({ lat: place.lat, lng: place.lng })}>
+                        className="h-24 w-full bg-muted cursor-pointer relative group"
+                        onClick={() => setMapClickCoords({ lat: place.lat, lng: place.lng })}>
                               <img
-                                src={`https://maps.googleapis.com/maps/api/streetview?size=600x200&location=${place.lat},${place.lng}&key=${GOOGLE_MAPS_KEY}`}
-                                alt={`Street View: ${place.name}`}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                              />
+                          src={`https://maps.googleapis.com/maps/api/streetview?size=600x200&location=${place.lat},${place.lng}&key=${GOOGLE_MAPS_KEY}`}
+                          alt={`Street View: ${place.name}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy" />
+                        
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                                 <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
                               </div>
                             </div>
                             {/* Place info */}
                             <button
-                              onClick={() => {
-                                setDestination(place.name);
-                                setDestinationCoords({ lat: place.lat, lng: place.lng });
-                                pendingDestCoordsRef.current = { lat: place.lat, lng: place.lng, name: place.name };
-                                setSearchStep('filters');
-                                setSearchFocused(false);
-                              }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-left">
+                        onClick={() => {
+                          setDestination(place.name);
+                          setDestinationCoords({ lat: place.lat, lng: place.lng });
+                          pendingDestCoordsRef.current = { lat: place.lat, lng: place.lng, name: place.name };
+                          setSearchStep('filters');
+                          setSearchFocused(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left">
                               <MapPin className="h-4 w-4 text-primary shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-foreground truncate">{place.name}</p>
                                 <p className="text-xs text-muted-foreground">{new Date(place.date).toLocaleDateString('sv-SE')}</p>
                               </div>
-                              <span className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 text-white text-lg font-extrabold whitespace-nowrap shrink-0">
+                              <span className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 text-white text-lg font-extrabold whitespace-nowrap shrink-0 mx-[24px] my-0 mr-0 pr-[8px] ml-[24px] pb-[12px] pl-[13px]">
                                 Kör hit
                                 <Navigation className="h-5 w-5" />
                               </span>
                             </button>
                           </div>
-                        ))}
+                    )}
                       </div>
-                    </div>
-                  );
-                })()
-                }
+                    </div>);
+
+            })()
+            }
               </div>
 
               {/* Bottom action */}
@@ -902,8 +902,8 @@ export default function RoutePlanning() {
                 e.dataTransfer.setData('text/plain', String(i));
                 (e.currentTarget as HTMLElement).style.opacity = '0.4';
               }}
-              onDragEnd={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
-              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+              onDragEnd={(e) => {(e.currentTarget as HTMLElement).style.opacity = '1';}}
+              onDragOver={(e) => {e.preventDefault();e.dataTransfer.dropEffect = 'move';}}
               onDrop={(e) => {
                 e.preventDefault();
                 const fromIdx = Number(e.dataTransfer.getData('text/plain'));
@@ -1259,9 +1259,9 @@ export default function RoutePlanning() {
                         </div>
                         <div className="text-[9px] font-medium text-primary whitespace-nowrap mt-0.5">
                           Framme {(() => {
-                            const arr = new Date(new Date(departureTime).getTime() + routeResult.travelTimeSeconds * 1000);
-                            return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-                          })()}
+                        const arr = new Date(new Date(departureTime).getTime() + routeResult.travelTimeSeconds * 1000);
+                        return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                      })()}
                         </div>
                       </button>
                       {alternativeRoutes.map((alt, i) => {
@@ -1288,9 +1288,9 @@ export default function RoutePlanning() {
                             </div>
                             <div className="text-[9px] font-medium text-primary whitespace-nowrap mt-0.5">
                               Framme {(() => {
-                                const arr = new Date(new Date(departureTime).getTime() + alt.travelTimeSeconds * 1000);
-                                return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-                              })()}
+                            const arr = new Date(new Date(departureTime).getTime() + alt.travelTimeSeconds * 1000);
+                            return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                          })()}
                             </div>
                           </button>);
 
@@ -1430,61 +1430,61 @@ export default function RoutePlanning() {
 
                             return (
                               <div key={`${legIdx}-${i}`}
-                                draggable={entry.type === 'stop'}
-                                onDragStart={entry.type === 'stop' ? (e) => {
-                                  const stopEntries = leg.timeline.filter(t => t.type === 'stop');
-                                  const stopIdx = stopEntries.indexOf(entry);
-                                  e.dataTransfer.effectAllowed = 'move';
-                                  e.dataTransfer.setData('text/plain', `stop:${stopIdx}`);
-                                  setDraggingStopIdx(stopIdx);
-                                } : undefined}
-                                onDragEnd={entry.type === 'stop' ? () => {
-                                  setDraggingStopIdx(null);
-                                  setDragOverStopIdx(null);
-                                } : undefined}
-                                onDragOver={entry.type === 'stop' ? (e) => {
-                                  e.preventDefault();
-                                  e.dataTransfer.dropEffect = 'move';
-                                  const stopEntries = leg.timeline.filter(t => t.type === 'stop');
-                                  const overIdx = stopEntries.indexOf(entry);
-                                  if (overIdx !== dragOverStopIdx) setDragOverStopIdx(overIdx);
-                                } : undefined}
-                                onDragLeave={entry.type === 'stop' ? () => {
-                                  const stopEntries = leg.timeline.filter(t => t.type === 'stop');
-                                  const overIdx = stopEntries.indexOf(entry);
-                                  if (dragOverStopIdx === overIdx) setDragOverStopIdx(null);
-                                } : undefined}
-                                onDrop={entry.type === 'stop' ? (e) => {
-                                  e.preventDefault();
-                                  const data = e.dataTransfer.getData('text/plain');
-                                  if (!data.startsWith('stop:')) return;
-                                  const fromStopIdx = Number(data.split(':')[1]);
-                                  const stopEntries = leg.timeline.filter(t => t.type === 'stop');
-                                  const toStopIdx = stopEntries.indexOf(entry);
-                                  setDraggingStopIdx(null);
-                                  setDragOverStopIdx(null);
-                                  if (fromStopIdx === toStopIdx) return;
-                                  const reordered = [...waypoints];
-                                  const [moved] = reordered.splice(fromStopIdx, 1);
-                                  reordered.splice(toStopIdx, 0, moved);
-                                  setWaypoints(reordered);
-                                  setTimeout(() => handleSearch(), 100);
-                                } : undefined}
-                                className={`transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-                                  entry.type === 'stop' ? 'cursor-grab active:cursor-grabbing' : ''
-                                } ${
-                                  entry.type === 'stop' && draggingStopIdx !== null && (() => {
-                                    const stopEntries = leg.timeline.filter(t => t.type === 'stop');
-                                    const thisStopIdx = stopEntries.indexOf(entry);
-                                    if (thisStopIdx === draggingStopIdx) return 'opacity-10 scale-75 blur-[2px] grayscale';
-                                    if (thisStopIdx === dragOverStopIdx) {
-                                      const isAbove = draggingStopIdx > thisStopIdx;
-                                      return `animate-wobble ring-2 ring-primary bg-primary/15 scale-[1.06] shadow-xl shadow-primary/30 ${isAbove ? 'translate-y-3' : '-translate-y-3'} rounded-xl relative z-10`;
-                                    }
-                                    return 'opacity-40 scale-[0.97]';
-                                  })() || ''
-                                }`}
-                              >
+                              draggable={entry.type === 'stop'}
+                              onDragStart={entry.type === 'stop' ? (e) => {
+                                const stopEntries = leg.timeline.filter((t) => t.type === 'stop');
+                                const stopIdx = stopEntries.indexOf(entry);
+                                e.dataTransfer.effectAllowed = 'move';
+                                e.dataTransfer.setData('text/plain', `stop:${stopIdx}`);
+                                setDraggingStopIdx(stopIdx);
+                              } : undefined}
+                              onDragEnd={entry.type === 'stop' ? () => {
+                                setDraggingStopIdx(null);
+                                setDragOverStopIdx(null);
+                              } : undefined}
+                              onDragOver={entry.type === 'stop' ? (e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'move';
+                                const stopEntries = leg.timeline.filter((t) => t.type === 'stop');
+                                const overIdx = stopEntries.indexOf(entry);
+                                if (overIdx !== dragOverStopIdx) setDragOverStopIdx(overIdx);
+                              } : undefined}
+                              onDragLeave={entry.type === 'stop' ? () => {
+                                const stopEntries = leg.timeline.filter((t) => t.type === 'stop');
+                                const overIdx = stopEntries.indexOf(entry);
+                                if (dragOverStopIdx === overIdx) setDragOverStopIdx(null);
+                              } : undefined}
+                              onDrop={entry.type === 'stop' ? (e) => {
+                                e.preventDefault();
+                                const data = e.dataTransfer.getData('text/plain');
+                                if (!data.startsWith('stop:')) return;
+                                const fromStopIdx = Number(data.split(':')[1]);
+                                const stopEntries = leg.timeline.filter((t) => t.type === 'stop');
+                                const toStopIdx = stopEntries.indexOf(entry);
+                                setDraggingStopIdx(null);
+                                setDragOverStopIdx(null);
+                                if (fromStopIdx === toStopIdx) return;
+                                const reordered = [...waypoints];
+                                const [moved] = reordered.splice(fromStopIdx, 1);
+                                reordered.splice(toStopIdx, 0, moved);
+                                setWaypoints(reordered);
+                                setTimeout(() => handleSearch(), 100);
+                              } : undefined}
+                              className={`transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                              entry.type === 'stop' ? 'cursor-grab active:cursor-grabbing' : ''} ${
+
+                              entry.type === 'stop' && draggingStopIdx !== null && (() => {
+                                const stopEntries = leg.timeline.filter((t) => t.type === 'stop');
+                                const thisStopIdx = stopEntries.indexOf(entry);
+                                if (thisStopIdx === draggingStopIdx) return 'opacity-10 scale-75 blur-[2px] grayscale';
+                                if (thisStopIdx === dragOverStopIdx) {
+                                  const isAbove = draggingStopIdx > thisStopIdx;
+                                  return `animate-wobble ring-2 ring-primary bg-primary/15 scale-[1.06] shadow-xl shadow-primary/30 ${isAbove ? 'translate-y-3' : '-translate-y-3'} rounded-xl relative z-10`;
+                                }
+                                return 'opacity-40 scale-[0.97]';
+                              })() || ''}`
+                              }>
+                                
                                     {showDayHeader &&
                                 <div className="bg-muted/60 px-4 py-2 flex items-center gap-2">
                                         <span className="text-lg">📅</span>
