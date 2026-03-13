@@ -84,6 +84,8 @@ export default function RoutePlanning() {
   const [distanceToNext, setDistanceToNext] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const gpsPointsRef = useRef<{lat: number;lng: number;time: string;}[]>([]);
+  const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+  const dragPointerYRef = useRef<number | null>(null);
   const [navStartTime, setNavStartTime] = useState<Date | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
     type: string;
@@ -110,6 +112,35 @@ export default function RoutePlanning() {
 
   useEffect(() => {getSavedTrips().then(setSavedTrips);}, []);
   useEffect(() => {getSearchHistory(15).then(setSearchHistoryEntries);}, []);
+
+  useEffect(() => {
+    if (draggingStopIdx === null) {
+      dragPointerYRef.current = null;
+      return;
+    }
+
+    const onGlobalDragOver = (event: DragEvent) => {
+      dragPointerYRef.current = event.clientY;
+      const container = timelineScrollRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const y = event.clientY - rect.top;
+      const edgeZone = 110;
+      const maxSpeed = 22;
+
+      if (y < edgeZone) {
+        const ratio = Math.min(1, Math.max(0, (edgeZone - y) / edgeZone));
+        container.scrollTop -= Math.max(5, Math.round(ratio * maxSpeed));
+      } else if (y > rect.height - edgeZone) {
+        const ratio = Math.min(1, Math.max(0, (y - (rect.height - edgeZone)) / edgeZone));
+        container.scrollTop += Math.max(5, Math.round(ratio * maxSpeed));
+      }
+    };
+
+    window.addEventListener('dragover', onGlobalDragOver);
+    return () => window.removeEventListener('dragover', onGlobalDragOver);
+  }, [draggingStopIdx]);
 
   // Click outside to dismiss panels
   const dismissPanels = useCallback(() => {
@@ -1231,48 +1262,7 @@ export default function RoutePlanning() {
               <div
                 className="overflow-y-auto"
                 style={{ maxHeight: 'calc(75vh - 140px)' }}
-                ref={(el) => {
-                  if (el) (el as any).__scrollRef = true;
-                  (window as any).__timelineScrollEl = el;
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  // Store mouse Y for the scroll interval
-                  const container = e.currentTarget;
-                  (container as any).__dragClientY = e.clientY;
-                }}
-                onDragEnter={(e) => {
-                  e.preventDefault();
-                  const container = e.currentTarget;
-                  if ((container as any).__scrollInterval) return;
-                  (container as any).__scrollInterval = setInterval(() => {
-                    const cy = (container as any).__dragClientY;
-                    if (cy == null) return;
-                    const rect = container.getBoundingClientRect();
-                    const y = cy - rect.top;
-                    const edgeZone = 80;
-                    if (y < edgeZone) {
-                      const speed = Math.max(4, Math.round((1 - y / edgeZone) * 20));
-                      container.scrollBy({ top: -speed });
-                    } else if (y > rect.height - edgeZone) {
-                      const dist = y - (rect.height - edgeZone);
-                      const speed = Math.max(4, Math.round((dist / edgeZone) * 20));
-                      container.scrollBy({ top: speed });
-                    }
-                  }, 16);
-                }}
-                onDragLeave={(e) => {
-                  const container = e.currentTarget;
-                  if (!container.contains(e.relatedTarget as Node)) {
-                    clearInterval((container as any).__scrollInterval);
-                    (container as any).__scrollInterval = null;
-                  }
-                }}
-                onDrop={(e) => {
-                  const container = e.currentTarget;
-                  clearInterval((container as any).__scrollInterval);
-                  (container as any).__scrollInterval = null;
-                }}>
+                ref={timelineScrollRef}>
                     {/* Big clear summary cards */}
                     <div className="px-4 py-3 space-y-3">
                       {/* Quick overview - big numbers */}
@@ -1388,9 +1378,6 @@ export default function RoutePlanning() {
                                 onDragOver={entry.type === 'stop' ? (e) => {
                                   e.preventDefault();
                                   e.dataTransfer.dropEffect = 'move';
-                                  // Propagate clientY to scroll container for auto-scroll
-                                  const scrollEl = (window as any).__timelineScrollEl;
-                                  if (scrollEl) (scrollEl as any).__dragClientY = e.clientY;
                                   const stopEntries = leg.timeline.filter(t => t.type === 'stop');
                                   const overIdx = stopEntries.indexOf(entry);
                                   if (overIdx !== dragOverStopIdx) setDragOverStopIdx(overIdx);
