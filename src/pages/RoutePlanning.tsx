@@ -716,22 +716,6 @@ export default function RoutePlanning() {
                       initialSuggestions={(() => {
                         const suggestions: Array<{id: string;name: string;address: string;lat: number;lng: number;isHistory: boolean;matchText: string;}> = [];
                         const seenKeys = new Set<string>();
-                        for (const t of savedTrips) {
-                          const key = t.endName.toLowerCase();
-                          if (seenKeys.has(key)) continue;
-                          seenKeys.add(key);
-                          const allStops = [t.startName, ...t.waypointNames, t.endName].join(' → ');
-                          const destWp = t.route.waypoints[t.route.waypoints.length - 1];
-                          suggestions.push({
-                            id: t.id,
-                            name: allStops,
-                            address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round(t.travelTimeSeconds % 3600 / 60)}min`,
-                            lat: destWp.lat,
-                            lng: destWp.lng,
-                            isHistory: true,
-                            matchText: [t.endName, ...t.waypointNames].join('|')
-                          });
-                        }
                         for (const h of searchHistoryEntries) {
                           const key = h.name.toLowerCase();
                           if (seenKeys.has(key)) continue;
