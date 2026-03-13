@@ -113,6 +113,35 @@ export default function RoutePlanning() {
   useEffect(() => {getSavedTrips().then(setSavedTrips);}, []);
   useEffect(() => {getSearchHistory(15).then(setSearchHistoryEntries);}, []);
 
+  useEffect(() => {
+    if (draggingStopIdx === null) {
+      dragPointerYRef.current = null;
+      return;
+    }
+
+    const onGlobalDragOver = (event: DragEvent) => {
+      dragPointerYRef.current = event.clientY;
+      const container = timelineScrollRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const y = event.clientY - rect.top;
+      const edgeZone = 110;
+      const maxSpeed = 22;
+
+      if (y < edgeZone) {
+        const ratio = Math.max(0, (edgeZone - y) / edgeZone);
+        container.scrollTop -= Math.max(5, Math.round(ratio * maxSpeed));
+      } else if (y > rect.height - edgeZone) {
+        const ratio = Math.max(0, (y - (rect.height - edgeZone)) / edgeZone);
+        container.scrollTop += Math.max(5, Math.round(ratio * maxSpeed));
+      }
+    };
+
+    window.addEventListener('dragover', onGlobalDragOver);
+    return () => window.removeEventListener('dragover', onGlobalDragOver);
+  }, [draggingStopIdx]);
+
   // Click outside to dismiss panels
   const dismissPanels = useCallback(() => {
     setShowDetails(false);
