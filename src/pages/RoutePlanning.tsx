@@ -1378,9 +1378,6 @@ export default function RoutePlanning() {
                                 onDragOver={entry.type === 'stop' ? (e) => {
                                   e.preventDefault();
                                   e.dataTransfer.dropEffect = 'move';
-                                  // Propagate clientY to scroll container for auto-scroll
-                                  const scrollEl = (window as any).__timelineScrollEl;
-                                  if (scrollEl) (scrollEl as any).__dragClientY = e.clientY;
                                   const stopEntries = leg.timeline.filter(t => t.type === 'stop');
                                   const overIdx = stopEntries.indexOf(entry);
                                   if (overIdx !== dragOverStopIdx) setDragOverStopIdx(overIdx);
