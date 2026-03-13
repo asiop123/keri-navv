@@ -762,7 +762,7 @@ export default function RoutePlanning() {
                 {/* Senaste reseplaner - full trips with all stops */}
                 {!destination && savedTrips.length > 0 &&
                 <div className="px-4 pt-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste reseplaner</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste besökta platser</p>
                   <div className="space-y-2">
                     {savedTrips.slice(0, 5).map((trip) => {
                       const stops = [trip.startName, ...trip.waypointNames, trip.endName];
