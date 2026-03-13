@@ -58,6 +58,7 @@ interface AddressAutocompleteProps {
   onInputFocus?: () => void;
   onInputBlur?: () => void;
   initialSuggestions?: Suggestion[];
+  inlineResults?: boolean;
 }
 
 export default function AddressAutocomplete({
@@ -71,6 +72,7 @@ export default function AddressAutocomplete({
   onInputFocus,
   onInputBlur,
   initialSuggestions = [],
+  inlineResults = false,
 }: AddressAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -292,7 +294,7 @@ export default function AddressAutocomplete({
   };
 
   return (
-    <div ref={containerRef} className="relative flex-1">
+    <div ref={containerRef} className={`relative ${inlineResults ? 'flex flex-col' : ''}`} style={inlineResults ? { flex: '1 1 auto', minHeight: 0 } : { flex: '1' }}>
       <div className="relative">
         <Input
           value={value}
@@ -318,7 +320,10 @@ export default function AddressAutocomplete({
       </div>
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden max-h-[240px] overflow-y-auto">
+        <div className={inlineResults
+          ? "flex-1 overflow-y-auto"
+          : "absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden max-h-[240px] overflow-y-auto"
+        }>
           {suggestions.map((s, i) => (
             <button
               key={s.id + i}
