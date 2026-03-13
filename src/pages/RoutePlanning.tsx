@@ -1209,19 +1209,19 @@ export default function RoutePlanning() {
                 </button>
 
                 <div className="shrink-0 flex flex-col px-3 py-1 ml-auto">
-                  <div className="flex items-center justify-between gap-4 text-black">
-                    <span className="font-semibold text-xl text-black">Körtid          </span>
-                    <span className="text-sm font-extrabold text-black">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-semibold text-xl text-foreground">Körtid</span>
+                    <span className="text-sm font-extrabold text-foreground">
                       {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
                     </span>
                   </div>
-                  <div className="text-[11px] text-black font-bold text-right">
+                  <div className="text-[11px] text-muted-foreground font-bold text-right">
                     {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
                   </div>
-                  <div className="border-t w-full my-1 border-2 border-black" />
+                  <div className="border-t w-full my-1 border-2 border-foreground/20" />
                   <div className="flex items-center justify-between gap-4">
-                    <span className="font-semibold text-black text-xl">Ankomst</span>
-                    <span className="text-sm font-extrabold text-black">
+                    <span className="font-semibold text-foreground text-xl">Ankomst</span>
+                    <span className="text-sm font-extrabold text-foreground">
                       {(() => {
                       const travelSec = trips.length > 1 ?
                       combinedTimeH * 3600 + combinedTimeMin * 60 :
