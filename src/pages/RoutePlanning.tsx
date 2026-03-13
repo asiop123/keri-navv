@@ -1072,7 +1072,7 @@ export default function RoutePlanning() {
               <div className="gap-1.5 px-2 py-1.5 flex items-center">
                 <div className="shrink-0 flex flex-col items-center justify-evenly gap-2 self-stretch">
                   <button onClick={handleBack} className="p-1.5 hover:bg-accent rounded-md transition-colors">
-                    <ArrowLeft className="h-5 w-5 text-foreground" />
+                    <ArrowLeft className="h-5 w-5 text-destructive" />
                   </button>
                   <button
                   onClick={() => {
@@ -1083,7 +1083,7 @@ export default function RoutePlanning() {
                   }}
                   className="p-1.5 hover:bg-accent rounded-md transition-colors"
                   title="Byt position och destination">
-                    <ArrowUpDown className="h-5 w-5 text-foreground" />
+                    <ArrowUpDown className="h-5 w-5 text-emerald-500" />
                   </button>
                 </div>
 
