@@ -116,6 +116,7 @@ export default function RoutePlanning() {
     setSelectedLocation(null);
   }, []);
 
+  const [searchHistoryEntries, setSearchHistoryEntries] = useState<SearchHistoryEntry[]>([]);
 
   // Auto-start GPS watch for smooth position
   const gpsInitRef = useRef(false);
