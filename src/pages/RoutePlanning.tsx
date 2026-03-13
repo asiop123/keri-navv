@@ -1321,15 +1321,18 @@ export default function RoutePlanning() {
                                   setWaypoints(reordered);
                                   setTimeout(() => handleSearch(), 100);
                                 } : undefined}
-                                className={`transition-all duration-200 ${
+                                className={`transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
                                   entry.type === 'stop' ? 'cursor-grab active:cursor-grabbing' : ''
                                 } ${
                                   entry.type === 'stop' && draggingStopIdx !== null && (() => {
                                     const stopEntries = leg.timeline.filter(t => t.type === 'stop');
                                     const thisStopIdx = stopEntries.indexOf(entry);
-                                    if (thisStopIdx === draggingStopIdx) return 'opacity-30 scale-95';
-                                    if (thisStopIdx === dragOverStopIdx) return 'ring-2 ring-primary ring-inset bg-primary/10 scale-[1.02]';
-                                    return '';
+                                    if (thisStopIdx === draggingStopIdx) return 'opacity-20 scale-90 blur-[1px]';
+                                    if (thisStopIdx === dragOverStopIdx) {
+                                      const isAbove = draggingStopIdx > thisStopIdx;
+                                      return `ring-2 ring-primary bg-primary/10 scale-[1.03] shadow-lg shadow-primary/20 ${isAbove ? 'translate-y-2' : '-translate-y-2'}`;
+                                    }
+                                    return 'opacity-50';
                                   })() || ''
                                 }`}
                               >
