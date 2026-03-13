@@ -59,6 +59,7 @@ interface AddressAutocompleteProps {
   onInputBlur?: () => void;
   initialSuggestions?: Suggestion[];
   inlineResults?: boolean;
+  autoFocus?: boolean;
 }
 
 export default function AddressAutocomplete({
