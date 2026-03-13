@@ -642,6 +642,16 @@ export default function RoutePlanning() {
               value={destination}
               onChange={setDestination}
               onSelect={(suggestion) => {
+                // Save to search history (non-blocking)
+                if (suggestion.lat && suggestion.lng && !suggestion.isHistory) {
+                  saveSearchHistory({
+                    name: suggestion.name,
+                    address: suggestion.address || suggestion.name,
+                    lat: suggestion.lat,
+                    lng: suggestion.lng,
+                  }).then(() => getSearchHistory(15).then(setSearchHistoryEntries));
+                }
+
                 if (suggestion.isHistory) {
                   const trip = savedTrips.find((t) => t.id === suggestion.id);
                   if (trip) {
@@ -662,7 +672,6 @@ export default function RoutePlanning() {
                   setDestinationCoords({ lat: suggestion.lat, lng: suggestion.lng });
                   pendingDestCoordsRef.current = { lat: suggestion.lat, lng: suggestion.lng, name: suggestion.name };
                 }
-                // Move to filters step
                 setSearchStep('filters');
                 setSearchFocused(false);
               }}
@@ -674,15 +683,18 @@ export default function RoutePlanning() {
               onInputBlur={() => {}}
               inlineResults={true}
               initialSuggestions={(() => {
-                const tripSuggestions: Array<{id: string;name: string;address: string;lat: number;lng: number;isHistory: boolean;matchText: string;}> = [];
-                const seenTrips = new Set<string>();
+                // Merge trip history + search history
+                const suggestions: Array<{id: string;name: string;address: string;lat: number;lng: number;isHistory: boolean;matchText: string;}> = [];
+                const seenKeys = new Set<string>();
+
+                // Trip history first
                 for (const t of savedTrips) {
                   const key = t.endName.toLowerCase();
-                  if (seenTrips.has(key)) continue;
-                  seenTrips.add(key);
+                  if (seenKeys.has(key)) continue;
+                  seenKeys.add(key);
                   const allStops = [t.startName, ...t.waypointNames, t.endName].join(' → ');
                   const destWp = t.route.waypoints[t.route.waypoints.length - 1];
-                  tripSuggestions.push({
+                  suggestions.push({
                     id: t.id,
                     name: allStops,
                     address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round(t.travelTimeSeconds % 3600 / 60)}min`,
@@ -692,7 +704,24 @@ export default function RoutePlanning() {
                     matchText: [t.endName, ...t.waypointNames].join('|')
                   });
                 }
-                return tripSuggestions.slice(0, 5);
+
+                // Search history entries
+                for (const h of searchHistoryEntries) {
+                  const key = h.name.toLowerCase();
+                  if (seenKeys.has(key)) continue;
+                  seenKeys.add(key);
+                  suggestions.push({
+                    id: h.id,
+                    name: h.name,
+                    address: h.address,
+                    lat: h.lat,
+                    lng: h.lng,
+                    isHistory: true,
+                    matchText: h.name,
+                  });
+                }
+
+                return suggestions.slice(0, 8);
               })()} />
             
                 {destination &&
