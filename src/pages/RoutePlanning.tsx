@@ -106,6 +106,7 @@ export default function RoutePlanning() {
 
   const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
   const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
+  const [searchHistoryEntries, setSearchHistoryEntries] = useState<SearchHistoryEntry[]>([]);
 
   useEffect(() => {getSavedTrips().then(setSavedTrips);}, []);
   useEffect(() => {getSearchHistory(15).then(setSearchHistoryEntries);}, []);
