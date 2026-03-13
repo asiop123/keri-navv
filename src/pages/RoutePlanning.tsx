@@ -1177,9 +1177,9 @@ export default function RoutePlanning() {
                     <button onClick={(e) => {e.stopPropagation();handleBack();}} className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors">
                       <ArrowLeft className="h-5 w-5 text-foreground" />
                     </button>
-                    <div className="rounded-lg border border-border bg-muted/50 flex-1 min-w-0 gap-[12px] flex-row px-[13px] my-0 mx-0 py-[6px] flex items-start justify-start">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0 my-0" />
-                      <span className="truncate text-base text-foreground mx-[66px] my-0 ml-0 mr-[360px] py-0">{start || 'Min position'}</span>
+                    <div className="rounded-lg border border-border bg-muted/50 flex-1 min-w-0 gap-[12px] px-[13px] my-0 mx-0 py-[6px] flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="truncate text-base text-foreground flex-1 min-w-0">{start || 'Min position'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 my-0.5 ml-0 px-[2px]">
