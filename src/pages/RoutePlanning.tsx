@@ -84,6 +84,8 @@ export default function RoutePlanning() {
   const [distanceToNext, setDistanceToNext] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const gpsPointsRef = useRef<{lat: number;lng: number;time: string;}[]>([]);
+  const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+  const dragPointerYRef = useRef<number | null>(null);
   const [navStartTime, setNavStartTime] = useState<Date | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
     type: string;
