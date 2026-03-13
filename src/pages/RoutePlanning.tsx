@@ -1018,9 +1018,9 @@ export default function RoutePlanning() {
           <div className="absolute top-2 left-2 right-2 z-20 max-w-xl mx-auto">
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
               <div className="gap-1.5 px-2 py-1.5 flex items-center">
-                <div className="shrink-0 flex flex-col items-center gap-0.5 self-start mt-0.5">
+                <div className="shrink-0 flex flex-col items-center gap-1 self-start mt-0.5">
                   <button onClick={handleBack} className="p-1 hover:bg-accent rounded-md transition-colors">
-                    <ArrowLeft className="h-4 w-4 text-foreground" />
+                    <ArrowLeft className="h-5 w-5 text-foreground" />
                   </button>
                   <button
                   onClick={() => {
@@ -1031,8 +1031,7 @@ export default function RoutePlanning() {
                   }}
                   className="p-1 hover:bg-accent rounded-md transition-colors"
                   title="Byt position och destination">
-                  
-                    <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    <ArrowUpDown className="h-5 w-5 text-foreground" />
                   </button>
                 </div>
 
