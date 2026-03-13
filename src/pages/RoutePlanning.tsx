@@ -764,10 +764,11 @@ export default function RoutePlanning() {
                   const visitedPlaces: Array<{name: string; lat: number; lng: number; date: string}> = [];
                   const seenPlaces = new Set<string>();
                   for (const trip of savedTrips.filter(t => t.tripSource === 'driven')) {
+                    // Add all waypoints and destination
                     const stops = [...trip.waypointNames, trip.endName];
                     const waypoints = trip.route.waypoints;
                     for (let i = 0; i < stops.length; i++) {
-                      const key = stops[i].toLowerCase();
+                      const key = stops[i].toLowerCase().trim();
                       if (seenPlaces.has(key)) continue;
                       seenPlaces.add(key);
                       const wpIdx = Math.min(i + 1, waypoints.length - 1);
@@ -777,6 +778,20 @@ export default function RoutePlanning() {
                         lng: waypoints[wpIdx]?.lng ?? 0,
                         date: trip.createdAt,
                       });
+                    }
+                    // Add rest stops and overnight stops from timeline
+                    for (const entry of trip.timeline) {
+                      if ((entry.type === 'rest' || entry.type === 'overnight' || entry.type === 'stop') && entry.restStop) {
+                        const key = entry.restStop.name.toLowerCase().trim();
+                        if (seenPlaces.has(key)) continue;
+                        seenPlaces.add(key);
+                        visitedPlaces.push({
+                          name: entry.restStop.name,
+                          lat: entry.restStop.lat,
+                          lng: entry.restStop.lng,
+                          date: trip.createdAt,
+                        });
+                      }
                     }
                   }
                   if (visitedPlaces.length === 0) return null;
