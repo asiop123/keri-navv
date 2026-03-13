@@ -593,9 +593,9 @@ export default function RoutePlanning() {
       {/* ===== SEARCH VIEW ===== */}
       {viewState === 'search' && (
         <>
-          {/* Search bar - Google Maps style */}
-          <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
-            <div className="bg-card rounded-2xl shadow-xl border border-border">
+          {/* Full-screen search overlay when focused */}
+          <div className={`${searchFocused ? 'absolute inset-0 z-30 bg-card flex flex-col' : 'absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto'}`}>
+            <div className={`${searchFocused ? 'flex-1 flex flex-col' : 'bg-card rounded-2xl shadow-xl border border-border'}`}>
               {/* Start point - always visible */}
               <div className="flex items-center gap-2 px-4 pt-3 pb-1">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
