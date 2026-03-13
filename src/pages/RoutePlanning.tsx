@@ -1279,7 +1279,36 @@ export default function RoutePlanning() {
                             };
 
                             return (
-                              <div key={`${legIdx}-${i}`}>
+                              <div key={`${legIdx}-${i}`}
+                                draggable={entry.type === 'stop'}
+                                onDragStart={entry.type === 'stop' ? (e) => {
+                                  // Find which stop index this is (among stops only)
+                                  const stopEntries = leg.timeline.filter(t => t.type === 'stop');
+                                  const stopIdx = stopEntries.indexOf(entry);
+                                  e.dataTransfer.effectAllowed = 'move';
+                                  e.dataTransfer.setData('text/plain', `stop:${stopIdx}`);
+                                  (e.currentTarget as HTMLElement).style.opacity = '0.4';
+                                } : undefined}
+                                onDragEnd={entry.type === 'stop' ? (e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; } : undefined}
+                                onDragOver={entry.type === 'stop' ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } : undefined}
+                                onDrop={entry.type === 'stop' ? (e) => {
+                                  e.preventDefault();
+                                  const data = e.dataTransfer.getData('text/plain');
+                                  if (!data.startsWith('stop:')) return;
+                                  const fromStopIdx = Number(data.split(':')[1]);
+                                  const stopEntries = leg.timeline.filter(t => t.type === 'stop');
+                                  const toStopIdx = stopEntries.indexOf(entry);
+                                  if (fromStopIdx === toStopIdx) return;
+                                  // Reorder waypoints
+                                  const reordered = [...waypoints];
+                                  const [moved] = reordered.splice(fromStopIdx, 1);
+                                  reordered.splice(toStopIdx, 0, moved);
+                                  setWaypoints(reordered);
+                                  // Recalculate route
+                                  setTimeout(() => handleSearch(), 100);
+                                } : undefined}
+                                className={entry.type === 'stop' ? 'cursor-grab active:cursor-grabbing' : ''}
+                              >
                                     {showDayHeader &&
                                 <div className="bg-muted/60 px-4 py-2 flex items-center gap-2">
                                         <span className="text-lg">📅</span>
@@ -1292,6 +1321,9 @@ export default function RoutePlanning() {
                                   onClick={() => handleTimelineEntryClick(entry, i)}
                                   className={`w-full text-left px-4 py-3 flex items-center gap-4 border-b border-border/30 last:border-b-0 hover:bg-accent/30 transition-colors ${getBgColor()}`}>
                                   
+                                      {/* Drag handle for stops */}
+                                      {entry.type === 'stop' && <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />}
+                                      
                                       {/* Big icon */}
                                       <div className="text-2xl shrink-0 w-10 text-center">{getIcon()}</div>
                                       
