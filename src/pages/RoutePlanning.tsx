@@ -746,8 +746,28 @@ export default function RoutePlanning() {
 
                 {/* Waypoints */}
                 {waypoints.map((wp, i) =>
-            <div key={i} className="space-y-1">
+            <div
+              key={i}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', String(i));
+                (e.currentTarget as HTMLElement).style.opacity = '0.4';
+              }}
+              onDragEnd={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const fromIdx = Number(e.dataTransfer.getData('text/plain'));
+                if (fromIdx === i) return;
+                const reordered = [...waypoints];
+                const [moved] = reordered.splice(fromIdx, 1);
+                reordered.splice(i, 0, moved);
+                setWaypoints(reordered);
+              }}
+              className="space-y-1 cursor-grab active:cursor-grabbing">
                     <div className="flex items-center gap-2">
+                      <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                       <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
                       <AddressAutocomplete
                   value={wp.address}
@@ -761,7 +781,7 @@ export default function RoutePlanning() {
                         <X className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     </div>
-                    <div className="ml-5 flex items-center gap-2">
+                    <div className="ml-9 flex items-center gap-2">
                       <Clock className="h-3 w-3 text-muted-foreground" />
                       <input
                   type="number"
