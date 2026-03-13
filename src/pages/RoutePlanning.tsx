@@ -913,24 +913,26 @@ export default function RoutePlanning() {
             </div>
           </div>
 
-          {/* Quick actions + Trip history - bottom */}
-          <div className="absolute bottom-0 left-0 right-0 z-20">
-            <div className="max-w-lg mx-auto">
-              {/* GPS button */}
-              <div className="flex gap-2 px-4 mb-2">
-                {userPosition && (
-                  <button
-                    onClick={() => mapHandleRef.current?.centerOnUser()}
-                    className="bg-card shadow-lg rounded-full p-3 hover:bg-accent transition-colors border border-border"
-                  >
-                    <Locate className="h-5 w-5 text-primary" />
-                  </button>
-                )}
-              </div>
+          {/* Quick actions + Trip history - bottom (hidden during fullscreen search) */}
+          {!searchFocused && (
+            <div className="absolute bottom-0 left-0 right-0 z-20">
+              <div className="max-w-lg mx-auto">
+                {/* GPS button */}
+                <div className="flex gap-2 px-4 mb-2">
+                  {userPosition && (
+                    <button
+                      onClick={() => mapHandleRef.current?.centerOnUser()}
+                      className="bg-card shadow-lg rounded-full p-3 hover:bg-accent transition-colors border border-border"
+                    >
+                      <Locate className="h-5 w-5 text-primary" />
+                    </button>
+                  )}
+                </div>
 
-              {/* Saved trips panel */}
+                {/* Saved trips panel */}
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
