@@ -1339,7 +1339,7 @@ export default function RoutePlanning() {
             if (e.target === e.currentTarget) dismissPanels();
           }}>
           
-            <div ref={bottomSheetRef} className="max-w-lg mx-auto">
+            <div ref={bottomSheetRef} className="max-w-3xl mx-auto">
               <div className={`bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden transition-all ${showDetails ? 'max-h-[75vh]' : ''}`}>
                 
                 {/* Route alternatives - horizontal scroll, always visible */}
