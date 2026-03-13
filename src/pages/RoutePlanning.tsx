@@ -1047,9 +1047,9 @@ export default function RoutePlanning() {
                   </div>
                   
                   {/* Till rad */}
-                  <div className="gap-1.5 px-0 flex-col flex items-start justify-start py-0 pr-[8px]">
+                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200">
                     <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
-                    <span className="font-medium text-foreground truncate text-sm">{destination}</span>
+                    <span className="truncate text-sm px-0 text-primary my-[2px] mx-[10px] bg-gray-200">{destination}</span>
                   </div>
                 </button>
 
