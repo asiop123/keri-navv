@@ -1385,12 +1385,12 @@ export default function RoutePlanning() {
                                   entry.type === 'stop' && draggingStopIdx !== null && (() => {
                                     const stopEntries = leg.timeline.filter(t => t.type === 'stop');
                                     const thisStopIdx = stopEntries.indexOf(entry);
-                                    if (thisStopIdx === draggingStopIdx) return 'opacity-20 scale-90 blur-[1px]';
+                                    if (thisStopIdx === draggingStopIdx) return 'opacity-10 scale-75 blur-[2px] grayscale';
                                     if (thisStopIdx === dragOverStopIdx) {
                                       const isAbove = draggingStopIdx > thisStopIdx;
-                                      return `ring-2 ring-primary bg-primary/10 scale-[1.03] shadow-lg shadow-primary/20 ${isAbove ? 'translate-y-2' : '-translate-y-2'}`;
+                                      return `animate-wobble ring-2 ring-primary bg-primary/15 scale-[1.06] shadow-xl shadow-primary/30 ${isAbove ? 'translate-y-3' : '-translate-y-3'} rounded-xl relative z-10`;
                                     }
-                                    return 'opacity-50';
+                                    return 'opacity-40 scale-[0.97]';
                                   })() || ''
                                 }`}
                               >
