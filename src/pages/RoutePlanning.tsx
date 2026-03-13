@@ -1200,7 +1200,7 @@ export default function RoutePlanning() {
                         <path d="M7 4v16" stroke="hsl(var(--destructive))" />
                       </svg>
                     </button>
-                    <div className="rounded-lg border border-border bg-muted/50 flex-1 min-w-0 gap-[12px] flex-row px-[13px] py-[6px] flex items-start justify-start">
+                    <div className="rounded-lg border border-border bg-muted/50 flex-1 min-w-0 gap-[12px] flex-row px-[13px] my-0 mx-0 py-[6px] flex items-start justify-start">
                       <div className="w-3 h-3 rounded-full bg-destructive shrink-0 my-0" />
                       <span className="truncate text-base text-foreground mx-[66px] my-0 ml-0 mr-[360px] py-0">{destination}</span>
                     </div>
