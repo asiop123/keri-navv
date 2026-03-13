@@ -1437,14 +1437,10 @@ export default function RoutePlanning() {
                 </div>
 
                 {/* Secondary actions */}
-                <div className="px-3 pb-2 flex gap-2">
-                  <Button variant="outline" onClick={handleAddLeg} className="flex-1 h-9 rounded-xl text-xs">
-                    <Plus className="h-3.5 w-3.5 mr-1" />
-                    Lägg till tur
-                  </Button>
+                <div className="px-3 pb-2">
                   <button
                   onClick={() => setShowDetails(!showDetails)}
-                  className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-medium text-foreground hover:bg-accent/50 transition-colors">
+                  className="w-full h-9 flex items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-medium text-foreground hover:bg-accent/50 transition-colors">
                   
                     📋 Resplan
                     {showDetails ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
