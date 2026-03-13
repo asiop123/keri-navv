@@ -1165,10 +1165,11 @@ export default function RoutePlanning() {
       {viewState === 'details' && routeResult &&
       <>
           {/* Top bar - route summary stacked */}
-          <div className="absolute top-2 left-2 right-2 z-20 max-w-xl mx-auto">
+           <div className="absolute top-2 left-2 right-2 z-20 max-w-2xl mx-auto">
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
-              <div className="gap-1.5 px-2 py-1.5 flex items-center">
-                <div className="shrink-0 flex flex-col items-center justify-evenly gap-2 self-stretch">
+              {/* Row 1: Nav + Addresses + Vehicle button */}
+              <div className="px-3 py-2 flex items-center gap-2">
+                <div className="shrink-0 flex flex-col items-center gap-2">
                   <button onClick={handleBack} className="p-1.5 hover:bg-accent rounded-md transition-colors">
                     <ArrowLeft className="h-5 w-5 text-foreground" />
                   </button>
@@ -1190,55 +1191,54 @@ export default function RoutePlanning() {
                   </button>
                 </div>
 
-                {/* From & To stacked */}
                 <button
                 onClick={() => {setViewState('search');setSearchStep('search');}}
                 className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
-                
-                  {/* Från rad */}
-                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[280px]">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="truncate text-sm px-0 text-primary my-[2px] mx-[10px] bg-gray-200">{start || 'Min position'}</span>
+                  <div className="rounded border border-border flex items-center gap-2 px-2.5 py-1.5 my-0.5 bg-muted/50 w-full">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="truncate text-sm text-foreground">{start || 'Min position'}</span>
                   </div>
-                  
-                  {/* Till rad */}
-                  <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200 w-[280px]">
-                    <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
-                    <span className="truncate text-sm px-0 text-primary my-[2px] mx-[10px] bg-gray-200">{destination}</span>
+                  <div className="rounded border border-border flex items-center gap-2 px-2.5 py-1.5 my-0.5 bg-muted/50 w-full">
+                    <div className="w-2.5 h-2.5 rounded-full bg-destructive shrink-0" />
+                    <span className="truncate text-sm text-foreground">{destination}</span>
                   </div>
                 </button>
 
-                <div className="shrink-0 flex flex-col px-3 py-1 ml-auto">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="font-semibold text-xl text-foreground">Körtid</span>
-                    <span className="text-sm font-extrabold text-foreground">
-                      {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-muted-foreground font-bold text-right">
+                <button
+                onClick={() => {setViewState('search');setSearchStep('filters');}}
+                className="shrink-0 p-2 hover:bg-accent rounded-md transition-colors">
+                  <Car className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* Row 2: Route stats bar */}
+              <div className="border-t border-border/60 bg-muted/30 px-4 py-2 flex items-center justify-around gap-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground font-medium">Körtid</span>
+                  <span className="text-base font-bold text-foreground">
+                    {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
+                  </span>
+                </div>
+                <div className="w-px h-5 bg-border" />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground font-medium">Distans</span>
+                  <span className="text-base font-bold text-foreground">
                     {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
-                  </div>
-                  <div className="border-t w-full my-1 border-2 border-foreground/20" />
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="font-semibold text-foreground text-xl">Ankomst</span>
-                    <span className="text-sm font-extrabold text-foreground">
-                      {(() => {
+                  </span>
+                </div>
+                <div className="w-px h-5 bg-border" />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground font-medium">Ankomst</span>
+                  <span className="text-base font-bold text-foreground">
+                    {(() => {
                       const travelSec = trips.length > 1 ?
                       combinedTimeH * 3600 + combinedTimeMin * 60 :
                       routeResult.travelTimeSeconds;
                       const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
                       return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
                     })()}
-                    </span>
-                  </div>
+                  </span>
                 </div>
-
-                <button
-                onClick={() => {setViewState('search');setSearchStep('filters');}}
-                className="shrink-0 p-1 hover:bg-accent rounded-md transition-colors">
-                
-                  <Car className="h-3.5 w-3.5 text-muted-foreground" />
-                </button>
               </div>
             </div>
           </div>
