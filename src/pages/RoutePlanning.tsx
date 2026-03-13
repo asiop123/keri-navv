@@ -841,7 +841,7 @@ export default function RoutePlanning() {
                                   <line x1="14.2" y1="14" x2="19" y2="19" />
                                   <line x1="9.8" y1="14" x2="5" y2="19" />
                                 </svg>
-                                Kör
+                                Kör hit
                               </span>
                             </button>
                           </div>
