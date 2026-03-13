@@ -334,10 +334,26 @@ export default function AddressAutocomplete({
               } ${i > 0 ? 'border-t border-border/50' : ''}`}
             >
               {s.isHistory ? <History className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" /> : <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />}
-              <div className="min-w-0">
-                <div className="font-medium text-foreground truncate">{s.name}</div>
-                {s.address && s.address !== s.name && (
-                  <div className="text-xs text-muted-foreground truncate">{s.address}</div>
+              <div className="min-w-0 flex-1">
+                {s.isHistory && s.name.includes('→') ? (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="text-sm text-foreground truncate">{s.name.split('→')[0].trim()}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
+                      <span className="text-sm font-medium text-foreground truncate">{s.name.split('→').pop()?.trim()}</span>
+                    </div>
+                    {s.address && <div className="text-xs text-muted-foreground mt-0.5">{s.address}</div>}
+                  </>
+                ) : (
+                  <>
+                    <div className="font-medium text-foreground truncate">{s.name}</div>
+                    {s.address && s.address !== s.name && (
+                      <div className="text-xs text-muted-foreground truncate">{s.address}</div>
+                    )}
+                  </>
                 )}
               </div>
             </button>
