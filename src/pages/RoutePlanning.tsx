@@ -833,7 +833,7 @@ export default function RoutePlanning() {
                                 <p className="text-sm font-medium text-foreground truncate">{place.name}</p>
                                 <p className="text-xs text-muted-foreground">{new Date(place.date).toLocaleDateString('sv-SE')}</p>
                               </div>
-                              <Navigation className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span className="text-[10px] font-medium text-primary whitespace-nowrap shrink-0">Sök rutt →</span>
                             </button>
                           </div>
                         ))}
