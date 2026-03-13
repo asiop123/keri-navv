@@ -775,8 +775,6 @@ export default function RoutePlanning() {
                 </div>
               </div>
 
-              {/* Inline results below card */}
-              <div className="flex-1 mx-4 mt-2 overflow-y-auto" />
 
               {/* If destination is set, show "Nästa" button */}
               {destination &&
