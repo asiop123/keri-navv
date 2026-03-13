@@ -666,6 +666,7 @@ export default function RoutePlanning() {
                   biasLng={userPosition?.lng}
                   onInputFocus={() => { setSearchFocused(true); setShowOptions(true); }}
                   onInputBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                  inlineResults={searchFocused}
                   initialSuggestions={(() => {
                     // Build two types: full trips (for empty search) + individual locations (for matching)
                     const tripSuggestions: Array<{ id: string; name: string; address: string; lat: number; lng: number; isHistory: boolean; matchText: string }> = [];
