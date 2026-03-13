@@ -60,6 +60,7 @@ interface AddressAutocompleteProps {
   initialSuggestions?: Suggestion[];
   inlineResults?: boolean;
   autoFocus?: boolean;
+  maxInitialVisible?: number;
 }
 
 export default function AddressAutocomplete({
