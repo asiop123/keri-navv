@@ -130,10 +130,10 @@ export default function RoutePlanning() {
       const maxSpeed = 22;
 
       if (y < edgeZone) {
-        const ratio = Math.max(0, (edgeZone - y) / edgeZone);
+        const ratio = Math.min(1, Math.max(0, (edgeZone - y) / edgeZone));
         container.scrollTop -= Math.max(5, Math.round(ratio * maxSpeed));
       } else if (y > rect.height - edgeZone) {
-        const ratio = Math.max(0, (y - (rect.height - edgeZone)) / edgeZone);
+        const ratio = Math.min(1, Math.max(0, (y - (rect.height - edgeZone)) / edgeZone));
         container.scrollTop += Math.max(5, Math.round(ratio * maxSpeed));
       }
     };
