@@ -1213,18 +1213,18 @@ export default function RoutePlanning() {
                   </button>
                 </button>
 
-                <div className="shrink-0 flex flex-col items-center gap-1.5 ml-1">
+                <div className="shrink-0 flex flex-col items-center gap-3 ml-2">
                   <button
                     onClick={handleStartNavigation}
-                    className="p-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-lg transition-colors shadow-sm"
+                    className="p-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-colors shadow-md"
                   >
-                    <Navigation className="h-4 w-4 text-white" />
+                    <Navigation className="h-6 w-6 text-white" />
                   </button>
                   <button
                     onClick={() => {setViewState('search');setSearchStep('filters');}}
-                    className="p-2 hover:bg-accent rounded-md transition-colors"
+                    className="p-3 hover:bg-accent rounded-xl transition-colors"
                   >
-                    <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+                    <SlidersHorizontal className="h-6 w-6 text-muted-foreground" />
                   </button>
                 </div>
               </div>
