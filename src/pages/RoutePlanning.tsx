@@ -1025,13 +1025,16 @@ export default function RoutePlanning() {
                 {/* From & To stacked */}
                 <button
                 onClick={() => {setViewState('search');setSearchStep('search');}}
-                className="flex-1 min-w-0 flex flex-col gap-0.5 px-2 py-0.5 hover:bg-accent/40 rounded-md transition-colors">
+                className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
                 
-                  <div className="flex-col border-2 rounded bg-gray-200 text-primary-foreground pl-[5px] my-0 mx-0 py-0 px-0 pb-0 gap-px border-primary flex items-start justify-start">
+                  {/* Från rad */}
+                  <div className="flex items-center gap-1.5 px-2 py-0.5">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                     <span className="text-xs text-foreground truncate">{start || 'Min position'}</span>
                   </div>
-                  <div className="items-start justify-start border-2 rounded shadow bg-gray-200 pl-[5px] pr-0 flex flex-col gap-px border-primary">
+                  
+                  {/* Till rad */}
+                  <div className="flex items-center gap-1.5 px-2 py-0.5">
                     <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
                     <span className="text-xs font-medium text-foreground truncate">{destination}</span>
                   </div>
