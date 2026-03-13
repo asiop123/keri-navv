@@ -783,24 +783,43 @@ export default function RoutePlanning() {
                   return (
                     <div className="px-4 pt-4">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste besökta platser</p>
-                      <div className="space-y-1">
+                      <div className="space-y-2">
                         {visitedPlaces.slice(0, 8).map((place, i) => (
-                          <button
+                          <div
                             key={place.name + i}
-                            onClick={() => {
-                              setDestination(place.name);
-                              setDestinationCoords({ lat: place.lat, lng: place.lng });
-                              pendingDestCoordsRef.current = { lat: place.lat, lng: place.lng, name: place.name };
-                              setSearchStep('filters');
-                              setSearchFocused(false);
-                            }}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-colors text-left">
-                            <MapPin className="h-4 w-4 text-primary shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-foreground truncate">{place.name}</p>
-                              <p className="text-xs text-muted-foreground">{new Date(place.date).toLocaleDateString('sv-SE')}</p>
+                            className="rounded-xl overflow-hidden border border-border/40 bg-card/50 hover:bg-accent/30 transition-colors">
+                            {/* Street View thumbnail */}
+                            <div
+                              className="h-24 w-full bg-muted cursor-pointer relative group"
+                              onClick={() => setMapClickCoords({ lat: place.lat, lng: place.lng })}>
+                              <img
+                                src={`https://maps.googleapis.com/maps/api/streetview?size=600x200&location=${place.lat},${place.lng}&key=${GOOGLE_MAPS_KEY}`}
+                                alt={`Street View: ${place.name}`}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                              </div>
                             </div>
-                          </button>
+                            {/* Place info */}
+                            <button
+                              onClick={() => {
+                                setDestination(place.name);
+                                setDestinationCoords({ lat: place.lat, lng: place.lng });
+                                pendingDestCoordsRef.current = { lat: place.lat, lng: place.lng, name: place.name };
+                                setSearchStep('filters');
+                                setSearchFocused(false);
+                              }}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 text-left">
+                              <MapPin className="h-4 w-4 text-primary shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{place.name}</p>
+                                <p className="text-xs text-muted-foreground">{new Date(place.date).toLocaleDateString('sv-SE')}</p>
+                              </div>
+                              <Navigation className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            </button>
+                          </div>
                         ))}
                       </div>
                     </div>
