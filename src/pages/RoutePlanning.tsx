@@ -1208,25 +1208,29 @@ export default function RoutePlanning() {
                   </div>
                 </button>
 
-                <div className="shrink-0 flex flex-col bg-muted rounded-lg px-4 py-2 min-w-[110px] ml-auto items-center">
-                  <span className="text-xs font-semibold text-foreground">Körtid</span>
-                  <span className="text-base font-extrabold text-foreground">
-                    {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-semibold">
+                <div className="shrink-0 flex flex-col bg-muted rounded-lg px-6 py-2 min-w-[160px] ml-auto">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-sm font-bold text-foreground">Körtid</span>
+                    <span className="text-lg font-extrabold text-foreground">
+                      {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground font-bold text-right">
                     {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
-                  </span>
+                  </div>
                   <div className="border-t border-border w-full my-1" />
-                  <span className="text-xs font-semibold text-foreground">Ankomsttid</span>
-                  <span className="text-base font-extrabold text-foreground">
-                    {(() => {
-                      const travelSec = trips.length > 1
-                        ? (combinedTimeH * 3600 + combinedTimeMin * 60)
-                        : routeResult.travelTimeSeconds;
-                      const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
-                      return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-                    })()}
-                  </span>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-sm font-bold text-foreground">Ankomst</span>
+                    <span className="text-lg font-extrabold text-foreground">
+                      {(() => {
+                        const travelSec = trips.length > 1
+                          ? (combinedTimeH * 3600 + combinedTimeMin * 60)
+                          : routeResult.travelTimeSeconds;
+                        const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
+                        return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                      })()}
+                    </span>
+                  </div>
                 </div>
 
                 <button
