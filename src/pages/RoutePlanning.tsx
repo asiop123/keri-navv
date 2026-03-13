@@ -1171,28 +1171,28 @@ export default function RoutePlanning() {
               {/* Row 1: Nav + Addresses + Vehicle button */}
               <div className="px-3 py-2 flex items-center gap-2">
                 <button
-                  onClick={() => {setViewState('search');setSearchStep('search');}}
-                  className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
-                  <div className="flex items-center gap-2 my-0.5">
-                    <button onClick={(e) => { e.stopPropagation(); handleBack(); }} className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors">
+                onClick={() => {setViewState('search');setSearchStep('search');}}
+                className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
+                  <div className="flex items-center gap-2 my-0.5 ml-0 px-[2px]">
+                    <button onClick={(e) => {e.stopPropagation();handleBack();}} className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors">
                       <ArrowLeft className="h-5 w-5 text-foreground" />
                     </button>
-                    <div className="rounded-lg border border-border flex items-center gap-3 px-4 py-3.5 bg-muted/50 flex-1 min-w-0">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
-                      <span className="truncate text-base text-foreground">{start || 'Min position'}</span>
+                    <div className="rounded-lg border border-border bg-muted/50 flex-1 min-w-0 gap-[12px] flex-row px-[13px] my-0 mx-0 py-[6px] flex items-start justify-start">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0 my-0" />
+                      <span className="truncate text-base text-foreground mx-[66px] my-0 ml-0 mr-[360px] py-0">{start || 'Min position'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 my-0.5">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const tmpStart = start;
-                        const tmpDest = destination;
-                        setStart(tmpDest);
-                        setDestination(tmpStart);
-                      }}
-                      className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors"
-                      title="Byt position och destination">
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const tmpStart = start;
+                      const tmpDest = destination;
+                      setStart(tmpDest);
+                      setDestination(tmpStart);
+                    }}
+                    className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors"
+                    title="Byt position och destination">
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                         <path d="m21 16-4 4-4-4" stroke="#10b981" />
                         <path d="M17 20V4" stroke="#10b981" />
@@ -1200,16 +1200,16 @@ export default function RoutePlanning() {
                         <path d="M7 4v16" stroke="hsl(var(--destructive))" />
                       </svg>
                     </button>
-                    <div className="rounded-lg border border-border flex items-center gap-3 px-4 py-3.5 bg-muted/50 flex-1 min-w-0">
+                    <div className="rounded-lg border border-border gap-3 bg-muted/50 flex-1 min-w-0 px-[16px] ml-px py-[6px] flex items-start justify-start">
                       <div className="w-3 h-3 rounded-full bg-destructive shrink-0" />
-                      <span className="truncate text-base text-foreground">{destination}</span>
+                      <span className="truncate text-base text-foreground mr-[360px]">{destination}</span>
                     </div>
                   </div>
                   {/* Add stop button */}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setViewState('search'); setSearchStep('filters'); }}
-                    className="flex items-center gap-1.5 px-2.5 py-1 my-0.5 w-full rounded border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-accent/30 transition-colors ml-9"
-                  >
+                  onClick={(e) => {e.stopPropagation();setViewState('search');setSearchStep('filters');}}
+                  className="flex items-center gap-1.5 px-2.5 py-1 my-0.5 w-full rounded border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-accent/30 transition-colors ml-9">
+                  
                     <Plus className="h-3 w-3 text-muted-foreground/60" />
                     <span className="text-xs text-muted-foreground/60">Lägg till stopp</span>
                   </button>
@@ -1217,15 +1217,15 @@ export default function RoutePlanning() {
 
                 <div className="shrink-0 flex flex-col items-center gap-3 ml-2">
                   <button
-                    onClick={handleStartNavigation}
-                    className="p-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-colors shadow-md"
-                  >
+                  onClick={handleStartNavigation}
+                  className="p-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-colors shadow-md">
+                  
                     <Navigation className="h-6 w-6 text-white" />
                   </button>
                   <button
-                    onClick={() => {setViewState('search');setSearchStep('filters');}}
-                    className="p-3 hover:bg-accent rounded-xl transition-colors"
-                  >
+                  onClick={() => {setViewState('search');setSearchStep('filters');}}
+                  className="p-3 hover:bg-accent rounded-xl transition-colors">
+                  
                     <SlidersHorizontal className="h-6 w-6 text-muted-foreground" />
                   </button>
                 </div>
@@ -1233,25 +1233,25 @@ export default function RoutePlanning() {
 
               {/* Curtain toggle arrow */}
               <button
-                onClick={() => setShowFilterCurtain(!showFilterCurtain)}
-                className="w-full flex items-center justify-center py-0.5 hover:bg-muted/50 transition-colors border-t border-border/40"
-              >
+              onClick={() => setShowFilterCurtain(!showFilterCurtain)}
+              className="w-full flex items-center justify-center py-0.5 hover:bg-muted/50 transition-colors border-t border-border/40">
+              
                 <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${showFilterCurtain ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Filter curtain */}
               <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilterCurtain ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}
-              >
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilterCurtain ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
+              
                 <div className="border-t border-border/40 bg-card px-4 py-3 space-y-3">
                   {/* Tur & retur */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setIsRoundTrip(!isRoundTrip)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                        isRoundTrip ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'
-                      }`}
-                    >
+                    onClick={() => setIsRoundTrip(!isRoundTrip)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    isRoundTrip ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`
+                    }>
+                    
                       <Repeat className="h-3.5 w-3.5" />
                       Tur & retur
                     </button>
@@ -1265,8 +1265,8 @@ export default function RoutePlanning() {
                         <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Välj" /></SelectTrigger>
                         <SelectContent>
                           {mockVehicles.map((v) =>
-                            <SelectItem key={v.id} value={v.id}>{v.brand} {v.model}</SelectItem>
-                          )}
+                        <SelectItem key={v.id} value={v.id}>{v.brand} {v.model}</SelectItem>
+                        )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1279,15 +1279,15 @@ export default function RoutePlanning() {
                   {/* Route type */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setRouteType('normal')}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-                    >
+                    onClick={() => setRouteType('normal')}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    
                       Normal (9h)
                     </button>
                     <button
-                      onClick={() => setRouteType('fastest')}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'fastest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-                    >
+                    onClick={() => setRouteType('fastest')}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${routeType === 'fastest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    
                       Snabbast (10h)
                     </button>
                   </div>
@@ -1295,32 +1295,32 @@ export default function RoutePlanning() {
                   {/* Rest stop filters */}
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      { key: 'toilet' as const, icon: '🚻', label: 'Toalett' },
-                      { key: 'food' as const, icon: '🍽️', label: 'Mat' },
-                      { key: 'shower' as const, icon: '🚿', label: 'Dusch' },
-                      { key: 'fuel' as const, icon: '⛽', label: 'Drivmedel' },
-                      { key: 'truckParking' as const, icon: '🅿️', label: 'Lastbilsp.' }
-                    ].map((f) =>
-                      <button
-                        key={f.key}
-                        onClick={() => setRestStopFilters((prev) => ({ ...prev, [f.key]: !prev[f.key] }))}
-                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
-                          restStopFilters[f.key] ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:bg-accent'
-                        }`}
-                      >
+                  { key: 'toilet' as const, icon: '🚻', label: 'Toalett' },
+                  { key: 'food' as const, icon: '🍽️', label: 'Mat' },
+                  { key: 'shower' as const, icon: '🚿', label: 'Dusch' },
+                  { key: 'fuel' as const, icon: '⛽', label: 'Drivmedel' },
+                  { key: 'truckParking' as const, icon: '🅿️', label: 'Lastbilsp.' }].
+                  map((f) =>
+                  <button
+                    key={f.key}
+                    onClick={() => setRestStopFilters((prev) => ({ ...prev, [f.key]: !prev[f.key] }))}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
+                    restStopFilters[f.key] ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:bg-accent'}`
+                    }>
+                    
                         <span>{f.icon}</span>
                         {f.label}
                       </button>
-                    )}
+                  )}
                   </div>
 
                   {/* Re-calculate button */}
                   <Button
-                    onClick={() => { setShowFilterCurtain(false); handleSearch(); }}
-                    disabled={isLoading}
-                    size="sm"
-                    className="w-full bg-primary text-primary-foreground font-semibold rounded-lg"
-                  >
+                  onClick={() => {setShowFilterCurtain(false);handleSearch();}}
+                  disabled={isLoading}
+                  size="sm"
+                  className="w-full bg-primary text-primary-foreground font-semibold rounded-lg">
+                  
                     {isLoading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Route className="h-3.5 w-3.5 mr-1.5" />}
                     Beräkna om rutt
                   </Button>
@@ -1428,21 +1428,21 @@ export default function RoutePlanning() {
                       <span className="text-[10px] text-muted-foreground">Ankomst</span>
                       <span className="text-sm font-bold text-foreground">
                         {(() => {
-                          const travelSec = trips.length > 1 ?
-                          combinedTimeH * 3600 + combinedTimeMin * 60 :
-                          routeResult.travelTimeSeconds;
-                          const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
-                          return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-                        })()}
+                        const travelSec = trips.length > 1 ?
+                        combinedTimeH * 3600 + combinedTimeMin * 60 :
+                        routeResult.travelTimeSeconds;
+                        const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
+                        return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                      })()}
                       </span>
                     </div>
                   </div>
 
                   {/* KÖR button */}
                   <button
-                    onClick={handleStartNavigation}
-                    className="shrink-0 h-10 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-base flex items-center gap-2 shadow-md shadow-emerald-600/25 transition-all"
-                  >
+                  onClick={handleStartNavigation}
+                  className="shrink-0 h-10 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-base flex items-center gap-2 shadow-md shadow-emerald-600/25 transition-all">
+                  
                     <Navigation className="h-5 w-5" />
                     KÖR
                   </button>
@@ -1451,9 +1451,9 @@ export default function RoutePlanning() {
                 {/* Resplan toggle */}
                 <div className="px-4 pb-2">
                   <button
-                    onClick={() => setShowDetails(!showDetails)}
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/30 text-sm font-bold text-primary hover:bg-primary/20 transition-colors"
-                  >
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/30 text-sm font-bold text-primary hover:bg-primary/20 transition-colors">
+                  
                     📋 Resplan — din körschema
                     {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   </button>
