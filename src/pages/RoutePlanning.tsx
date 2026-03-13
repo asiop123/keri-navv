@@ -1170,43 +1170,45 @@ export default function RoutePlanning() {
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
               {/* Row 1: Nav + Addresses + Vehicle button */}
               <div className="px-3 py-2 flex items-center gap-2">
-                <div className="shrink-0 flex flex-col items-center gap-2">
-                  <button onClick={handleBack} className="p-1.5 hover:bg-accent rounded-md transition-colors">
-                    <ArrowLeft className="h-5 w-5 text-foreground" />
-                  </button>
-                  <button
-                  onClick={() => {
-                    const tmpStart = start;
-                    const tmpDest = destination;
-                    setStart(tmpDest);
-                    setDestination(tmpStart);
-                  }}
-                  className="p-1.5 hover:bg-accent rounded-md transition-colors"
-                  title="Byt position och destination">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                      <path d="m21 16-4 4-4-4" stroke="#10b981" />
-                      <path d="M17 20V4" stroke="#10b981" />
-                      <path d="m3 8 4-4 4 4" stroke="hsl(var(--destructive))" />
-                      <path d="M7 4v16" stroke="hsl(var(--destructive))" />
-                    </svg>
-                  </button>
-                </div>
-
                 <button
-                onClick={() => {setViewState('search');setSearchStep('search');}}
-                className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
-                  <div className="rounded border border-border flex items-center gap-2 px-2.5 py-1.5 my-0.5 bg-muted/50 w-full">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="truncate text-sm text-foreground">{start || 'Min position'}</span>
+                  onClick={() => {setViewState('search');setSearchStep('search');}}
+                  className="flex-1 min-w-0 flex flex-col hover:bg-accent/40 rounded-md transition-colors">
+                  <div className="flex items-center gap-2 my-0.5">
+                    <button onClick={(e) => { e.stopPropagation(); handleBack(); }} className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors">
+                      <ArrowLeft className="h-5 w-5 text-foreground" />
+                    </button>
+                    <div className="rounded border border-border flex items-center gap-2 px-2.5 py-1.5 bg-muted/50 flex-1 min-w-0">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="truncate text-sm text-foreground">{start || 'Min position'}</span>
+                    </div>
                   </div>
-                  <div className="rounded border border-border flex items-center gap-2 px-2.5 py-1.5 my-0.5 bg-muted/50 w-full">
-                    <div className="w-2.5 h-2.5 rounded-full bg-destructive shrink-0" />
-                    <span className="truncate text-sm text-foreground">{destination}</span>
+                  <div className="flex items-center gap-2 my-0.5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const tmpStart = start;
+                        const tmpDest = destination;
+                        setStart(tmpDest);
+                        setDestination(tmpStart);
+                      }}
+                      className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors"
+                      title="Byt position och destination">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                        <path d="m21 16-4 4-4-4" stroke="#10b981" />
+                        <path d="M17 20V4" stroke="#10b981" />
+                        <path d="m3 8 4-4 4 4" stroke="hsl(var(--destructive))" />
+                        <path d="M7 4v16" stroke="hsl(var(--destructive))" />
+                      </svg>
+                    </button>
+                    <div className="rounded border border-border flex items-center gap-2 px-2.5 py-1.5 bg-muted/50 flex-1 min-w-0">
+                      <div className="w-2.5 h-2.5 rounded-full bg-destructive shrink-0" />
+                      <span className="truncate text-sm text-foreground">{destination}</span>
+                    </div>
                   </div>
                   {/* Add stop button */}
                   <button
                     onClick={(e) => { e.stopPropagation(); setViewState('search'); setSearchStep('filters'); }}
-                    className="flex items-center gap-1.5 px-2.5 py-1 my-0.5 w-full rounded border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-accent/30 transition-colors"
+                    className="flex items-center gap-1.5 px-2.5 py-1 my-0.5 w-full rounded border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-accent/30 transition-colors ml-9"
                   >
                     <Plus className="h-3 w-3 text-muted-foreground/60" />
                     <span className="text-xs text-muted-foreground/60">Lägg till stopp</span>
