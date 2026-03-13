@@ -57,6 +57,7 @@ export default function RoutePlanning() {
   const [showOptions, setShowOptions] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showBottomSheet, setShowBottomSheet] = useState(true);
+  const [showFilterCurtain, setShowFilterCurtain] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchStep, setSearchStep] = useState<'search' | 'filters' | null>('search');
 
