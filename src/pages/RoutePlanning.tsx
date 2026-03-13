@@ -664,7 +664,7 @@ export default function RoutePlanning() {
                   className="border-0 shadow-none focus-visible:ring-0 h-auto py-0 text-base placeholder:text-muted-foreground/60"
                   biasLat={userPosition?.lat}
                   biasLng={userPosition?.lng}
-                  onInputFocus={() => setSearchFocused(true)}
+                  onInputFocus={() => { setSearchFocused(true); setShowOptions(true); }}
                   onInputBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                   initialSuggestions={(() => {
                     // Build two types: full trips (for empty search) + individual locations (for matching)
