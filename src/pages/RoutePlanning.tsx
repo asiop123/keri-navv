@@ -974,7 +974,7 @@ export default function RoutePlanning() {
           )}
 
           {/* Quick actions + Trip history - bottom (hidden during fullscreen search) */}
-          {!searchFocused && (
+          {!searchStep && (
             <div className="absolute bottom-0 left-0 right-0 z-20">
               <div className="max-w-lg mx-auto">
                 {/* GPS button */}
