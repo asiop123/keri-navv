@@ -1387,6 +1387,36 @@ export default function RoutePlanning() {
                   </div>
               }
 
+                {/* Route stats */}
+                <div className="px-3 pt-2 pb-1 flex items-center justify-around gap-4">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] text-muted-foreground font-medium">Körtid</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {trips.length > 1 ? `${combinedTimeH}h ${combinedTimeMin}min` : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
+                    </span>
+                  </div>
+                  <div className="w-px h-6 bg-border" />
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] text-muted-foreground font-medium">Distans</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
+                    </span>
+                  </div>
+                  <div className="w-px h-6 bg-border" />
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] text-muted-foreground font-medium">Ankomst</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {(() => {
+                        const travelSec = trips.length > 1 ?
+                        combinedTimeH * 3600 + combinedTimeMin * 60 :
+                        routeResult.travelTimeSeconds;
+                        const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
+                        return arr.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                      })()}
+                    </span>
+                  </div>
+                </div>
+
                 {/* BIG START BUTTON - always visible */}
                 <div className="px-3 py-3">
                   <button
