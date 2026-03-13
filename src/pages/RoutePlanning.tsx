@@ -716,6 +716,22 @@ export default function RoutePlanning() {
                       initialSuggestions={(() => {
                         const suggestions: Array<{id: string;name: string;address: string;lat: number;lng: number;isHistory: boolean;matchText: string;}> = [];
                         const seenKeys = new Set<string>();
+                        for (const t of savedTrips) {
+                          const key = t.endName.toLowerCase();
+                          if (seenKeys.has(key)) continue;
+                          seenKeys.add(key);
+                          const allStops = [t.startName, ...t.waypointNames, t.endName].join(' → ');
+                          const destWp = t.route.waypoints[t.route.waypoints.length - 1];
+                          suggestions.push({
+                            id: t.id,
+                            name: allStops,
+                            address: `${t.distanceKm} km · ${Math.floor(t.travelTimeSeconds / 3600)}h ${Math.round(t.travelTimeSeconds % 3600 / 60)}min`,
+                            lat: destWp.lat,
+                            lng: destWp.lng,
+                            isHistory: true,
+                            matchText: [t.endName, ...t.waypointNames].join('|')
+                          });
+                        }
                         for (const h of searchHistoryEntries) {
                           const key = h.name.toLowerCase();
                           if (seenKeys.has(key)) continue;
@@ -746,7 +762,7 @@ export default function RoutePlanning() {
                 {/* Senaste reseplaner - full trips with all stops */}
                 {!destination && savedTrips.length > 0 &&
                 <div className="px-4 pt-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste reseplaner</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Senaste besökta platser</p>
                   <div className="space-y-2">
                     {savedTrips.slice(0, 5).map((trip) => {
                       const stops = [trip.startName, ...trip.waypointNames, trip.endName];
