@@ -1438,13 +1438,13 @@ export default function RoutePlanning() {
                 </div>
 
                 {/* Resplan toggle */}
-                <div className="px-4 pb-1.5">
+                <div className="px-4 pb-2">
                   <button
                     onClick={() => setShowDetails(!showDetails)}
-                    className="w-full h-7 flex items-center justify-center gap-1.5 rounded-lg text-[11px] font-medium text-muted-foreground hover:bg-accent/50 transition-colors"
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/30 text-sm font-bold text-primary hover:bg-primary/20 transition-colors"
                   >
-                    📋 Resplan
-                    {showDetails ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                    📋 Resplan — din körschema
+                    {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   </button>
                 </div>
 
