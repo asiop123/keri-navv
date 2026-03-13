@@ -72,6 +72,7 @@ export default function AddressAutocomplete({
   onInputFocus,
   onInputBlur,
   initialSuggestions = [],
+  inlineResults = false,
 }: AddressAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
