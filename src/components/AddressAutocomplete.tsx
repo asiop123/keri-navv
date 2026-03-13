@@ -76,8 +76,10 @@ export default function AddressAutocomplete({
   initialSuggestions = [],
   inlineResults = false,
   autoFocus = false,
+  maxInitialVisible,
 }: AddressAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [expandedHistory, setExpandedHistory] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
