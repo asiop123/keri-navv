@@ -1019,7 +1019,7 @@ export default function RoutePlanning() {
             <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
               <div className="gap-1.5 px-2 py-1.5 flex items-center">
                 <div className="shrink-0 flex flex-col items-center gap-1 self-start mt-0.5">
-                  <button onClick={handleBack} className="p-1 hover:bg-accent rounded-md transition-colors">
+                  <button onClick={handleBack} className="p-1 hover:bg-accent rounded-md transition-colors mx-[4px] my-[4px] border-dashed">
                     <ArrowLeft className="h-5 w-5 text-foreground" />
                   </button>
                   <button
