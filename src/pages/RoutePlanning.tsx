@@ -1030,7 +1030,7 @@ export default function RoutePlanning() {
                   {/* Från rad */}
                   <div className="shadow flex-col rounded border-solid border border-primary gap-0 flex items-start justify-start mx-0 my-[3px] py-[5px] px-[7px] pb-0 pr-0 pt-[3px] pl-[6px] bg-gray-200">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="truncate text-sm px-0 text-primary bg-gray-300 my-[2px] mx-[10px]">{start || 'Min position'}</span>
+                    <span className="truncate text-sm px-0 text-primary my-[2px] mx-[10px] bg-gray-200">{start || 'Min position'}</span>
                   </div>
                   
                   {/* Till rad */}
