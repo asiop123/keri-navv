@@ -156,7 +156,7 @@ export default function AddressAutocomplete({
     try {
       const { getTomTomApiKey } = await import('@/services/tomtom');
       const key = getTomTomApiKey();
-      let url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(query)}.json?key=${key}&countrySet=SE&limit=5&language=sv-SE&typeahead=true`;
+      let url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(query)}.json?key=${key}&countrySet=SE,NO,DK,FI&limit=5&language=sv-SE&typeahead=true`;
       if (biasLat && biasLng) {
         url += `&lat=${biasLat}&lon=${biasLng}&radius=500000`;
       }
