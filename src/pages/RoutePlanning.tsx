@@ -969,11 +969,11 @@ export default function RoutePlanning() {
                             >
                               {/* Street View thumbnail */}
                               <div
-                                className="h-24 w-full bg-muted cursor-pointer relative group"
+                                className="h-40 w-full bg-muted cursor-pointer relative group"
                                 onClick={() => setMapClickCoords({ lat: place.lat, lng: place.lng })}
                               >
                                 <img
-                                  src={`https://maps.googleapis.com/maps/api/streetview?size=600x200&location=${place.lat},${place.lng}&key=${GOOGLE_MAPS_KEY}`}
+                                  src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${place.lat},${place.lng}&key=${GOOGLE_MAPS_KEY}`}
                                   alt={`Street View: ${place.name}`}
                                   className="w-full h-full object-cover"
                                   loading="lazy"
