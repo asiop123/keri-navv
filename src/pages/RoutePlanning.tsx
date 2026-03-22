@@ -1515,7 +1515,7 @@ export default function RoutePlanning() {
                     <button
                       onClick={() => {
                         setViewState("search");
-                        setSearchStep(null);
+                        setSearchStep("search");
                         setDestinationPreview(null);
                         setDestination("");
                         setDestinationCoords(null);
@@ -1523,6 +1523,9 @@ export default function RoutePlanning() {
                         if (previewMarkerRef.current) {
                           previewMarkerRef.current.remove();
                           previewMarkerRef.current = null;
+                        }
+                        if (userPosition) {
+                          setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12), 100);
                         }
                       }}
                       className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
