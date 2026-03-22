@@ -1303,59 +1303,18 @@ export default function RoutePlanning() {
             </div>
           )}
 
-          {/* Map search card (when no step is active) */}
+          {/* Map search pill (when no step is active) */}
           {!searchStep && (
-            <div className="absolute top-4 left-4 right-4 z-20 max-w-lg mx-auto">
-              <div className="bg-card/95 backdrop-blur-md rounded-2xl shadow-lg border border-border overflow-hidden">
-                {/* From - compact row matching step 1 */}
-                <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/40">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                  <div className="flex-1 min-w-0 flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground shrink-0">Från</span>
-                    <span className="text-sm text-foreground truncate">{start || "Min position"}</span>
-                  </div>
-                  {userPosition && (
-                    <button
-                      onClick={async () => {
-                        const name = await reverseGeocode(userPosition.lat, userPosition.lng);
-                        setStart(name);
-                      }}
-                      className="shrink-0 p-1.5 rounded-lg hover:bg-accent transition-colors"
-                      title="Min position"
-                    >
-                      <Locate className="h-3.5 w-3.5 text-primary" />
-                    </button>
-                  )}
-                </div>
-
-                {/* To - prominent row matching step 1, opens search on click */}
-                <div
-                  className="flex items-center gap-3 px-4 py-3 cursor-pointer group hover:bg-accent/30 transition-colors"
-                  onClick={() => setSearchStep("search")}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-destructive shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span
-                      className={`text-sm ${destination ? "text-foreground font-medium" : "text-muted-foreground/50"}`}
-                    >
-                      {destination || "Sök destination..."}
-                    </span>
-                  </div>
-                  {destination ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDestination("");
-                      }}
-                      className="shrink-0 p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <Search className="h-4 w-4 text-muted-foreground/40 shrink-0" />
-                  )}
-                </div>
-              </div>
+            <div className="absolute top-4 left-4 right-4 z-20 flex justify-center pointer-events-none">
+              <button
+                onClick={() => setSearchStep("search")}
+                className="pointer-events-auto flex items-center gap-2.5 bg-card/90 backdrop-blur-lg rounded-full shadow-lg border border-border/50 px-4 py-2.5 hover:bg-card hover:shadow-xl transition-all active:scale-[0.97]"
+              >
+                <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className={`text-sm ${destination ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                  {destination || 'Sök destination...'}
+                </span>
+              </button>
             </div>
           )}
 
