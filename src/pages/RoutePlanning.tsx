@@ -62,7 +62,14 @@ interface TripLeg {
 
 const LEG_COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#0891b2"];
 
-type ViewState = "search" | "details" | "navigating";
+type ViewState = "search" | "preview" | "details" | "navigating";
+
+interface DestinationPreview {
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+}
 
 export default function RoutePlanning() {
   const [searchParams] = useSearchParams();
@@ -96,6 +103,7 @@ export default function RoutePlanning() {
   const [searchStep, setSearchStep] = useState<"search" | "filters" | null>(initialSearchStep as any);
 
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [destinationPreview, setDestinationPreview] = useState<DestinationPreview | null>(null);
   const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
@@ -249,6 +257,43 @@ export default function RoutePlanning() {
     }
     setDistanceToNext(dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`);
   }, [userPosition, isNavigating, routeResult, currentStep, haversineKm]);
+
+  // Preview destination marker
+  const previewMarkerRef = useRef<any>(null);
+  useEffect(() => {
+    const map = mapHandleRef.current?.getMap();
+
+    // Remove old preview marker
+    if (previewMarkerRef.current) {
+      previewMarkerRef.current.remove();
+      previewMarkerRef.current = null;
+    }
+
+    if (!map || viewState !== "preview" || !destinationPreview) return;
+
+    import('@tomtom-international/web-sdk-maps').then((tt) => {
+      if (viewState !== "preview" || !destinationPreview) return;
+      const el = document.createElement('div');
+      el.style.cssText = `
+        width: 40px; height: 40px; border-radius: 50%;
+        background: #ef4444;
+        border: 3px solid white; box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; color: white; font-weight: bold;
+      `;
+      el.textContent = '📍';
+      previewMarkerRef.current = new tt.default.Marker({ element: el })
+        .setLngLat([destinationPreview.lng, destinationPreview.lat])
+        .addTo(map);
+    });
+
+    return () => {
+      if (previewMarkerRef.current) {
+        previewMarkerRef.current.remove();
+        previewMarkerRef.current = null;
+      }
+    };
+  }, [viewState, destinationPreview]);
 
   const startGpsTracking = useCallback(() => {
     if (!("geolocation" in navigator)) return;
@@ -853,6 +898,21 @@ export default function RoutePlanning() {
                                 lng: suggestion.lng,
                                 name: suggestion.name,
                               };
+                              // Enter preview mode: zoom to destination
+                              setDestinationPreview({
+                                name: suggestion.name,
+                                address: suggestion.address || suggestion.name,
+                                lat: suggestion.lat,
+                                lng: suggestion.lng,
+                              });
+                              setViewState("preview");
+                              setSearchStep(null);
+                              setSearchFocused(false);
+                              // Zoom to destination
+                              setTimeout(() => {
+                                mapHandleRef.current?.flyToLocation(suggestion.lng, suggestion.lat, 16);
+                              }, 100);
+                              return;
                             }
                             setSearchStep("filters");
                             setSearchFocused(false);
@@ -1006,8 +1066,18 @@ export default function RoutePlanning() {
                                   setDestination(place.name);
                                   setDestinationCoords({ lat: place.lat, lng: place.lng });
                                   pendingDestCoordsRef.current = { lat: place.lat, lng: place.lng, name: place.name };
-                                  setSearchStep("filters");
+                                  setDestinationPreview({
+                                    name: place.name,
+                                    address: place.name,
+                                    lat: place.lat,
+                                    lng: place.lng,
+                                  });
+                                  setViewState("preview");
+                                  setSearchStep(null);
                                   setSearchFocused(false);
+                                  setTimeout(() => {
+                                    mapHandleRef.current?.flyToLocation(place.lng, place.lat, 16);
+                                  }, 100);
                                 }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 text-left"
                               >
@@ -1366,7 +1436,111 @@ export default function RoutePlanning() {
         </>
       )}
 
-      {/* ===== DETAILS VIEW ===== */}
+      {/* ===== PREVIEW VIEW ===== */}
+      {viewState === "preview" && destinationPreview && (
+        <>
+          {/* Back button */}
+          <div className="absolute top-3 left-3 z-20">
+            <button
+              onClick={() => {
+                // Zoom out and show destination card
+                const map = mapHandleRef.current?.getMap();
+                if (map) {
+                  (map as any).flyTo({ zoom: 6, duration: 800 });
+                }
+              }}
+              className="p-2.5 bg-card/90 backdrop-blur-lg rounded-full shadow-lg border border-border/50 hover:bg-card transition-all"
+            >
+              <ArrowLeft className="h-4 w-4 text-foreground" />
+            </button>
+          </div>
+
+          {/* Bottom destination card */}
+          <div className="absolute bottom-4 left-3 right-3 z-20 max-w-lg mx-auto">
+            <div className="bg-card/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50 overflow-hidden">
+              {/* Street View image */}
+              <div
+                className="h-36 w-full bg-muted cursor-pointer relative group"
+                onClick={() => setMapClickCoords({ lat: destinationPreview.lat, lng: destinationPreview.lng })}
+              >
+                <img
+                  src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${destinationPreview.lat},${destinationPreview.lng}&key=${GOOGLE_MAPS_KEY}`}
+                  alt={`Street View: ${destinationPreview.name}`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                </div>
+              </div>
+
+              {/* Info section */}
+              <div className="p-4">
+                <h3 className="text-base font-bold text-foreground truncate">{destinationPreview.name}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{destinationPreview.address}</p>
+
+                {/* Distance & estimated time */}
+                {userPosition && (
+                  <div className="flex items-center gap-3 mt-2.5">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {(() => {
+                        const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
+                        return dist < 1 ? `${Math.round(dist * 1000)} m bort` : `${Math.round(dist)} km bort`;
+                      })()}
+                    </span>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {(() => {
+                        const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
+                        const estMinutes = Math.round(dist / 1.2); // ~72 km/h average
+                        if (estMinutes < 60) return `~${estMinutes} min`;
+                        return `~${Math.floor(estMinutes / 60)}h ${estMinutes % 60}min`;
+                      })()}
+                    </span>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setViewState("search");
+                      setSearchStep("search");
+                      setDestinationPreview(null);
+                      setDestination("");
+                      setDestinationCoords(null);
+                      pendingDestCoordsRef.current = null;
+                    }}
+                    className="flex-1 rounded-xl"
+                  >
+                    Ändra destination
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setDestination(destinationPreview.name);
+                      pendingDestCoordsRef.current = {
+                        lat: destinationPreview.lat,
+                        lng: destinationPreview.lng,
+                        name: destinationPreview.name,
+                      };
+                      setDestinationPreview(null);
+                      setSearchStep("filters");
+                      setViewState("search");
+                    }}
+                    className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold"
+                  >
+                    <Navigation className="h-4 w-4 mr-1" />
+                    Kör hit
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {viewState === "details" && routeResult && (
         <>
           {/* Top bar - compact pill OR expanded panel */}
