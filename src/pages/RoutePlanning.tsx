@@ -1477,18 +1477,11 @@ export default function RoutePlanning() {
           <div className="absolute top-3 left-3 z-20">
             <button
               onClick={() => {
-                setViewState("search");
-                setSearchStep(null);
-                setDestinationPreview(null);
-                setDestination("");
-                setDestinationCoords(null);
-                pendingDestCoordsRef.current = null;
-                if (previewMarkerRef.current) {
-                  previewMarkerRef.current.remove();
-                  previewMarkerRef.current = null;
-                }
                 if (userPosition) {
-                  setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12), 100);
+                  mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12);
+                } else {
+                  const map = mapHandleRef.current?.getMap();
+                  if (map) (map as any).flyTo({ zoom: 6, duration: 800 });
                 }
               }}
               className="p-2.5 bg-card/90 backdrop-blur-lg rounded-full shadow-lg border border-border/50 hover:bg-card transition-all"
