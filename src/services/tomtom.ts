@@ -38,7 +38,7 @@ interface GeocodingResult {
 }
 
 export async function geocode(query: string): Promise<GeocodingResult> {
-  const url = `${BASE_URL}/search/2/geocode/${encodeURIComponent(query)}.json?key=${API_KEY}&countrySet=SE&limit=1`;
+  const url = `${BASE_URL}/search/2/geocode/${encodeURIComponent(query)}.json?key=${API_KEY}&countrySet=SE,NO,DK,FI&limit=1`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Geocoding failed for "${query}": ${res.status}`);
   const data = await res.json();
