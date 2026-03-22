@@ -1389,7 +1389,111 @@ export default function RoutePlanning() {
         </>
       )}
 
-      {/* ===== DETAILS VIEW ===== */}
+      {/* ===== PREVIEW VIEW ===== */}
+      {viewState === "preview" && destinationPreview && (
+        <>
+          {/* Back button */}
+          <div className="absolute top-3 left-3 z-20">
+            <button
+              onClick={() => {
+                // Zoom out and show destination card
+                const map = mapHandleRef.current?.getMap();
+                if (map) {
+                  (map as any).flyTo({ zoom: 6, duration: 800 });
+                }
+              }}
+              className="p-2.5 bg-card/90 backdrop-blur-lg rounded-full shadow-lg border border-border/50 hover:bg-card transition-all"
+            >
+              <ArrowLeft className="h-4 w-4 text-foreground" />
+            </button>
+          </div>
+
+          {/* Bottom destination card */}
+          <div className="absolute bottom-4 left-3 right-3 z-20 max-w-lg mx-auto">
+            <div className="bg-card/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50 overflow-hidden">
+              {/* Street View image */}
+              <div
+                className="h-36 w-full bg-muted cursor-pointer relative group"
+                onClick={() => setMapClickCoords({ lat: destinationPreview.lat, lng: destinationPreview.lng })}
+              >
+                <img
+                  src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${destinationPreview.lat},${destinationPreview.lng}&key=${GOOGLE_MAPS_KEY}`}
+                  alt={`Street View: ${destinationPreview.name}`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                </div>
+              </div>
+
+              {/* Info section */}
+              <div className="p-4">
+                <h3 className="text-base font-bold text-foreground truncate">{destinationPreview.name}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{destinationPreview.address}</p>
+
+                {/* Distance & estimated time */}
+                {userPosition && (
+                  <div className="flex items-center gap-3 mt-2.5">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {(() => {
+                        const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
+                        return dist < 1 ? `${Math.round(dist * 1000)} m bort` : `${Math.round(dist)} km bort`;
+                      })()}
+                    </span>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {(() => {
+                        const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
+                        const estMinutes = Math.round(dist / 1.2); // ~72 km/h average
+                        if (estMinutes < 60) return `~${estMinutes} min`;
+                        return `~${Math.floor(estMinutes / 60)}h ${estMinutes % 60}min`;
+                      })()}
+                    </span>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setViewState("search");
+                      setSearchStep("search");
+                      setDestinationPreview(null);
+                      setDestination("");
+                      setDestinationCoords(null);
+                      pendingDestCoordsRef.current = null;
+                    }}
+                    className="flex-1 rounded-xl"
+                  >
+                    Ändra destination
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setDestination(destinationPreview.name);
+                      pendingDestCoordsRef.current = {
+                        lat: destinationPreview.lat,
+                        lng: destinationPreview.lng,
+                        name: destinationPreview.name,
+                      };
+                      setDestinationPreview(null);
+                      setSearchStep("filters");
+                      setViewState("search");
+                    }}
+                    className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold"
+                  >
+                    <Navigation className="h-4 w-4 mr-1" />
+                    Kör hit
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {viewState === "details" && routeResult && (
         <>
           {/* Top bar - compact pill OR expanded panel */}
