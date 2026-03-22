@@ -1915,7 +1915,7 @@ export default function RoutePlanning() {
                         </button>
                         <button
                           onClick={() => {
-                            handleSaveTrip();
+                            handleSave();
                           }}
                           className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-accent transition-colors"
                         >
