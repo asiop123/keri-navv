@@ -62,7 +62,14 @@ interface TripLeg {
 
 const LEG_COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#0891b2"];
 
-type ViewState = "search" | "details" | "navigating";
+type ViewState = "search" | "preview" | "details" | "navigating";
+
+interface DestinationPreview {
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+}
 
 export default function RoutePlanning() {
   const [searchParams] = useSearchParams();
