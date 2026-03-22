@@ -1857,27 +1857,48 @@ export default function RoutePlanning() {
 
                   {/* Main content area - Google Maps style */}
                   {bottomSheetTab === "overview" && (
-                    <div className="px-5 pb-4">
-                      {/* Big time display */}
-                      <div className="flex items-baseline gap-2 mb-0.5">
-                        <span className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                          {trips.length > 1
-                            ? `${combinedTimeH} h ${combinedTimeMin} min`
-                            : `${totalDriveTimeH} h ${totalDriveTimeMin} min`}
-                        </span>
+                    <div className="px-5 pb-5">
+                      {/* Title row: destination name + action icons */}
+                      <div className="flex items-start justify-between mb-1">
+                        <h2 className="text-xl font-semibold text-foreground leading-tight pr-3">
+                          {destination || "Destination"}
+                        </h2>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => handleSave()}
+                            className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
+                            title="Spara"
+                          >
+                            <Bookmark className="h-5 w-5 text-foreground" />
+                          </button>
+                          <button
+                            onClick={() => setShowBottomSheet(false)}
+                            className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
+                            title="Stäng"
+                          >
+                            <X className="h-5 w-5 text-foreground" />
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Subtitle: distance + arrival */}
-                      <div className="text-sm text-muted-foreground mb-4">
-                        {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km · Ankomst{" "}
+                      {/* Subtitle: arrival + distance */}
+                      <div className="text-sm text-muted-foreground mb-1">
                         {(() => {
                           const travelSec =
                             trips.length > 1
                               ? combinedTimeH * 3600 + combinedTimeMin * 60
                               : routeResult.travelTimeSeconds;
                           const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
-                          return arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+                          const dayName = arr.toLocaleDateString("sv-SE", { weekday: "long" });
+                          const timeStr = arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+                          return `${dayName} ${timeStr}`;
                         })()}
+                      </div>
+                      <div className="text-sm text-muted-foreground mb-4">
+                        {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
+                        {trips.length > 1
+                          ? ` · ${combinedTimeH}h ${combinedTimeMin}min`
+                          : ` · ${totalDriveTimeH}h ${totalDriveTimeMin}min`}
                         {allRestCount > 0 && ` · ${allRestCount} ${allRestCount === 1 ? "paus" : "pauser"}`}
                       </div>
 
@@ -1888,48 +1909,55 @@ export default function RoutePlanning() {
                         </div>
                       )}
 
-                      {/* Start button - Google Maps green */}
-                      <button
-                        onClick={handleStartNavigation}
-                        className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-full text-base flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/20 transition-all mb-3"
-                      >
-                        <Navigation className="h-5 w-5" />
-                        Starta
-                      </button>
-
-                      {/* Action row - Google Maps style icons */}
-                      <div className="flex items-center justify-around pt-1 border-t border-border">
+                      {/* Action buttons - horizontal pills like Google Maps */}
+                      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                        <button
+                          onClick={handleStartNavigation}
+                          className="shrink-0 h-10 px-5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold rounded-full text-sm flex items-center gap-2 shadow-md transition-all"
+                        >
+                          <Navigation className="h-4 w-4" />
+                          Starta
+                        </button>
                         <button
                           onClick={() => setBottomSheetTab("streetview")}
-                          className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-accent transition-colors"
+                          className="shrink-0 h-10 px-4 bg-accent hover:bg-accent/80 text-accent-foreground font-medium rounded-full text-sm flex items-center gap-2 transition-colors"
                         >
-                          <Eye className="h-5 w-5 text-primary" />
-                          <span className="text-[10px] font-medium text-muted-foreground">Gatuvy</span>
+                          <Eye className="h-4 w-4" />
+                          Gatuvy
                         </button>
                         <button
                           onClick={() => setBottomSheetTab("resplan")}
-                          className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-accent transition-colors"
+                          className="shrink-0 h-10 px-4 bg-accent hover:bg-accent/80 text-accent-foreground font-medium rounded-full text-sm flex items-center gap-2 transition-colors"
                         >
-                          <Route className="h-5 w-5 text-primary" />
-                          <span className="text-[10px] font-medium text-muted-foreground">Steg</span>
+                          <Route className="h-4 w-4" />
+                          Körschema
                         </button>
                         <button
-                          onClick={() => {
-                            handleSave();
-                          }}
-                          className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-accent transition-colors"
+                          onClick={() => handleSave()}
+                          className="shrink-0 h-10 px-4 bg-accent hover:bg-accent/80 text-accent-foreground font-medium rounded-full text-sm flex items-center gap-2 transition-colors"
                         >
-                          <Save className="h-5 w-5 text-primary" />
-                          <span className="text-[10px] font-medium text-muted-foreground">Spara</span>
-                        </button>
-                        <button
-                          onClick={() => setShowBottomSheet(false)}
-                          className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-accent transition-colors"
-                        >
-                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                          <span className="text-[10px] font-medium text-muted-foreground">Dölj</span>
+                          <Save className="h-4 w-4" />
+                          Spara
                         </button>
                       </div>
+
+                      {/* Street View preview thumbnail */}
+                      {destinationCoords && (
+                        <div className="mt-4">
+                          <button
+                            onClick={() => setBottomSheetTab("streetview")}
+                            className="w-full rounded-xl overflow-hidden relative group"
+                          >
+                            <StreetViewPanorama
+                              lat={destinationCoords.lat}
+                              lng={destinationCoords.lng}
+                              className="w-full h-[160px]"
+                              showExpandButton={false}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
 
