@@ -99,6 +99,7 @@ export default function RoutePlanning() {
   const [showBottomSheet, setShowBottomSheet] = useState(true);
   const [showFilterCurtain, setShowFilterCurtain] = useState(false);
   const [fullscreenResplan, setFullscreenResplan] = useState(false);
+  const [bottomSheetTab, setBottomSheetTab] = useState<"overview" | "streetview" | "resplan">("overview");
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchStep, setSearchStep] = useState<"search" | "filters" | null>(initialSearchStep as any);
 
