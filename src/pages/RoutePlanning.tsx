@@ -86,6 +86,7 @@ export default function RoutePlanning() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showBottomSheet, setShowBottomSheet] = useState(true);
   const [showFilterCurtain, setShowFilterCurtain] = useState(false);
