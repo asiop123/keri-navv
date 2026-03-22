@@ -103,6 +103,7 @@ export default function RoutePlanning() {
   const [searchStep, setSearchStep] = useState<"search" | "filters" | null>(initialSearchStep as any);
 
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [destinationPreview, setDestinationPreview] = useState<DestinationPreview | null>(null);
   const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
