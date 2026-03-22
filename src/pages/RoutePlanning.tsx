@@ -198,6 +198,8 @@ export default function RoutePlanning() {
     setShowDetails(false);
     setShowBottomSheet(false);
     setSelectedLocation(null);
+    setDetailsExpanded(false);
+    setShowFilterCurtain(false);
   }, []);
 
   // Auto-start GPS watch for smooth position
