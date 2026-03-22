@@ -1385,109 +1385,101 @@ export default function RoutePlanning() {
       {/* ===== DETAILS VIEW ===== */}
       {viewState === "details" && routeResult && (
         <>
-          {/* Top bar - route summary stacked */}
-          <div className="absolute top-2 left-2 right-2 z-20 max-w-2xl mx-auto">
-            <div className="bg-card/95 backdrop-blur-sm rounded-xl shadow-md border border-border/60 overflow-hidden">
-              {/* Row 1: Nav + Addresses + Vehicle button */}
-              <div className="px-3 py-2 flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setViewState("search");
-                    setSearchStep("search");
-                  }}
-                  className="flex-1 min-w-0 hover:bg-accent/40 transition-colors gap-0 text-xs rounded-none px-0 mr-[4px] flex flex-col text-left font-thin font-sans"
-                >
-                  <div className="flex items-center gap-2 my-0.5 ml-0 px-[2px]">
+          {/* Top bar - route summary */}
+          <div className="absolute top-3 left-3 right-3 z-20 max-w-xl mx-auto">
+            <div className="bg-card/95 backdrop-blur-md rounded-2xl shadow-xl border border-border/50 overflow-hidden">
+              {/* Address rows */}
+              <div className="px-3 pt-3 pb-2">
+                <div className="flex items-stretch gap-2">
+                  {/* Back button */}
+                  <button
+                    onClick={handleBack}
+                    className="shrink-0 self-center p-2 hover:bg-accent rounded-xl transition-colors"
+                  >
+                    <ArrowLeft className="h-5 w-5 text-foreground" />
+                  </button>
+
+                  {/* Address fields with connecting dots */}
+                  <div className="flex-1 min-w-0 flex flex-col gap-1.5 relative">
+                    {/* Connecting line between dots */}
+                    <div className="absolute left-[7px] top-[14px] bottom-[14px] w-[2px] bg-border z-0" />
+
+                    {/* Start address */}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBack();
+                      onClick={() => {
+                        setViewState("search");
+                        setSearchStep("search");
                       }}
-                      className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors"
+                      className="flex items-center gap-2.5 bg-muted/60 hover:bg-muted rounded-lg px-3 py-2 transition-colors text-left relative z-10"
                     >
-                      <ArrowLeft className="h-5 w-5 text-foreground" />
+                      <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-emerald-600/30 shrink-0" />
+                      <span className="truncate text-sm text-foreground">{start || "Min position"}</span>
                     </button>
-                    <div className="rounded-lg border-border bg-muted/50 flex-1 min-w-0 flex-row my-0 flex items-start justify-start mx-[2px] px-[21px] py-0 gap-[11px] border">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0 my-0" />
-                      <span className="truncate text-base text-foreground mx-[66px] my-0 ml-0 py-0 mr-[360px]">
-                        {start || "Min position"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 my-0.5">
+
+                    {/* Destination address */}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
+                      onClick={() => {
+                        setViewState("search");
+                        setSearchStep("search");
+                      }}
+                      className="flex items-center gap-2.5 bg-muted/60 hover:bg-muted rounded-lg px-3 py-2 transition-colors text-left relative z-10"
+                    >
+                      <div className="w-3.5 h-3.5 rounded-full bg-destructive border-2 border-destructive/30 shrink-0" />
+                      <span className="truncate text-sm text-foreground">{destination}</span>
+                    </button>
+                  </div>
+
+                  {/* Right action buttons */}
+                  <div className="shrink-0 flex flex-col items-center justify-between py-0.5">
+                    {/* Swap button */}
+                    <button
+                      onClick={() => {
                         const tmpStart = start;
                         const tmpDest = destination;
                         setStart(tmpDest);
                         setDestination(tmpStart);
                       }}
-                      className="shrink-0 p-1.5 hover:bg-accent rounded-md transition-colors"
+                      className="p-2 hover:bg-accent rounded-xl transition-colors"
                       title="Byt position och destination"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-5 w-5"
-                      >
-                        <path d="m21 16-4 4-4-4" stroke="#10b981" />
-                        <path d="M17 20V4" stroke="#10b981" />
-                        <path d="m3 8 4-4 4 4" stroke="hsl(var(--destructive))" />
-                        <path d="M7 4v16" stroke="hsl(var(--destructive))" />
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m21 16-4 4-4-4" stroke="hsl(var(--primary))" />
+                        <path d="M17 20V4" stroke="hsl(var(--primary))" />
+                        <path d="m3 8 4-4 4 4" stroke="hsl(var(--muted-foreground))" />
+                        <path d="M7 4v16" stroke="hsl(var(--muted-foreground))" />
                       </svg>
                     </button>
-                    <div className="rounded-lg border-border bg-muted/50 flex-1 min-w-0 py-[6px] flex items-start justify-start px-[21px] mx-0 pb-0 pt-0 ml-[7px] pr-[21px] gap-[11px] border-2 mr-[360px]">
-                      <div className="w-3 h-3 rounded-full bg-destructive shrink-0" />
-                      <span className="truncate text-base text-foreground mr-0">{destination}</span>
-                    </div>
-                  </div>
-                  {/* Add stop button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewState("search");
-                      setSearchStep("filters");
-                    }}
-                    className="flex items-center gap-1.5 px-2.5 py-1 my-0.5 w-full rounded border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-accent/30 transition-colors ml-9"
-                  >
-                    <Plus className="h-3 w-3 text-muted-foreground/60" />
-                    <span className="text-xs text-muted-foreground/60">Lägg till stopp</span>
-                  </button>
-                </button>
 
-                <div className="shrink-0 flex flex-col items-center gap-3 ml-2">
-                  <button
-                    onClick={handleStartNavigation}
-                    className="p-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-colors shadow-md"
-                  >
-                    <Navigation className="h-6 w-6 text-white" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setViewState("search");
-                      setSearchStep("filters");
-                    }}
-                    className="p-3 hover:bg-accent rounded-xl transition-colors"
-                  >
-                    <SlidersHorizontal className="h-6 w-6 text-muted-foreground" />
-                  </button>
+                    {/* Navigate button */}
+                    <button
+                      onClick={handleStartNavigation}
+                      className="p-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-colors shadow-md"
+                    >
+                      <Navigation className="h-5 w-5 text-white" />
+                    </button>
+                  </div>
                 </div>
+
+                {/* Add stop */}
+                <button
+                  onClick={() => {
+                    setViewState("search");
+                    setSearchStep("filters");
+                  }}
+                  className="flex items-center gap-1.5 ml-11 mt-1 px-2 py-1 rounded-md text-xs text-muted-foreground/70 hover:text-muted-foreground hover:bg-accent/40 transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                  Lägg till stopp
+                </button>
               </div>
 
-              {/* Curtain toggle arrow */}
+              {/* Expand filter curtain toggle */}
               <button
                 onClick={() => setShowFilterCurtain(!showFilterCurtain)}
-                className="w-full flex items-center justify-center py-0.5 hover:bg-muted/50 transition-colors border-t border-border/40"
+                className="w-full flex items-center justify-center py-1 hover:bg-muted/40 transition-colors border-t border-border/30"
               >
                 <ChevronDown
-                  className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${showFilterCurtain ? "rotate-180" : ""}`}
+                  className={`h-4 w-4 text-muted-foreground/60 transition-transform duration-300 ${showFilterCurtain ? "rotate-180" : ""}`}
                 />
               </button>
 
@@ -1495,7 +1487,7 @@ export default function RoutePlanning() {
               <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilterCurtain ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"}`}
               >
-                <div className="border-t border-border/40 bg-card px-4 py-3 space-y-3">
+                <div className="border-t border-border/30 bg-card px-4 py-3 space-y-3">
                   {/* Tur & retur */}
                   <div className="flex items-center gap-2">
                     <button
@@ -1511,7 +1503,7 @@ export default function RoutePlanning() {
                     </button>
                   </div>
 
-                  {/* Vehicle & Load compact */}
+                  {/* Vehicle & Load */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label className="text-[10px] text-muted-foreground">Fordon</Label>
@@ -1580,7 +1572,7 @@ export default function RoutePlanning() {
                     ))}
                   </div>
 
-                  {/* Re-calculate button */}
+                  {/* Re-calculate */}
                   <Button
                     onClick={() => {
                       setShowFilterCurtain(false);
