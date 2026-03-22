@@ -258,6 +258,43 @@ export default function RoutePlanning() {
     setDistanceToNext(dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`);
   }, [userPosition, isNavigating, routeResult, currentStep, haversineKm]);
 
+  // Preview destination marker
+  const previewMarkerRef = useRef<any>(null);
+  useEffect(() => {
+    const map = mapHandleRef.current?.getMap();
+
+    // Remove old preview marker
+    if (previewMarkerRef.current) {
+      previewMarkerRef.current.remove();
+      previewMarkerRef.current = null;
+    }
+
+    if (!map || viewState !== "preview" || !destinationPreview) return;
+
+    import('@tomtom-international/web-sdk-maps').then((tt) => {
+      if (viewState !== "preview" || !destinationPreview) return;
+      const el = document.createElement('div');
+      el.style.cssText = `
+        width: 40px; height: 40px; border-radius: 50%;
+        background: #ef4444;
+        border: 3px solid white; box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; color: white; font-weight: bold;
+      `;
+      el.textContent = '📍';
+      previewMarkerRef.current = new tt.default.Marker({ element: el })
+        .setLngLat([destinationPreview.lng, destinationPreview.lat])
+        .addTo(map);
+    });
+
+    return () => {
+      if (previewMarkerRef.current) {
+        previewMarkerRef.current.remove();
+        previewMarkerRef.current = null;
+      }
+    };
+  }, [viewState, destinationPreview]);
+
   const startGpsTracking = useCallback(() => {
     if (!("geolocation" in navigator)) return;
     gpsPointsRef.current = [];
