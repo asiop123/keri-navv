@@ -123,7 +123,7 @@ export default function AddressAutocomplete({
     return new Promise<boolean>((resolve) => {
       const request: google.maps.places.AutocompletionRequest = {
         input: query,
-        componentRestrictions: { country: 'se' },
+        componentRestrictions: { country: ['se', 'no', 'dk', 'fi'] },
       };
 
       if (biasLat && biasLng) {
