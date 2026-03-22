@@ -1458,7 +1458,7 @@ export default function RoutePlanning() {
             className="absolute inset-0 z-10"
             onClick={() => {
               setViewState("search");
-              setSearchStep("search");
+              setSearchStep(null);
               setDestinationPreview(null);
               setDestination("");
               setDestinationCoords(null);
@@ -1478,7 +1478,7 @@ export default function RoutePlanning() {
             <button
               onClick={() => {
                 setViewState("search");
-                setSearchStep("search");
+                setSearchStep(null);
                 setDestinationPreview(null);
                 setDestination("");
                 setDestinationCoords(null);
@@ -1515,7 +1515,7 @@ export default function RoutePlanning() {
                     <button
                       onClick={() => {
                         setViewState("search");
-                        setSearchStep("search");
+                        setSearchStep(null);
                         setDestinationPreview(null);
                         setDestination("");
                         setDestinationCoords(null);
