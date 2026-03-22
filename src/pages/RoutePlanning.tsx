@@ -1608,14 +1608,20 @@ export default function RoutePlanning() {
           {/* Bottom sheet - compact by default */}
           {showBottomSheet && (
             <div
-              className="absolute bottom-0 left-0 right-0 z-20"
+              className={`absolute z-20 transition-all duration-300 ${fullscreenResplan ? 'inset-0' : 'bottom-0 left-0 right-0'}`}
               onPointerDown={(e) => {
-                if (e.target === e.currentTarget) dismissPanels();
+                if (e.target === e.currentTarget) {
+                  if (fullscreenResplan) {
+                    setFullscreenResplan(false);
+                  } else {
+                    dismissPanels();
+                  }
+                }
               }}
             >
-              <div ref={bottomSheetRef} className="max-w-3xl mx-auto">
+              <div ref={bottomSheetRef} className={`transition-all duration-300 ${fullscreenResplan ? 'h-full' : 'max-w-3xl mx-auto'}`}>
                 <div
-                  className={`bg-card rounded-t-2xl shadow-xl border border-b-0 border-border overflow-hidden transition-all ${showDetails ? "max-h-[75vh]" : ""}`}
+                  className={`bg-card shadow-xl border border-border overflow-hidden transition-all duration-300 ${fullscreenResplan ? 'h-full rounded-none border-0' : `rounded-t-2xl border-b-0 ${showDetails ? "max-h-[75vh]" : ""}`}`}
                 >
                   {/* Route alternatives - horizontal scroll, always visible */}
                   {alternativeRoutes.length > 0 && (
