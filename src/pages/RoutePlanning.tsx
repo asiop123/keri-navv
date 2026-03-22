@@ -25,7 +25,7 @@ import {
   Search,
   Car,
   ArrowLeft,
-  Star,
+  Bookmark,
   Info,
   Eye,
   Repeat,
