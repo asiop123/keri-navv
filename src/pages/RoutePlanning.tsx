@@ -1822,68 +1822,32 @@ export default function RoutePlanning() {
                 }
               }}
             >
-              <div ref={bottomSheetRef} className={`transition-all duration-300 ${fullscreenResplan ? 'h-full' : 'max-w-3xl mx-auto'}`}>
+              <div ref={bottomSheetRef} className={`transition-all duration-300 ${fullscreenResplan ? 'h-full' : 'max-w-lg mx-auto'}`}>
                 <div
-                  className={`bg-card shadow-xl border border-border overflow-hidden transition-all duration-300 ${fullscreenResplan ? 'h-full rounded-none border-0 flex flex-col' : `rounded-t-2xl border-b-0 ${bottomSheetTab === 'resplan' || bottomSheetTab === 'streetview' ? "max-h-[75vh] flex flex-col" : ""}`}`}
+                  className={`bg-card shadow-2xl overflow-hidden transition-all duration-300 ${fullscreenResplan ? 'h-full rounded-none flex flex-col' : `rounded-t-3xl ${bottomSheetTab !== 'overview' ? "max-h-[80vh] flex flex-col" : ""}`}`}
                 >
-                  {/* Drag handle */}
-                  <div className="flex justify-center pt-2 pb-1">
-                    <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                  {/* Google Maps drag handle */}
+                  <div className="flex justify-center pt-3 pb-1 cursor-grab">
+                    <div className="w-8 h-1 rounded-full bg-muted-foreground/25" />
                   </div>
 
-                  {/* Route alternatives - horizontal scroll */}
-                  {alternativeRoutes.length > 0 && (
-                    <div className="px-3 pb-1">
-                      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-                        <button className="shrink-0 rounded-lg px-2.5 py-1.5 text-left border-2 border-primary bg-primary/10 min-w-[80px]">
-                          <div className="text-[11px] font-semibold text-foreground">Rutt 1</div>
-                          <div className="text-[9px] text-muted-foreground whitespace-nowrap">
-                            {routeResult.distanceKm} km · {Math.floor(routeResult.travelTimeSeconds / 3600)}h{" "}
-                            {Math.round((routeResult.travelTimeSeconds % 3600) / 60)}min
-                          </div>
-                          <div className="text-[9px] font-medium text-primary whitespace-nowrap mt-0.5">
-                            Framme{" "}
-                            {(() => {
-                              const arr = new Date(
-                                new Date(departureTime).getTime() + routeResult.travelTimeSeconds * 1000,
-                              );
-                              return arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
-                            })()}
-                          </div>
+                  {/* Route alternatives pills - Google Maps style */}
+                  {alternativeRoutes.length > 0 && bottomSheetTab === "overview" && (
+                    <div className="px-4 pb-2">
+                      <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                        <button className="shrink-0 rounded-full px-3 py-1 text-xs font-medium bg-primary text-primary-foreground">
+                          {Math.floor(routeResult.travelTimeSeconds / 3600)}h {Math.round((routeResult.travelTimeSeconds % 3600) / 60)}min
                         </button>
                         {alternativeRoutes.map((alt, i) => {
                           const diffMin = Math.round((alt.travelTimeSeconds - routeResult.travelTimeSeconds) / 60);
-                          const diffKm = alt.distanceKm - routeResult.distanceKm;
                           return (
                             <button
                               key={i}
                               onClick={() => handleSwitchRoute(i + 1)}
-                              className="shrink-0 rounded-lg px-2.5 py-1.5 text-left border border-border hover:border-primary/50 min-w-[80px]"
+                              className="shrink-0 rounded-full px-3 py-1 text-xs font-medium bg-muted text-muted-foreground hover:bg-accent transition-colors"
                             >
-                              <div className="text-[11px] font-semibold text-foreground">Rutt {i + 2}</div>
-                              <div className="text-[9px] text-muted-foreground whitespace-nowrap">
-                                {alt.distanceKm} km · {Math.floor(alt.travelTimeSeconds / 3600)}h{" "}
-                                {Math.round((alt.travelTimeSeconds % 3600) / 60)}min
-                              </div>
-                              <div className="text-[9px] mt-0.5 whitespace-nowrap">
-                                <span className={diffMin > 0 ? "text-destructive" : "text-emerald-600"}>
-                                  {diffMin > 0 ? "+" : ""}
-                                  {diffMin}min
-                                </span>{" "}
-                                <span className="text-muted-foreground">
-                                  {diffKm > 0 ? "+" : ""}
-                                  {diffKm}km
-                                </span>
-                              </div>
-                              <div className="text-[9px] font-medium text-primary whitespace-nowrap mt-0.5">
-                                Framme{" "}
-                                {(() => {
-                                  const arr = new Date(
-                                    new Date(departureTime).getTime() + alt.travelTimeSeconds * 1000,
-                                  );
-                                  return arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
-                                })()}
-                              </div>
+                              {Math.floor(alt.travelTimeSeconds / 3600)}h {Math.round((alt.travelTimeSeconds % 3600) / 60)}min
+                              {diffMin > 0 && <span className="text-destructive ml-1">+{diffMin}</span>}
                             </button>
                           );
                         })}
@@ -1891,123 +1855,99 @@ export default function RoutePlanning() {
                     </div>
                   )}
 
-                  {/* Tab bar */}
-                  <div className="flex border-b border-border">
-                    {[
-                      { key: "overview" as const, label: "Översikt", icon: "📊" },
-                      { key: "streetview" as const, label: "Gatuvy", icon: "👁️" },
-                      { key: "resplan" as const, label: "Resplan", icon: "📋" },
-                    ].map((tab) => (
-                      <button
-                        key={tab.key}
-                        onClick={() => {
-                          setBottomSheetTab(tab.key);
-                          if (tab.key === "resplan") {
-                            setShowDetails(true);
-                          }
-                        }}
-                        className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 ${
-                          bottomSheetTab === tab.key
-                            ? "border-primary text-primary"
-                            : "border-transparent text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        <span>{tab.icon}</span>
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* TAB: Översikt */}
+                  {/* Main content area - Google Maps style */}
                   {bottomSheetTab === "overview" && (
-                    <div className="px-4 py-3">
-                      {/* Stats row */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-muted-foreground">Körtid</span>
-                          <span className="text-sm font-bold text-foreground">
-                            {trips.length > 1
-                              ? `${combinedTimeH}h ${combinedTimeMin}min`
-                              : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
-                          </span>
-                        </div>
-                        <div className="w-px h-4 bg-border" />
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-muted-foreground">Distans</span>
-                          <span className="text-sm font-bold text-foreground">
-                            {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
-                          </span>
-                        </div>
-                        <div className="w-px h-4 bg-border" />
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-muted-foreground">Ankomst</span>
-                          <span className="text-sm font-bold text-foreground">
-                            {(() => {
-                              const travelSec =
-                                trips.length > 1
-                                  ? combinedTimeH * 3600 + combinedTimeMin * 60
-                                  : routeResult.travelTimeSeconds;
-                              const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
-                              return arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
-                            })()}
-                          </span>
-                        </div>
+                    <div className="px-5 pb-4">
+                      {/* Big time display */}
+                      <div className="flex items-baseline gap-2 mb-0.5">
+                        <span className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                          {trips.length > 1
+                            ? `${combinedTimeH} h ${combinedTimeMin} min`
+                            : `${totalDriveTimeH} h ${totalDriveTimeMin} min`}
+                        </span>
                       </div>
 
-                      {/* Quick overview cards */}
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        <div className="bg-primary/10 rounded-2xl p-3 text-center">
-                          <div className="text-2xl font-black text-primary">
-                            {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm}
-                          </div>
-                          <div className="text-xs text-muted-foreground font-medium">km</div>
-                        </div>
-                        <div className="bg-primary/10 rounded-2xl p-3 text-center">
-                          <div className="text-2xl font-black text-primary">
-                            {trips.length > 1
-                              ? `${combinedTimeH}:${String(combinedTimeMin).padStart(2, "0")}`
-                              : `${totalDriveTimeH}:${String(totalDriveTimeMin).padStart(2, "0")}`}
-                          </div>
-                          <div className="text-xs text-muted-foreground font-medium">körtid</div>
-                        </div>
-                        <div className="bg-primary/10 rounded-2xl p-3 text-center">
-                          <div className="text-2xl font-black text-primary">{allRestCount}</div>
-                          <div className="text-xs text-muted-foreground font-medium">
-                            {allRestCount === 1 ? "paus" : "pauser"}
-                          </div>
-                        </div>
+                      {/* Subtitle: distance + arrival */}
+                      <div className="text-sm text-muted-foreground mb-4">
+                        {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km · Ankomst{" "}
+                        {(() => {
+                          const travelSec =
+                            trips.length > 1
+                              ? combinedTimeH * 3600 + combinedTimeMin * 60
+                              : routeResult.travelTimeSeconds;
+                          const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
+                          return arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+                        })()}
+                        {allRestCount > 0 && ` · ${allRestCount} ${allRestCount === 1 ? "paus" : "pauser"}`}
                       </div>
 
                       {usedDriveHours > 0 && (
-                        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-3 flex items-center gap-3 mb-3">
-                          <span className="text-2xl">⏱</span>
-                          <div>
-                            <div className="text-sm font-bold text-amber-800 dark:text-amber-300">
-                              {usedDriveHours}h redan körd idag
-                            </div>
-                            <div className="text-xs text-amber-600 dark:text-amber-400">
-                              Resan planeras med {routeType === "fastest" ? 10 - usedDriveHours : 9 - usedDriveHours}h kvar
-                            </div>
-                          </div>
+                        <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 mb-3">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>{usedDriveHours}h redan körd – {routeType === "fastest" ? 10 - usedDriveHours : 9 - usedDriveHours}h kvar</span>
                         </div>
                       )}
 
-                      {/* KÖR button */}
+                      {/* Start button - Google Maps green */}
                       <button
                         onClick={handleStartNavigation}
-                        className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-base flex items-center justify-center gap-2 shadow-md shadow-emerald-600/25 transition-all"
+                        className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-full text-base flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/20 transition-all mb-3"
                       >
                         <Navigation className="h-5 w-5" />
-                        KÖR
+                        Starta
                       </button>
+
+                      {/* Action row - Google Maps style icons */}
+                      <div className="flex items-center justify-around pt-1 border-t border-border">
+                        <button
+                          onClick={() => setBottomSheetTab("streetview")}
+                          className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-accent transition-colors"
+                        >
+                          <Eye className="h-5 w-5 text-primary" />
+                          <span className="text-[10px] font-medium text-muted-foreground">Gatuvy</span>
+                        </button>
+                        <button
+                          onClick={() => setBottomSheetTab("resplan")}
+                          className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-accent transition-colors"
+                        >
+                          <Route className="h-5 w-5 text-primary" />
+                          <span className="text-[10px] font-medium text-muted-foreground">Steg</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleSave();
+                          }}
+                          className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-accent transition-colors"
+                        >
+                          <Save className="h-5 w-5 text-primary" />
+                          <span className="text-[10px] font-medium text-muted-foreground">Spara</span>
+                        </button>
+                        <button
+                          onClick={() => setShowBottomSheet(false)}
+                          className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg hover:bg-accent transition-colors"
+                        >
+                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                          <span className="text-[10px] font-medium text-muted-foreground">Dölj</span>
+                        </button>
+                      </div>
                     </div>
                   )}
 
-                  {/* TAB: Street View */}
+                  {/* Street View tab */}
                   {bottomSheetTab === "streetview" && (
-                    <div className="flex-1 min-h-0">
+                    <div className="flex-1 min-h-0 flex flex-col">
+                      {/* Back header */}
+                      <div className="px-4 py-2.5 flex items-center gap-3 border-b border-border">
+                        <button
+                          onClick={() => setBottomSheetTab("overview")}
+                          className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
+                        >
+                          <ArrowLeft className="h-4 w-4 text-foreground" />
+                        </button>
+                        <span className="text-sm font-semibold text-foreground">Gatuvy – {destination || "Destination"}</span>
+                      </div>
                       {destinationCoords ? (
-                        <div className="h-[50vh]">
+                        <div className="flex-1 min-h-[50vh]">
                           <StreetViewPanorama
                             lat={destinationCoords.lat}
                             lng={destinationCoords.lng}
@@ -2020,21 +1960,37 @@ export default function RoutePlanning() {
                         <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
                           <div className="text-center">
                             <Eye className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                            <p>Ingen destination vald</p>
+                            <p>Ingen gatuvy tillgänglig</p>
                           </div>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* TAB: Resplan */}
+                  {/* Resplan (Steps) tab */}
                   {bottomSheetTab === "resplan" && (
                     <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-                      <div className="px-4 py-2 flex items-center justify-between border-b border-border">
-                        <span className="text-sm font-bold text-foreground">📋 Din körschema</span>
+                      {/* Back header */}
+                      <div className="px-4 py-2.5 flex items-center justify-between border-b border-border">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setBottomSheetTab("overview")}
+                            className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
+                          >
+                            <ArrowLeft className="h-4 w-4 text-foreground" />
+                          </button>
+                          <div>
+                            <div className="text-sm font-semibold text-foreground">Körschema</div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {trips.length > 1
+                                ? `${combinedDistanceKm} km · ${combinedTimeH}h ${combinedTimeMin}min`
+                                : `${routeResult.distanceKm} km · ${totalDriveTimeH}h ${totalDriveTimeMin}min`}
+                            </div>
+                          </div>
+                        </div>
                         <button
                           onClick={() => setFullscreenResplan(!fullscreenResplan)}
-                          className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                          className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
                           title={fullscreenResplan ? 'Minimera' : 'Helskärm'}
                         >
                           {fullscreenResplan ? (
@@ -2044,28 +2000,23 @@ export default function RoutePlanning() {
                           )}
                         </button>
                       </div>
+
                       <div
                         className="overflow-y-auto flex-1"
-                        style={{ maxHeight: fullscreenResplan ? "calc(100vh - 200px)" : "calc(60vh - 100px)" }}
+                        style={{ maxHeight: fullscreenResplan ? "calc(100vh - 120px)" : "calc(65vh - 80px)" }}
                         ref={timelineScrollRef}
                       >
-                        <div className="px-4 py-3 space-y-3">
-                          {/* EU rules */}
-                          <div className="rounded-2xl bg-muted/40 p-3 space-y-1">
-                            <div className="text-xs font-bold text-foreground">ℹ️ Så funkar pauserna</div>
-                            <div className="text-xs text-muted-foreground leading-relaxed">
-                              Efter <span className="font-bold">4,5 timmars körning</span> → 45 min rast
-                              <br />
-                              Max <span className="font-bold">{routeType === "fastest" ? "10" : "9"} timmar</span> körning per dag
-                              <br />
-                              Sedan <span className="font-bold">11 timmars</span> vila (dygnsvila)
+                        <div className="py-2">
+                          {/* EU pause info - compact */}
+                          <div className="mx-4 mb-3 rounded-xl bg-muted/50 px-3 py-2">
+                            <div className="text-[11px] text-muted-foreground leading-relaxed">
+                              <span className="font-semibold text-foreground">Pauser:</span>{" "}
+                              45 min rast efter 4,5h · max {routeType === "fastest" ? "10" : "9"}h/dag · 11h dygnsvila
                             </div>
                           </div>
 
-                          {/* Step by step journey */}
+                          {/* Timeline entries - Google Maps step style */}
                           {displayTrips.map((leg, legIdx) => {
-                            const depTime = new Date(leg.route.departureTime);
-                            const arrTime = new Date(leg.route.arrivalTime);
                             const firstEntry = leg.timeline[0];
                             const lastEntry = leg.timeline[leg.timeline.length - 1];
                             const totalTripMs = lastEntry
@@ -2075,68 +2026,61 @@ export default function RoutePlanning() {
                             const totalTripMin = Math.round((totalTripMs % 3600000) / 60000);
 
                             return (
-                              <div key={leg.id} className="space-y-2">
+                              <div key={leg.id}>
                                 {displayTrips.length > 1 && (
-                                  <div className="flex items-center gap-2 pt-2">
+                                  <div className="flex items-center gap-2 px-4 pt-3 pb-1">
                                     <div
-                                      className="w-3 h-3 rounded-full shrink-0"
+                                      className="w-2.5 h-2.5 rounded-full shrink-0"
                                       style={{ background: LEG_COLORS[legIdx % LEG_COLORS.length] }}
                                     />
-                                    <span className="text-sm font-bold text-foreground">Tur {legIdx + 1}</span>
+                                    <span className="text-xs font-bold text-foreground">Tur {legIdx + 1}</span>
                                   </div>
                                 )}
 
-                                <div className="bg-card rounded-2xl border border-border overflow-hidden">
-                                  {leg.timeline.map((entry, i) => {
-                                    const startT = new Date(entry.startTime);
-                                    const endT = new Date(entry.endTime);
-                                    const timeStr = startT.toLocaleTimeString("sv-SE", {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    });
-                                    const endStr = endT.toLocaleTimeString("sv-SE", {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    });
-                                    const entryDate = startT.toLocaleDateString("sv-SE");
-                                    const prevDate =
-                                      i > 0 ? new Date(leg.timeline[i - 1].startTime).toLocaleDateString("sv-SE") : null;
-                                    const showDayHeader = i === 0 || entryDate !== prevDate;
+                                {leg.timeline.map((entry, i) => {
+                                  const startT = new Date(entry.startTime);
+                                  const endT = new Date(entry.endTime);
+                                  const timeStr = startT.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+                                  const endStr = endT.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+                                  const entryDate = startT.toLocaleDateString("sv-SE");
+                                  const prevDate = i > 0 ? new Date(leg.timeline[i - 1].startTime).toLocaleDateString("sv-SE") : null;
+                                  const showDayHeader = i === 0 || entryDate !== prevDate;
 
-                                    const getSimpleLabel = () => {
-                                      if (entry.type === "drive") {
-                                        const h = Math.floor(entry.durationMinutes / 60);
-                                        const m = entry.durationMinutes % 60;
-                                        return `Kör ${h > 0 ? `${h}h ` : ""}${m}min`;
-                                      }
-                                      if (entry.type === "rest") return "Rast – 45 min";
-                                      if (entry.type === "overnight") return "Sov – 11 timmar";
-                                      if (entry.type === "stop") return `Stopp: ${entry.location || "Mellanstation"}`;
-                                      if (entry.type === "arrival") return `Framme!`;
-                                      return entry.label;
-                                    };
+                                  const getLabel = () => {
+                                    if (entry.type === "drive") {
+                                      const h = Math.floor(entry.durationMinutes / 60);
+                                      const m = entry.durationMinutes % 60;
+                                      return `Kör ${h > 0 ? `${h}h ` : ""}${m}min`;
+                                    }
+                                    if (entry.type === "rest") return "Rast – 45 min";
+                                    if (entry.type === "overnight") return "Dygnsvila – 11h";
+                                    if (entry.type === "stop") return entry.location || "Mellanstation";
+                                    if (entry.type === "arrival") return "Framme";
+                                    return entry.label;
+                                  };
 
-                                    const getBgColor = () => {
-                                      if (entry.type === "drive") return "";
-                                      if (entry.type === "rest") return "bg-amber-50 dark:bg-amber-950/20";
-                                      if (entry.type === "overnight") return "bg-indigo-50 dark:bg-indigo-950/20";
-                                      if (entry.type === "stop") return "bg-orange-50 dark:bg-orange-950/20";
-                                      if (entry.type === "arrival") return "bg-emerald-50 dark:bg-emerald-950/20";
-                                      return "";
-                                    };
+                                  const getDotColor = () => {
+                                    if (entry.type === "drive") return "bg-primary";
+                                    if (entry.type === "rest") return "bg-amber-400";
+                                    if (entry.type === "overnight") return "bg-indigo-500";
+                                    if (entry.type === "stop") return "bg-orange-400";
+                                    if (entry.type === "arrival") return "bg-emerald-500";
+                                    return "bg-muted-foreground";
+                                  };
 
-                                    const getIcon = () => {
-                                      if (entry.type === "drive") return "🚛";
-                                      if (entry.type === "rest") return "☕";
-                                      if (entry.type === "overnight") return "🛏️";
-                                      if (entry.type === "stop") return "📦";
-                                      if (entry.type === "arrival") return "🏁";
-                                      return "📍";
-                                    };
+                                  const isLast = i === leg.timeline.length - 1;
 
-                                    return (
-                                      <div
-                                        key={`${legIdx}-${i}`}
+                                  return (
+                                    <div key={`${legIdx}-${i}`}>
+                                      {showDayHeader && (
+                                        <div className="px-4 pt-3 pb-1">
+                                          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                                            {startT.toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "short" })}
+                                          </span>
+                                        </div>
+                                      )}
+                                      <button
+                                        onClick={() => handleTimelineEntryClick(entry, i)}
                                         draggable={entry.type === "stop"}
                                         onDragStart={
                                           entry.type === "stop"
@@ -2149,31 +2093,14 @@ export default function RoutePlanning() {
                                               }
                                             : undefined
                                         }
-                                        onDragEnd={
-                                          entry.type === "stop"
-                                            ? () => {
-                                                setDraggingStopIdx(null);
-                                                setDragOverStopIdx(null);
-                                              }
-                                            : undefined
-                                        }
+                                        onDragEnd={entry.type === "stop" ? () => { setDraggingStopIdx(null); setDragOverStopIdx(null); } : undefined}
                                         onDragOver={
                                           entry.type === "stop"
                                             ? (e) => {
                                                 e.preventDefault();
-                                                e.dataTransfer.dropEffect = "move";
                                                 const stopEntries = leg.timeline.filter((t) => t.type === "stop");
                                                 const overIdx = stopEntries.indexOf(entry);
                                                 if (overIdx !== dragOverStopIdx) setDragOverStopIdx(overIdx);
-                                              }
-                                            : undefined
-                                        }
-                                        onDragLeave={
-                                          entry.type === "stop"
-                                            ? () => {
-                                                const stopEntries = leg.timeline.filter((t) => t.type === "stop");
-                                                const overIdx = stopEntries.indexOf(entry);
-                                                if (dragOverStopIdx === overIdx) setDragOverStopIdx(null);
                                               }
                                             : undefined
                                         }
@@ -2186,8 +2113,7 @@ export default function RoutePlanning() {
                                                 const fromStopIdx = Number(data.split(":")[1]);
                                                 const stopEntries = leg.timeline.filter((t) => t.type === "stop");
                                                 const toStopIdx = stopEntries.indexOf(entry);
-                                                setDraggingStopIdx(null);
-                                                setDragOverStopIdx(null);
+                                                setDraggingStopIdx(null); setDragOverStopIdx(null);
                                                 if (fromStopIdx === toStopIdx) return;
                                                 const reordered = [...waypoints];
                                                 const [moved] = reordered.splice(fromStopIdx, 1);
@@ -2197,86 +2123,57 @@ export default function RoutePlanning() {
                                               }
                                             : undefined
                                         }
-                                        className={`transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                                        className={`w-full text-left flex items-start gap-3 px-4 py-2 hover:bg-accent/40 transition-colors ${
                                           entry.type === "stop" ? "cursor-grab active:cursor-grabbing" : ""
-                                        } ${
-                                          (entry.type === "stop" &&
-                                            draggingStopIdx !== null &&
-                                            (() => {
-                                              const stopEntries = leg.timeline.filter((t) => t.type === "stop");
-                                              const thisStopIdx = stopEntries.indexOf(entry);
-                                              if (thisStopIdx === draggingStopIdx)
-                                                return "opacity-10 scale-75 blur-[2px] grayscale";
-                                              if (thisStopIdx === dragOverStopIdx) {
-                                                const isAbove = draggingStopIdx > thisStopIdx;
-                                                return `animate-wobble ring-2 ring-primary bg-primary/15 scale-[1.06] shadow-xl shadow-primary/30 ${isAbove ? "translate-y-3" : "-translate-y-3"} rounded-xl relative z-10`;
-                                              }
-                                              return "opacity-40 scale-[0.97]";
-                                            })()) ||
-                                          ""
                                         }`}
                                       >
-                                        {showDayHeader && (
-                                          <div className="bg-muted/60 px-4 py-2 flex items-center gap-2">
-                                            <span className="text-lg">📅</span>
-                                            <span className="text-sm font-bold text-foreground">
-                                              {startT.toLocaleDateString("sv-SE", {
-                                                weekday: "long",
-                                                day: "numeric",
-                                                month: "long",
-                                              })}
-                                            </span>
+                                        {/* Timeline dot + line */}
+                                        <div className="flex flex-col items-center pt-1.5 shrink-0 w-4">
+                                          <div className={`w-2.5 h-2.5 rounded-full ${getDotColor()} ${entry.type === "arrival" ? "ring-2 ring-emerald-200 dark:ring-emerald-800" : ""}`} />
+                                          {!isLast && <div className="w-px flex-1 min-h-[20px] bg-border mt-1" />}
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0 pb-1">
+                                          <div className="flex items-baseline justify-between gap-2">
+                                            <span className="text-sm font-medium text-foreground">{getLabel()}</span>
+                                            <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{timeStr}</span>
                                           </div>
-                                        )}
-                                        <button
-                                          onClick={() => handleTimelineEntryClick(entry, i)}
-                                          className={`w-full text-left px-4 py-3 flex items-center gap-4 border-b border-border/30 last:border-b-0 hover:bg-accent/30 transition-colors ${getBgColor()}`}
-                                        >
-                                          {entry.type === "stop" && (
-                                            <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                                          {entry.restStop && (
+                                            <div className="text-xs text-primary mt-0.5 flex items-center gap-1">
+                                              <MapPin className="h-3 w-3 shrink-0" />
+                                              <span className="truncate">{entry.restStop.name}</span>
+                                            </div>
                                           )}
-                                          <div className="text-2xl shrink-0 w-10 text-center">{getIcon()}</div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-bold text-foreground">{getSimpleLabel()}</div>
-                                            {entry.restStop && (
-                                              <div className="text-xs text-primary font-medium mt-0.5 flex items-center gap-1">
-                                                <MapPin className="h-3 w-3 shrink-0" />
-                                                <span className="truncate">{entry.restStop.name}</span>
-                                              </div>
-                                            )}
-                                            {entry.restStop?.facilities &&
-                                              Object.values(entry.restStop.facilities).some(Boolean) && (
-                                                <div className="flex items-center gap-1.5 mt-1">
-                                                  <div className="flex gap-1">
-                                                    {entry.restStop.facilities.toilet && <span title="Toalett (uppskattat)">🚻</span>}
-                                                    {entry.restStop.facilities.food && <span title="Mat (uppskattat)">🍽️</span>}
-                                                    {entry.restStop.facilities.shower && <span title="Dusch (uppskattat)">🚿</span>}
-                                                    {entry.restStop.facilities.fuel && <span title="Drivmedel (uppskattat)">⛽</span>}
-                                                    {entry.restStop.facilities.truckParking && <span title="Lastbilsp. (uppskattat)">🅿️</span>}
-                                                  </div>
-                                                  <span className="text-[9px] text-muted-foreground italic">~uppskattat</span>
-                                                </div>
-                                              )}
-                                            {entry.type === "arrival" && (
-                                              <div className="text-xs text-muted-foreground mt-0.5">{entry.location}</div>
-                                            )}
-                                          </div>
-                                          <div className="text-right shrink-0">
-                                            <div className="text-base font-black text-foreground">{timeStr}</div>
-                                            {entry.durationMinutes > 0 && entry.type !== "drive" && (
-                                              <div className="text-[11px] text-muted-foreground">→ {endStr}</div>
-                                            )}
-                                          </div>
-                                        </button>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
+                                          {entry.restStop?.facilities && Object.values(entry.restStop.facilities).some(Boolean) && (
+                                            <div className="flex gap-1 mt-1 text-xs">
+                                              {entry.restStop.facilities.toilet && <span>🚻</span>}
+                                              {entry.restStop.facilities.food && <span>🍽️</span>}
+                                              {entry.restStop.facilities.shower && <span>🚿</span>}
+                                              {entry.restStop.facilities.fuel && <span>⛽</span>}
+                                              {entry.restStop.facilities.truckParking && <span>🅿️</span>}
+                                            </div>
+                                          )}
+                                          {entry.type === "arrival" && entry.location && (
+                                            <div className="text-xs text-muted-foreground mt-0.5">{entry.location}</div>
+                                          )}
+                                          {entry.durationMinutes > 0 && entry.type !== "drive" && (
+                                            <div className="text-[11px] text-muted-foreground mt-0.5">{timeStr} → {endStr}</div>
+                                          )}
+                                        </div>
+
+                                        {entry.type === "stop" && (
+                                          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 mt-1.5" />
+                                        )}
+                                      </button>
+                                    </div>
+                                  );
+                                })}
 
                                 {(totalTripH > 0 || totalTripMin > 0) && (
-                                  <div className="bg-muted/40 rounded-2xl p-3 flex items-center justify-between">
-                                    <span className="text-xs font-semibold text-muted-foreground">Total tid inkl. pauser</span>
-                                    <span className="text-sm font-black text-foreground">{totalTripH}h {totalTripMin}min</span>
+                                  <div className="mx-4 my-2 px-3 py-2 bg-muted/40 rounded-lg flex items-center justify-between">
+                                    <span className="text-[11px] text-muted-foreground">Total inkl. pauser</span>
+                                    <span className="text-xs font-bold text-foreground">{totalTripH}h {totalTripMin}min</span>
                                   </div>
                                 )}
                               </div>
@@ -2284,9 +2181,9 @@ export default function RoutePlanning() {
                           })}
 
                           {displayTrips.length > 1 && (
-                            <div className="bg-primary/10 rounded-2xl p-4 flex items-center justify-between">
-                              <span className="text-sm font-bold text-foreground">🏁 Totalt alla turer</span>
-                              <span className="text-sm font-black text-primary">
+                            <div className="mx-4 my-2 px-3 py-2.5 bg-primary/10 rounded-lg flex items-center justify-between">
+                              <span className="text-xs font-bold text-foreground">Totalt alla turer</span>
+                              <span className="text-xs font-black text-primary">
                                 {combinedDistanceKm} km · {combinedTimeH}h {combinedTimeMin}min
                               </span>
                             </div>
