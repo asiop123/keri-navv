@@ -513,15 +513,35 @@ export default function RoutePlanning() {
       setViewState("details");
       return;
     }
+
+    // Keep destination info as a location card before clearing route
+    if (viewState === "details" && destinationCoords && destination) {
+      setSelectedLocation({
+        type: "arrival",
+        label: "Destination",
+        lat: destinationCoords.lat,
+        lng: destinationCoords.lng,
+        name: destination,
+      });
+      setShowDetails(false);
+      setShowBottomSheet(false);
+    } else {
+      setSelectedLocation(null);
+    }
+
     setViewState("search");
     setRouteResult(null);
     setAlternativeRoutes([]);
     setSelectedRouteIndex(0);
     setTimeline([]);
     setDestination("");
-    setSelectedLocation(null);
     setTrips([]);
     setAddingNewLeg(false);
+
+    // Center on user position
+    if (userPosition) {
+      setTimeout(() => mapHandleRef.current?.centerOnUser(), 200);
+    }
   };
 
   const handleAddLeg = () => {
