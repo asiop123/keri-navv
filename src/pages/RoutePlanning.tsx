@@ -1066,8 +1066,18 @@ export default function RoutePlanning() {
                                   setDestination(place.name);
                                   setDestinationCoords({ lat: place.lat, lng: place.lng });
                                   pendingDestCoordsRef.current = { lat: place.lat, lng: place.lng, name: place.name };
-                                  setSearchStep("filters");
+                                  setDestinationPreview({
+                                    name: place.name,
+                                    address: place.name,
+                                    lat: place.lat,
+                                    lng: place.lng,
+                                  });
+                                  setViewState("preview");
+                                  setSearchStep(null);
                                   setSearchFocused(false);
+                                  setTimeout(() => {
+                                    mapHandleRef.current?.flyToLocation(place.lng, place.lat, 16);
+                                  }, 100);
                                 }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 text-left"
                               >
