@@ -414,7 +414,28 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     // Draw route and markers
     useEffect(() => {
       const map = mapInstance.current;
-      if (!map || !route) return;
+      if (!map) return;
+
+      // If route is cleared, remove all route layers/markers
+      if (!route) {
+        routeMarkersRef.current.forEach(m => m.remove());
+        routeMarkersRef.current = [];
+        const layersToRemove = ['route-line', 'route-line-bg'];
+        const sourcesToRemove = ['route'];
+        for (let i = 0; i < 5; i++) {
+          layersToRemove.push(`alt-route-line-${i}`, `alt-route-line-bg-${i}`);
+          sourcesToRemove.push(`alt-route-${i}`);
+        }
+        for (let i = 0; i < 10; i++) {
+          layersToRemove.push(`prev-leg-line-${i}`, `prev-leg-line-bg-${i}`);
+          sourcesToRemove.push(`prev-leg-${i}`);
+        }
+        try {
+          layersToRemove.forEach(l => { if (map.getLayer(l)) map.removeLayer(l); });
+          sourcesToRemove.forEach(s => { if (map.getSource(s)) map.removeSource(s); });
+        } catch {}
+        return;
+      }
 
       const draw = () => addRouteToMap(map, route, timeline, alternativeRoutes, previousLegs);
 
