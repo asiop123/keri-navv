@@ -114,6 +114,14 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         style: initStyle?.style,
       });
 
+      const resizeMap = () => map.resize();
+      const containerResizeObserver = new ResizeObserver(() => resizeMap());
+      containerResizeObserver.observe(mapRef.current);
+      window.addEventListener('resize', resizeMap);
+
+      map.on('load', () => resizeMap());
+      requestAnimationFrame(() => resizeMap());
+
       map.on('dblclick', (e: any) => {
         e.preventDefault();
         if (onMapClickRef.current) {
@@ -142,6 +150,8 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       mapInstance.current = map;
 
       return () => {
+        containerResizeObserver.disconnect();
+        window.removeEventListener('resize', resizeMap);
         map.remove();
         mapInstance.current = null;
       };
