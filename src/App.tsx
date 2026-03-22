@@ -33,7 +33,7 @@ function AppRoutes() {
       <Route path="*" element={
         <AppLayout>
           <Routes>
-            <Route path="/" element={role === 'chef' ? <ChefDashboard /> : <ChauffeurMyDay />} />
+            <Route path="/" element={<RoutePlanning />} />
             <Route path="/fordon" element={<Vehicles />} />
             <Route path="/fordon/ny" element={<AddVehicle />} />
             <Route path="/fordon/:id" element={<VehicleDetail />} />
