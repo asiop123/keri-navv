@@ -861,6 +861,21 @@ export default function RoutePlanning() {
                                 lng: suggestion.lng,
                                 name: suggestion.name,
                               };
+                              // Enter preview mode: zoom to destination
+                              setDestinationPreview({
+                                name: suggestion.name,
+                                address: suggestion.address || suggestion.name,
+                                lat: suggestion.lat,
+                                lng: suggestion.lng,
+                              });
+                              setViewState("preview");
+                              setSearchStep(null);
+                              setSearchFocused(false);
+                              // Zoom to destination
+                              setTimeout(() => {
+                                mapHandleRef.current?.flyToLocation(suggestion.lng, suggestion.lat, 16);
+                              }, 100);
+                              return;
                             }
                             setSearchStep("filters");
                             setSearchFocused(false);
