@@ -716,8 +716,8 @@ export default function RoutePlanning() {
   };
 
   return (
-    <div className="relative -m-4 md:-m-6" style={{ height: "calc(100vh - 3.5rem)", width: "calc(100% + 2rem)", maxWidth: "none" }}>
-      <style>{`@media (min-width: 768px) { .route-map-container { width: calc(100% + 3rem) !important; } }`}</style>
+    <div className="absolute inset-0 -m-4 md:-m-6" style={{ width: "calc(100% + 2rem)", height: "calc(100% + 2rem)" }}>
+      <style>{`@media (min-width: 768px) { [data-route-map] { width: calc(100% + 3rem) !important; height: calc(100% + 3rem) !important; } }`}</style>
       {/* Map */}
       <TomTomMap
         ref={mapHandleRef}
