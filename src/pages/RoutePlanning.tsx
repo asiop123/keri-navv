@@ -716,7 +716,8 @@ export default function RoutePlanning() {
   };
 
   return (
-    <div className="relative w-full -m-4 md:-m-6" style={{ height: "calc(100vh - 3.5rem)" }}>
+    <div className="route-planning-wrapper relative -m-4 md:-m-6 overflow-hidden" style={{ height: "calc(100vh - 3.5rem)", width: "calc(100% + 2rem)" }}>
+      <style>{`@media (min-width: 768px) { .route-planning-wrapper { width: calc(100% + 3rem) !important; } }`}</style>
       {/* Map */}
       <TomTomMap
         ref={mapHandleRef}
