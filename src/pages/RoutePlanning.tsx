@@ -879,16 +879,29 @@ export default function RoutePlanning() {
                             if (suggestion.isHistory) {
                               const trip = savedTrips.find((t) => t.id === suggestion.id);
                               if (trip) {
-                                setRouteResult(trip.route);
-                                setTimeline(trip.timeline);
-                                setDestination(trip.endName);
                                 const destWp = trip.route.waypoints[trip.route.waypoints.length - 1];
+                                const previewName = destWp.name || trip.endName;
+                                setDestination(previewName);
                                 setDestinationCoords({ lat: destWp.lat, lng: destWp.lng });
-                                setViewState("details");
-                                setShowBottomSheet(true);
+                                pendingDestCoordsRef.current = {
+                                  lat: destWp.lat,
+                                  lng: destWp.lng,
+                                  name: previewName,
+                                };
+                                setDestinationPreview({
+                                  name: previewName,
+                                  address: previewName,
+                                  lat: destWp.lat,
+                                  lng: destWp.lng,
+                                });
+                                setViewState("preview");
+                                setShowBottomSheet(false);
                                 setShowDetails(false);
                                 setSearchStep(null);
                                 setSearchFocused(false);
+                                setTimeout(() => {
+                                  mapHandleRef.current?.flyToLocation(destWp.lng, destWp.lat, 16);
+                                }, 100);
                                 return;
                               }
                             }
