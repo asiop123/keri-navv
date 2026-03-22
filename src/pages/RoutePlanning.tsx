@@ -1731,7 +1731,14 @@ export default function RoutePlanning() {
                   {/* Resplan toggle */}
                    <div className="px-4 pb-2 flex gap-2">
                     <button
-                      onClick={() => setShowDetails(!showDetails)}
+                      onClick={() => {
+                        if (showDetails) {
+                          setShowDetails(false);
+                          setFullscreenResplan(false);
+                        } else {
+                          setShowDetails(true);
+                        }
+                      }}
                       className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/30 text-sm font-bold text-primary hover:bg-primary/20 transition-colors"
                     >
                       📋 Resplan — din körschema
