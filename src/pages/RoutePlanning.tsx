@@ -1729,20 +1729,33 @@ export default function RoutePlanning() {
                   </div>
 
                   {/* Resplan toggle */}
-                  <div className="px-4 pb-2">
+                   <div className="px-4 pb-2 flex gap-2">
                     <button
                       onClick={() => setShowDetails(!showDetails)}
-                      className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/30 text-sm font-bold text-primary hover:bg-primary/20 transition-colors"
+                      className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/30 text-sm font-bold text-primary hover:bg-primary/20 transition-colors"
                     >
                       📋 Resplan — din körschema
                       {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                     </button>
+                    {showDetails && (
+                      <button
+                        onClick={() => setFullscreenResplan(!fullscreenResplan)}
+                        className="h-11 w-11 flex items-center justify-center rounded-xl bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors shrink-0"
+                        title={fullscreenResplan ? 'Minimera' : 'Helskärm'}
+                      >
+                        {fullscreenResplan ? (
+                          <ChevronDown className="h-5 w-5" />
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                        )}
+                      </button>
+                    )}
                   </div>
 
                   {showDetails && (
                     <div
                       className="overflow-y-auto"
-                      style={{ maxHeight: "calc(75vh - 140px)" }}
+                      style={{ maxHeight: fullscreenResplan ? "calc(100vh - 200px)" : "calc(75vh - 140px)" }}
                       ref={timelineScrollRef}
                     >
                       {/* Big clear summary cards */}
