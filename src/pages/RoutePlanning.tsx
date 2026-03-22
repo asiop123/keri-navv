@@ -84,6 +84,7 @@ export default function RoutePlanning() {
     return now.toISOString().slice(0, 16); // yyyy-MM-ddTHH:mm
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [isZoomedToUser, setIsZoomedToUser] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
