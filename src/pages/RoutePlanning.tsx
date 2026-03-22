@@ -1811,7 +1811,7 @@ export default function RoutePlanning() {
           {/* Bottom sheet - compact by default */}
           {showBottomSheet && (
             <div
-              className={`absolute z-20 transition-all duration-300 ${fullscreenResplan ? 'inset-0' : 'bottom-0 left-0 right-0'}`}
+              className={`absolute z-20 transition-all duration-300 ${fullscreenResplan ? 'inset-0' : 'bottom-4 left-3 right-3'}`}
               onPointerDown={(e) => {
                 if (e.target === e.currentTarget) {
                   if (fullscreenResplan) {
@@ -1824,7 +1824,7 @@ export default function RoutePlanning() {
             >
               <div ref={bottomSheetRef} className={`transition-all duration-300 ${fullscreenResplan ? 'h-full' : 'max-w-lg mx-auto'}`}>
                 <div
-                  className={`bg-card shadow-2xl overflow-hidden transition-all duration-300 ${fullscreenResplan ? 'h-full rounded-none flex flex-col' : `rounded-t-3xl ${bottomSheetTab !== 'overview' ? "max-h-[80vh] flex flex-col" : ""}`}`}
+                  className={`bg-card overflow-hidden transition-all duration-300 ${fullscreenResplan ? 'h-full rounded-none flex flex-col shadow-2xl' : `rounded-2xl shadow-xl ${bottomSheetTab !== 'overview' ? "max-h-[70vh] flex flex-col" : ""}`}`}
                 >
                   {/* Google Maps drag handle */}
                   <div className="flex justify-center pt-3 pb-1 cursor-grab">
