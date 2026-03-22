@@ -1458,7 +1458,7 @@ export default function RoutePlanning() {
             className="absolute inset-0 z-10"
             onClick={() => {
               setViewState("search");
-              setSearchStep(null);
+              setSearchStep("search");
               setDestinationPreview(null);
               setDestination("");
               setDestinationCoords(null);
@@ -1466,6 +1466,9 @@ export default function RoutePlanning() {
               if (previewMarkerRef.current) {
                 previewMarkerRef.current.remove();
                 previewMarkerRef.current = null;
+              }
+              if (userPosition) {
+                setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12), 100);
               }
             }}
           />
@@ -1475,7 +1478,7 @@ export default function RoutePlanning() {
             <button
               onClick={() => {
                 setViewState("search");
-                setSearchStep(null);
+                setSearchStep("search");
                 setDestinationPreview(null);
                 setDestination("");
                 setDestinationCoords(null);
@@ -1483,6 +1486,9 @@ export default function RoutePlanning() {
                 if (previewMarkerRef.current) {
                   previewMarkerRef.current.remove();
                   previewMarkerRef.current = null;
+                }
+                if (userPosition) {
+                  setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12), 100);
                 }
               }}
               className="p-2.5 bg-card/90 backdrop-blur-lg rounded-full shadow-lg border border-border/50 hover:bg-card transition-all"
