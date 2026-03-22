@@ -1824,11 +1824,16 @@ export default function RoutePlanning() {
             >
               <div ref={bottomSheetRef} className={`transition-all duration-300 ${fullscreenResplan ? 'h-full' : 'max-w-3xl mx-auto'}`}>
                 <div
-                  className={`bg-card shadow-xl border border-border overflow-hidden transition-all duration-300 ${fullscreenResplan ? 'h-full rounded-none border-0' : `rounded-t-2xl border-b-0 ${showDetails ? "max-h-[75vh]" : ""}`}`}
+                  className={`bg-card shadow-xl border border-border overflow-hidden transition-all duration-300 ${fullscreenResplan ? 'h-full rounded-none border-0 flex flex-col' : `rounded-t-2xl border-b-0 ${bottomSheetTab === 'resplan' || bottomSheetTab === 'streetview' ? "max-h-[75vh] flex flex-col" : ""}`}`}
                 >
-                  {/* Route alternatives - horizontal scroll, always visible */}
+                  {/* Drag handle */}
+                  <div className="flex justify-center pt-2 pb-1">
+                    <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                  </div>
+
+                  {/* Route alternatives - horizontal scroll */}
                   {alternativeRoutes.length > 0 && (
-                    <div className="px-3 pt-3 pb-1">
+                    <div className="px-3 pb-1">
                       <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
                         <button className="shrink-0 rounded-lg px-2.5 py-1.5 text-left border-2 border-primary bg-primary/10 min-w-[80px]">
                           <div className="text-[11px] font-semibold text-foreground">Rutt 1</div>
@@ -1886,396 +1891,406 @@ export default function RoutePlanning() {
                     </div>
                   )}
 
-                  {/* Route stats + KÖR + Resplan in one compact row-based layout */}
-                  <div className="px-4 py-2 flex items-center gap-4">
-                    {/* Stats */}
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-muted-foreground">Körtid</span>
-                        <span className="text-sm font-bold text-foreground">
-                          {trips.length > 1
-                            ? `${combinedTimeH}h ${combinedTimeMin}min`
-                            : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
-                        </span>
-                      </div>
-                      <div className="w-px h-4 bg-border" />
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-muted-foreground">Distans</span>
-                        <span className="text-sm font-bold text-foreground">
-                          {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
-                        </span>
-                      </div>
-                      <div className="w-px h-4 bg-border" />
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-muted-foreground">Ankomst</span>
-                        <span className="text-sm font-bold text-foreground">
-                          {(() => {
-                            const travelSec =
-                              trips.length > 1
-                                ? combinedTimeH * 3600 + combinedTimeMin * 60
-                                : routeResult.travelTimeSeconds;
-                            const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
-                            return arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
-                          })()}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* KÖR button */}
-                    <button
-                      onClick={handleStartNavigation}
-                      className="shrink-0 h-10 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-base flex items-center gap-2 shadow-md shadow-emerald-600/25 transition-all"
-                    >
-                      <Navigation className="h-5 w-5" />
-                      KÖR
-                    </button>
-                  </div>
-
-                  {/* Resplan toggle */}
-                   <div className="px-4 pb-2 flex gap-2">
-                    <button
-                      onClick={() => {
-                        if (showDetails) {
-                          setShowDetails(false);
-                          setFullscreenResplan(false);
-                        } else {
-                          setShowDetails(true);
-                        }
-                      }}
-                      className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/30 text-sm font-bold text-primary hover:bg-primary/20 transition-colors"
-                    >
-                      📋 Resplan — din körschema
-                      {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                    </button>
-                    {showDetails && (
+                  {/* Tab bar */}
+                  <div className="flex border-b border-border">
+                    {[
+                      { key: "overview" as const, label: "Översikt", icon: "📊" },
+                      { key: "streetview" as const, label: "Gatuvy", icon: "👁️" },
+                      { key: "resplan" as const, label: "Resplan", icon: "📋" },
+                    ].map((tab) => (
                       <button
-                        onClick={() => setFullscreenResplan(!fullscreenResplan)}
-                        className="h-11 w-11 flex items-center justify-center rounded-xl bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors shrink-0"
-                        title={fullscreenResplan ? 'Minimera' : 'Helskärm'}
+                        key={tab.key}
+                        onClick={() => {
+                          setBottomSheetTab(tab.key);
+                          if (tab.key === "resplan") {
+                            setShowDetails(true);
+                          }
+                        }}
+                        className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 ${
+                          bottomSheetTab === tab.key
+                            ? "border-primary text-primary"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                        }`}
                       >
-                        {fullscreenResplan ? (
-                          <ChevronDown className="h-5 w-5" />
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-                        )}
+                        <span>{tab.icon}</span>
+                        {tab.label}
                       </button>
-                    )}
+                    ))}
                   </div>
 
-                  {showDetails && (
-                    <div
-                      className="overflow-y-auto"
-                      style={{ maxHeight: fullscreenResplan ? "calc(100vh - 200px)" : "calc(75vh - 140px)" }}
-                      ref={timelineScrollRef}
-                    >
-                      {/* Big clear summary cards */}
-                      <div className="px-4 py-3 space-y-3">
-                        {/* Quick overview - big numbers */}
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="bg-primary/10 rounded-2xl p-3 text-center">
-                            <div className="text-2xl font-black text-primary">
-                              {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm}
-                            </div>
-                            <div className="text-xs text-muted-foreground font-medium">km</div>
+                  {/* TAB: Översikt */}
+                  {bottomSheetTab === "overview" && (
+                    <div className="px-4 py-3">
+                      {/* Stats row */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground">Körtid</span>
+                          <span className="text-sm font-bold text-foreground">
+                            {trips.length > 1
+                              ? `${combinedTimeH}h ${combinedTimeMin}min`
+                              : `${totalDriveTimeH}h ${totalDriveTimeMin}min`}
+                          </span>
+                        </div>
+                        <div className="w-px h-4 bg-border" />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground">Distans</span>
+                          <span className="text-sm font-bold text-foreground">
+                            {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm} km
+                          </span>
+                        </div>
+                        <div className="w-px h-4 bg-border" />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground">Ankomst</span>
+                          <span className="text-sm font-bold text-foreground">
+                            {(() => {
+                              const travelSec =
+                                trips.length > 1
+                                  ? combinedTimeH * 3600 + combinedTimeMin * 60
+                                  : routeResult.travelTimeSeconds;
+                              const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
+                              return arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+                            })()}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Quick overview cards */}
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div className="bg-primary/10 rounded-2xl p-3 text-center">
+                          <div className="text-2xl font-black text-primary">
+                            {trips.length > 1 ? combinedDistanceKm : routeResult.distanceKm}
                           </div>
-                          <div className="bg-primary/10 rounded-2xl p-3 text-center">
-                            <div className="text-2xl font-black text-primary">
-                              {trips.length > 1
-                                ? `${combinedTimeH}:${String(combinedTimeMin).padStart(2, "0")}`
-                                : `${totalDriveTimeH}:${String(totalDriveTimeMin).padStart(2, "0")}`}
-                            </div>
-                            <div className="text-xs text-muted-foreground font-medium">körtid</div>
+                          <div className="text-xs text-muted-foreground font-medium">km</div>
+                        </div>
+                        <div className="bg-primary/10 rounded-2xl p-3 text-center">
+                          <div className="text-2xl font-black text-primary">
+                            {trips.length > 1
+                              ? `${combinedTimeH}:${String(combinedTimeMin).padStart(2, "0")}`
+                              : `${totalDriveTimeH}:${String(totalDriveTimeMin).padStart(2, "0")}`}
                           </div>
-                          <div className="bg-primary/10 rounded-2xl p-3 text-center">
-                            <div className="text-2xl font-black text-primary">{allRestCount}</div>
-                            <div className="text-xs text-muted-foreground font-medium">
-                              {allRestCount === 1 ? "paus" : "pauser"}
+                          <div className="text-xs text-muted-foreground font-medium">körtid</div>
+                        </div>
+                        <div className="bg-primary/10 rounded-2xl p-3 text-center">
+                          <div className="text-2xl font-black text-primary">{allRestCount}</div>
+                          <div className="text-xs text-muted-foreground font-medium">
+                            {allRestCount === 1 ? "paus" : "pauser"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {usedDriveHours > 0 && (
+                        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-3 flex items-center gap-3 mb-3">
+                          <span className="text-2xl">⏱</span>
+                          <div>
+                            <div className="text-sm font-bold text-amber-800 dark:text-amber-300">
+                              {usedDriveHours}h redan körd idag
+                            </div>
+                            <div className="text-xs text-amber-600 dark:text-amber-400">
+                              Resan planeras med {routeType === "fastest" ? 10 - usedDriveHours : 9 - usedDriveHours}h kvar
                             </div>
                           </div>
                         </div>
+                      )}
 
-                        {usedDriveHours > 0 && (
-                          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-3 flex items-center gap-3">
-                            <span className="text-2xl">⏱</span>
-                            <div>
-                              <div className="text-sm font-bold text-amber-800 dark:text-amber-300">
-                                {usedDriveHours}h redan körd idag
-                              </div>
-                              <div className="text-xs text-amber-600 dark:text-amber-400">
-                                Resan planeras med {routeType === "fastest" ? 10 - usedDriveHours : 9 - usedDriveHours}h
-                                kvar
-                              </div>
+                      {/* KÖR button */}
+                      <button
+                        onClick={handleStartNavigation}
+                        className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-base flex items-center justify-center gap-2 shadow-md shadow-emerald-600/25 transition-all"
+                      >
+                        <Navigation className="h-5 w-5" />
+                        KÖR
+                      </button>
+                    </div>
+                  )}
+
+                  {/* TAB: Street View */}
+                  {bottomSheetTab === "streetview" && (
+                    <div className="flex-1 min-h-0">
+                      {destinationCoords ? (
+                        <div className="h-[50vh]">
+                          <StreetViewPanorama
+                            lat={destinationCoords.lat}
+                            lng={destinationCoords.lng}
+                            className="w-full h-full"
+                            showExpandButton={true}
+                            label={destination || "Destination"}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
+                          <div className="text-center">
+                            <Eye className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                            <p>Ingen destination vald</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* TAB: Resplan */}
+                  {bottomSheetTab === "resplan" && (
+                    <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                      <div className="px-4 py-2 flex items-center justify-between border-b border-border">
+                        <span className="text-sm font-bold text-foreground">📋 Din körschema</span>
+                        <button
+                          onClick={() => setFullscreenResplan(!fullscreenResplan)}
+                          className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                          title={fullscreenResplan ? 'Minimera' : 'Helskärm'}
+                        >
+                          {fullscreenResplan ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                          )}
+                        </button>
+                      </div>
+                      <div
+                        className="overflow-y-auto flex-1"
+                        style={{ maxHeight: fullscreenResplan ? "calc(100vh - 200px)" : "calc(60vh - 100px)" }}
+                        ref={timelineScrollRef}
+                      >
+                        <div className="px-4 py-3 space-y-3">
+                          {/* EU rules */}
+                          <div className="rounded-2xl bg-muted/40 p-3 space-y-1">
+                            <div className="text-xs font-bold text-foreground">ℹ️ Så funkar pauserna</div>
+                            <div className="text-xs text-muted-foreground leading-relaxed">
+                              Efter <span className="font-bold">4,5 timmars körning</span> → 45 min rast
+                              <br />
+                              Max <span className="font-bold">{routeType === "fastest" ? "10" : "9"} timmar</span> körning per dag
+                              <br />
+                              Sedan <span className="font-bold">11 timmars</span> vila (dygnsvila)
                             </div>
                           </div>
-                        )}
 
-                        {/* Step by step - visual journey */}
-                        {displayTrips.map((leg, legIdx) => {
-                          const depTime = new Date(leg.route.departureTime);
-                          const arrTime = new Date(leg.route.arrivalTime);
-                          const firstEntry = leg.timeline[0];
-                          const lastEntry = leg.timeline[leg.timeline.length - 1];
-                          const totalTripMs = lastEntry
-                            ? new Date(lastEntry.endTime).getTime() - new Date(firstEntry.startTime).getTime()
-                            : 0;
-                          const totalTripH = Math.floor(totalTripMs / 3600000);
-                          const totalTripMin = Math.round((totalTripMs % 3600000) / 60000);
+                          {/* Step by step journey */}
+                          {displayTrips.map((leg, legIdx) => {
+                            const depTime = new Date(leg.route.departureTime);
+                            const arrTime = new Date(leg.route.arrivalTime);
+                            const firstEntry = leg.timeline[0];
+                            const lastEntry = leg.timeline[leg.timeline.length - 1];
+                            const totalTripMs = lastEntry
+                              ? new Date(lastEntry.endTime).getTime() - new Date(firstEntry.startTime).getTime()
+                              : 0;
+                            const totalTripH = Math.floor(totalTripMs / 3600000);
+                            const totalTripMin = Math.round((totalTripMs % 3600000) / 60000);
 
-                          return (
-                            <div key={leg.id} className="space-y-2">
-                              {displayTrips.length > 1 && (
-                                <div className="flex items-center gap-2 pt-2">
-                                  <div
-                                    className="w-3 h-3 rounded-full shrink-0"
-                                    style={{ background: LEG_COLORS[legIdx % LEG_COLORS.length] }}
-                                  />
-                                  <span className="text-sm font-bold text-foreground">Tur {legIdx + 1}</span>
-                                </div>
-                              )}
-
-                              {/* Visual journey steps */}
-                              <div className="bg-card rounded-2xl border border-border overflow-hidden">
-                                {leg.timeline.map((entry, i) => {
-                                  const startT = new Date(entry.startTime);
-                                  const endT = new Date(entry.endTime);
-                                  const timeStr = startT.toLocaleTimeString("sv-SE", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  });
-                                  const endStr = endT.toLocaleTimeString("sv-SE", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  });
-                                  const entryDate = startT.toLocaleDateString("sv-SE");
-                                  const prevDate =
-                                    i > 0 ? new Date(leg.timeline[i - 1].startTime).toLocaleDateString("sv-SE") : null;
-                                  const showDayHeader = i === 0 || entryDate !== prevDate;
-
-                                  // Simplified labels
-                                  const getSimpleLabel = () => {
-                                    if (entry.type === "drive") {
-                                      const h = Math.floor(entry.durationMinutes / 60);
-                                      const m = entry.durationMinutes % 60;
-                                      return `Kör ${h > 0 ? `${h}h ` : ""}${m}min`;
-                                    }
-                                    if (entry.type === "rest") return "Rast – 45 min";
-                                    if (entry.type === "overnight") return "Sov – 11 timmar";
-                                    if (entry.type === "stop") return `Stopp: ${entry.location || "Mellanstation"}`;
-                                    if (entry.type === "arrival") return `Framme!`;
-                                    return entry.label;
-                                  };
-
-                                  const getBgColor = () => {
-                                    if (entry.type === "drive") return "";
-                                    if (entry.type === "rest") return "bg-amber-50 dark:bg-amber-950/20";
-                                    if (entry.type === "overnight") return "bg-indigo-50 dark:bg-indigo-950/20";
-                                    if (entry.type === "stop") return "bg-orange-50 dark:bg-orange-950/20";
-                                    if (entry.type === "arrival") return "bg-emerald-50 dark:bg-emerald-950/20";
-                                    return "";
-                                  };
-
-                                  const getIcon = () => {
-                                    if (entry.type === "drive") return "🚛";
-                                    if (entry.type === "rest") return "☕";
-                                    if (entry.type === "overnight") return "🛏️";
-                                    if (entry.type === "stop") return "📦";
-                                    if (entry.type === "arrival") return "🏁";
-                                    return "📍";
-                                  };
-
-                                  return (
+                            return (
+                              <div key={leg.id} className="space-y-2">
+                                {displayTrips.length > 1 && (
+                                  <div className="flex items-center gap-2 pt-2">
                                     <div
-                                      key={`${legIdx}-${i}`}
-                                      draggable={entry.type === "stop"}
-                                      onDragStart={
-                                        entry.type === "stop"
-                                          ? (e) => {
+                                      className="w-3 h-3 rounded-full shrink-0"
+                                      style={{ background: LEG_COLORS[legIdx % LEG_COLORS.length] }}
+                                    />
+                                    <span className="text-sm font-bold text-foreground">Tur {legIdx + 1}</span>
+                                  </div>
+                                )}
+
+                                <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                                  {leg.timeline.map((entry, i) => {
+                                    const startT = new Date(entry.startTime);
+                                    const endT = new Date(entry.endTime);
+                                    const timeStr = startT.toLocaleTimeString("sv-SE", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    });
+                                    const endStr = endT.toLocaleTimeString("sv-SE", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    });
+                                    const entryDate = startT.toLocaleDateString("sv-SE");
+                                    const prevDate =
+                                      i > 0 ? new Date(leg.timeline[i - 1].startTime).toLocaleDateString("sv-SE") : null;
+                                    const showDayHeader = i === 0 || entryDate !== prevDate;
+
+                                    const getSimpleLabel = () => {
+                                      if (entry.type === "drive") {
+                                        const h = Math.floor(entry.durationMinutes / 60);
+                                        const m = entry.durationMinutes % 60;
+                                        return `Kör ${h > 0 ? `${h}h ` : ""}${m}min`;
+                                      }
+                                      if (entry.type === "rest") return "Rast – 45 min";
+                                      if (entry.type === "overnight") return "Sov – 11 timmar";
+                                      if (entry.type === "stop") return `Stopp: ${entry.location || "Mellanstation"}`;
+                                      if (entry.type === "arrival") return `Framme!`;
+                                      return entry.label;
+                                    };
+
+                                    const getBgColor = () => {
+                                      if (entry.type === "drive") return "";
+                                      if (entry.type === "rest") return "bg-amber-50 dark:bg-amber-950/20";
+                                      if (entry.type === "overnight") return "bg-indigo-50 dark:bg-indigo-950/20";
+                                      if (entry.type === "stop") return "bg-orange-50 dark:bg-orange-950/20";
+                                      if (entry.type === "arrival") return "bg-emerald-50 dark:bg-emerald-950/20";
+                                      return "";
+                                    };
+
+                                    const getIcon = () => {
+                                      if (entry.type === "drive") return "🚛";
+                                      if (entry.type === "rest") return "☕";
+                                      if (entry.type === "overnight") return "🛏️";
+                                      if (entry.type === "stop") return "📦";
+                                      if (entry.type === "arrival") return "🏁";
+                                      return "📍";
+                                    };
+
+                                    return (
+                                      <div
+                                        key={`${legIdx}-${i}`}
+                                        draggable={entry.type === "stop"}
+                                        onDragStart={
+                                          entry.type === "stop"
+                                            ? (e) => {
+                                                const stopEntries = leg.timeline.filter((t) => t.type === "stop");
+                                                const stopIdx = stopEntries.indexOf(entry);
+                                                e.dataTransfer.effectAllowed = "move";
+                                                e.dataTransfer.setData("text/plain", `stop:${stopIdx}`);
+                                                setDraggingStopIdx(stopIdx);
+                                              }
+                                            : undefined
+                                        }
+                                        onDragEnd={
+                                          entry.type === "stop"
+                                            ? () => {
+                                                setDraggingStopIdx(null);
+                                                setDragOverStopIdx(null);
+                                              }
+                                            : undefined
+                                        }
+                                        onDragOver={
+                                          entry.type === "stop"
+                                            ? (e) => {
+                                                e.preventDefault();
+                                                e.dataTransfer.dropEffect = "move";
+                                                const stopEntries = leg.timeline.filter((t) => t.type === "stop");
+                                                const overIdx = stopEntries.indexOf(entry);
+                                                if (overIdx !== dragOverStopIdx) setDragOverStopIdx(overIdx);
+                                              }
+                                            : undefined
+                                        }
+                                        onDragLeave={
+                                          entry.type === "stop"
+                                            ? () => {
+                                                const stopEntries = leg.timeline.filter((t) => t.type === "stop");
+                                                const overIdx = stopEntries.indexOf(entry);
+                                                if (dragOverStopIdx === overIdx) setDragOverStopIdx(null);
+                                              }
+                                            : undefined
+                                        }
+                                        onDrop={
+                                          entry.type === "stop"
+                                            ? (e) => {
+                                                e.preventDefault();
+                                                const data = e.dataTransfer.getData("text/plain");
+                                                if (!data.startsWith("stop:")) return;
+                                                const fromStopIdx = Number(data.split(":")[1]);
+                                                const stopEntries = leg.timeline.filter((t) => t.type === "stop");
+                                                const toStopIdx = stopEntries.indexOf(entry);
+                                                setDraggingStopIdx(null);
+                                                setDragOverStopIdx(null);
+                                                if (fromStopIdx === toStopIdx) return;
+                                                const reordered = [...waypoints];
+                                                const [moved] = reordered.splice(fromStopIdx, 1);
+                                                reordered.splice(toStopIdx, 0, moved);
+                                                setWaypoints(reordered);
+                                                setTimeout(() => handleSearch(), 100);
+                                              }
+                                            : undefined
+                                        }
+                                        className={`transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                                          entry.type === "stop" ? "cursor-grab active:cursor-grabbing" : ""
+                                        } ${
+                                          (entry.type === "stop" &&
+                                            draggingStopIdx !== null &&
+                                            (() => {
                                               const stopEntries = leg.timeline.filter((t) => t.type === "stop");
-                                              const stopIdx = stopEntries.indexOf(entry);
-                                              e.dataTransfer.effectAllowed = "move";
-                                              e.dataTransfer.setData("text/plain", `stop:${stopIdx}`);
-                                              setDraggingStopIdx(stopIdx);
-                                            }
-                                          : undefined
-                                      }
-                                      onDragEnd={
-                                        entry.type === "stop"
-                                          ? () => {
-                                              setDraggingStopIdx(null);
-                                              setDragOverStopIdx(null);
-                                            }
-                                          : undefined
-                                      }
-                                      onDragOver={
-                                        entry.type === "stop"
-                                          ? (e) => {
-                                              e.preventDefault();
-                                              e.dataTransfer.dropEffect = "move";
-                                              const stopEntries = leg.timeline.filter((t) => t.type === "stop");
-                                              const overIdx = stopEntries.indexOf(entry);
-                                              if (overIdx !== dragOverStopIdx) setDragOverStopIdx(overIdx);
-                                            }
-                                          : undefined
-                                      }
-                                      onDragLeave={
-                                        entry.type === "stop"
-                                          ? () => {
-                                              const stopEntries = leg.timeline.filter((t) => t.type === "stop");
-                                              const overIdx = stopEntries.indexOf(entry);
-                                              if (dragOverStopIdx === overIdx) setDragOverStopIdx(null);
-                                            }
-                                          : undefined
-                                      }
-                                      onDrop={
-                                        entry.type === "stop"
-                                          ? (e) => {
-                                              e.preventDefault();
-                                              const data = e.dataTransfer.getData("text/plain");
-                                              if (!data.startsWith("stop:")) return;
-                                              const fromStopIdx = Number(data.split(":")[1]);
-                                              const stopEntries = leg.timeline.filter((t) => t.type === "stop");
-                                              const toStopIdx = stopEntries.indexOf(entry);
-                                              setDraggingStopIdx(null);
-                                              setDragOverStopIdx(null);
-                                              if (fromStopIdx === toStopIdx) return;
-                                              const reordered = [...waypoints];
-                                              const [moved] = reordered.splice(fromStopIdx, 1);
-                                              reordered.splice(toStopIdx, 0, moved);
-                                              setWaypoints(reordered);
-                                              setTimeout(() => handleSearch(), 100);
-                                            }
-                                          : undefined
-                                      }
-                                      className={`transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-                                        entry.type === "stop" ? "cursor-grab active:cursor-grabbing" : ""
-                                      } ${
-                                        (entry.type === "stop" &&
-                                          draggingStopIdx !== null &&
-                                          (() => {
-                                            const stopEntries = leg.timeline.filter((t) => t.type === "stop");
-                                            const thisStopIdx = stopEntries.indexOf(entry);
-                                            if (thisStopIdx === draggingStopIdx)
-                                              return "opacity-10 scale-75 blur-[2px] grayscale";
-                                            if (thisStopIdx === dragOverStopIdx) {
-                                              const isAbove = draggingStopIdx > thisStopIdx;
-                                              return `animate-wobble ring-2 ring-primary bg-primary/15 scale-[1.06] shadow-xl shadow-primary/30 ${isAbove ? "translate-y-3" : "-translate-y-3"} rounded-xl relative z-10`;
-                                            }
-                                            return "opacity-40 scale-[0.97]";
-                                          })()) ||
-                                        ""
-                                      }`}
-                                    >
-                                      {showDayHeader && (
-                                        <div className="bg-muted/60 px-4 py-2 flex items-center gap-2">
-                                          <span className="text-lg">📅</span>
-                                          <span className="text-sm font-bold text-foreground">
-                                            {startT.toLocaleDateString("sv-SE", {
-                                              weekday: "long",
-                                              day: "numeric",
-                                              month: "long",
-                                            })}
-                                          </span>
-                                        </div>
-                                      )}
-                                      <button
-                                        onClick={() => handleTimelineEntryClick(entry, i)}
-                                        className={`w-full text-left px-4 py-3 flex items-center gap-4 border-b border-border/30 last:border-b-0 hover:bg-accent/30 transition-colors ${getBgColor()}`}
+                                              const thisStopIdx = stopEntries.indexOf(entry);
+                                              if (thisStopIdx === draggingStopIdx)
+                                                return "opacity-10 scale-75 blur-[2px] grayscale";
+                                              if (thisStopIdx === dragOverStopIdx) {
+                                                const isAbove = draggingStopIdx > thisStopIdx;
+                                                return `animate-wobble ring-2 ring-primary bg-primary/15 scale-[1.06] shadow-xl shadow-primary/30 ${isAbove ? "translate-y-3" : "-translate-y-3"} rounded-xl relative z-10`;
+                                              }
+                                              return "opacity-40 scale-[0.97]";
+                                            })()) ||
+                                          ""
+                                        }`}
                                       >
-                                        {/* Drag handle for stops */}
-                                        {entry.type === "stop" && (
-                                          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                                        {showDayHeader && (
+                                          <div className="bg-muted/60 px-4 py-2 flex items-center gap-2">
+                                            <span className="text-lg">📅</span>
+                                            <span className="text-sm font-bold text-foreground">
+                                              {startT.toLocaleDateString("sv-SE", {
+                                                weekday: "long",
+                                                day: "numeric",
+                                                month: "long",
+                                              })}
+                                            </span>
+                                          </div>
                                         )}
-
-                                        {/* Big icon */}
-                                        <div className="text-2xl shrink-0 w-10 text-center">{getIcon()}</div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                          <div className="text-sm font-bold text-foreground">{getSimpleLabel()}</div>
-                                          {entry.restStop && (
-                                            <div className="text-xs text-primary font-medium mt-0.5 flex items-center gap-1">
-                                              <MapPin className="h-3 w-3 shrink-0" />
-                                              <span className="truncate">{entry.restStop.name}</span>
-                                            </div>
+                                        <button
+                                          onClick={() => handleTimelineEntryClick(entry, i)}
+                                          className={`w-full text-left px-4 py-3 flex items-center gap-4 border-b border-border/30 last:border-b-0 hover:bg-accent/30 transition-colors ${getBgColor()}`}
+                                        >
+                                          {entry.type === "stop" && (
+                                            <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                                           )}
-                                          {entry.restStop?.facilities &&
-                                            Object.values(entry.restStop.facilities).some(Boolean) && (
-                                              <div className="flex items-center gap-1.5 mt-1">
-                                                <div className="flex gap-1">
-                                                  {entry.restStop.facilities.toilet && (
-                                                    <span title="Toalett (uppskattat)">🚻</span>
-                                                  )}
-                                                  {entry.restStop.facilities.food && (
-                                                    <span title="Mat (uppskattat)">🍽️</span>
-                                                  )}
-                                                  {entry.restStop.facilities.shower && (
-                                                    <span title="Dusch (uppskattat)">🚿</span>
-                                                  )}
-                                                  {entry.restStop.facilities.fuel && (
-                                                    <span title="Drivmedel (uppskattat)">⛽</span>
-                                                  )}
-                                                  {entry.restStop.facilities.truckParking && (
-                                                    <span title="Lastbilsp. (uppskattat)">🅿️</span>
-                                                  )}
-                                                </div>
-                                                <span className="text-[9px] text-muted-foreground italic">
-                                                  ~uppskattat
-                                                </span>
+                                          <div className="text-2xl shrink-0 w-10 text-center">{getIcon()}</div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-bold text-foreground">{getSimpleLabel()}</div>
+                                            {entry.restStop && (
+                                              <div className="text-xs text-primary font-medium mt-0.5 flex items-center gap-1">
+                                                <MapPin className="h-3 w-3 shrink-0" />
+                                                <span className="truncate">{entry.restStop.name}</span>
                                               </div>
                                             )}
-                                          {entry.type === "arrival" && (
-                                            <div className="text-xs text-muted-foreground mt-0.5">{entry.location}</div>
-                                          )}
-                                        </div>
-
-                                        {/* Time on right side - big and clear */}
-                                        <div className="text-right shrink-0">
-                                          <div className="text-base font-black text-foreground">{timeStr}</div>
-                                          {entry.durationMinutes > 0 && entry.type !== "drive" && (
-                                            <div className="text-[11px] text-muted-foreground">→ {endStr}</div>
-                                          )}
-                                        </div>
-                                      </button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-
-                              {/* Total trip time for this leg */}
-                              {(totalTripH > 0 || totalTripMin > 0) && (
-                                <div className="bg-muted/40 rounded-2xl p-3 flex items-center justify-between">
-                                  <span className="text-xs font-semibold text-muted-foreground">
-                                    Total tid inkl. pauser
-                                  </span>
-                                  <span className="text-sm font-black text-foreground">
-                                    {totalTripH}h {totalTripMin}min
-                                  </span>
+                                            {entry.restStop?.facilities &&
+                                              Object.values(entry.restStop.facilities).some(Boolean) && (
+                                                <div className="flex items-center gap-1.5 mt-1">
+                                                  <div className="flex gap-1">
+                                                    {entry.restStop.facilities.toilet && <span title="Toalett (uppskattat)">🚻</span>}
+                                                    {entry.restStop.facilities.food && <span title="Mat (uppskattat)">🍽️</span>}
+                                                    {entry.restStop.facilities.shower && <span title="Dusch (uppskattat)">🚿</span>}
+                                                    {entry.restStop.facilities.fuel && <span title="Drivmedel (uppskattat)">⛽</span>}
+                                                    {entry.restStop.facilities.truckParking && <span title="Lastbilsp. (uppskattat)">🅿️</span>}
+                                                  </div>
+                                                  <span className="text-[9px] text-muted-foreground italic">~uppskattat</span>
+                                                </div>
+                                              )}
+                                            {entry.type === "arrival" && (
+                                              <div className="text-xs text-muted-foreground mt-0.5">{entry.location}</div>
+                                            )}
+                                          </div>
+                                          <div className="text-right shrink-0">
+                                            <div className="text-base font-black text-foreground">{timeStr}</div>
+                                            {entry.durationMinutes > 0 && entry.type !== "drive" && (
+                                              <div className="text-[11px] text-muted-foreground">→ {endStr}</div>
+                                            )}
+                                          </div>
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              )}
+
+                                {(totalTripH > 0 || totalTripMin > 0) && (
+                                  <div className="bg-muted/40 rounded-2xl p-3 flex items-center justify-between">
+                                    <span className="text-xs font-semibold text-muted-foreground">Total tid inkl. pauser</span>
+                                    <span className="text-sm font-black text-foreground">{totalTripH}h {totalTripMin}min</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+
+                          {displayTrips.length > 1 && (
+                            <div className="bg-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                              <span className="text-sm font-bold text-foreground">🏁 Totalt alla turer</span>
+                              <span className="text-sm font-black text-primary">
+                                {combinedDistanceKm} km · {combinedTimeH}h {combinedTimeMin}min
+                              </span>
                             </div>
-                          );
-                        })}
-
-                        {displayTrips.length > 1 && (
-                          <div className="bg-primary/10 rounded-2xl p-4 flex items-center justify-between">
-                            <span className="text-sm font-bold text-foreground">🏁 Totalt alla turer</span>
-                            <span className="text-sm font-black text-primary">
-                              {combinedDistanceKm} km · {combinedTimeH}h {combinedTimeMin}min
-                            </span>
-                          </div>
-                        )}
-
-                        {/* EU rules - simple explanation */}
-                        <div className="rounded-2xl bg-muted/40 p-3 space-y-1">
-                          <div className="text-xs font-bold text-foreground">ℹ️ Så funkar pauserna</div>
-                          <div className="text-xs text-muted-foreground leading-relaxed">
-                            Efter <span className="font-bold">4,5 timmars körning</span> → 45 min rast
-                            <br />
-                            Max <span className="font-bold">{routeType === "fastest" ? "10" : "9"} timmar</span> körning
-                            per dag
-                            <br />
-                            Sedan <span className="font-bold">11 timmars</span> vila (dygnsvila)
-                          </div>
+                          )}
                         </div>
                       </div>
                     </div>
