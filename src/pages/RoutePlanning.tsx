@@ -1399,39 +1399,29 @@ export default function RoutePlanning() {
                     <ArrowLeft className="h-5 w-5 text-foreground" />
                   </button>
 
-                  {/* Swap button */}
-                  <button
-                    onClick={() => {
-                      const tmpStart = start;
-                      const tmpDest = destination;
-                      setStart(tmpDest);
-                      setDestination(tmpStart);
-                    }}
-                    className="shrink-0 self-center p-2 hover:bg-accent rounded-xl transition-colors"
-                    title="Byt position och destination"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m21 16-4 4-4-4" stroke="hsl(var(--primary))" />
-                      <path d="M17 20V4" stroke="hsl(var(--primary))" />
-                      <path d="m3 8 4-4 4 4" stroke="hsl(var(--muted-foreground))" />
-                      <path d="M7 4v16" stroke="hsl(var(--muted-foreground))" />
-                    </svg>
-                  </button>
-
                   {/* Address fields with connecting dots */}
                   <div className="flex-1 min-w-0 flex flex-col gap-1.5 relative">
+                    {/* Connecting line between dots */}
                     <div className="absolute left-[7px] top-[14px] bottom-[14px] w-[2px] bg-border z-0" />
 
+                    {/* Start address */}
                     <button
-                      onClick={() => { setViewState("search"); setSearchStep("search"); }}
+                      onClick={() => {
+                        setViewState("search");
+                        setSearchStep("search");
+                      }}
                       className="flex items-center gap-2.5 bg-muted/60 hover:bg-muted rounded-lg px-3 py-2 transition-colors text-left relative z-10"
                     >
                       <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-emerald-600/30 shrink-0" />
                       <span className="truncate text-sm text-foreground">{start || "Min position"}</span>
                     </button>
 
+                    {/* Destination address */}
                     <button
-                      onClick={() => { setViewState("search"); setSearchStep("search"); }}
+                      onClick={() => {
+                        setViewState("search");
+                        setSearchStep("search");
+                      }}
                       className="flex items-center gap-2.5 bg-muted/60 hover:bg-muted rounded-lg px-3 py-2 transition-colors text-left relative z-10"
                     >
                       <div className="w-3.5 h-3.5 rounded-full bg-destructive border-2 border-destructive/30 shrink-0" />
@@ -1439,13 +1429,35 @@ export default function RoutePlanning() {
                     </button>
                   </div>
 
-                  {/* Navigate button */}
-                  <button
-                    onClick={handleStartNavigation}
-                    className="shrink-0 self-center p-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-colors shadow-md"
-                  >
-                    <Navigation className="h-5 w-5 text-white" />
-                  </button>
+                  {/* Right action buttons */}
+                  <div className="shrink-0 flex flex-col items-center justify-between py-0.5">
+                    {/* Swap button */}
+                    <button
+                      onClick={() => {
+                        const tmpStart = start;
+                        const tmpDest = destination;
+                        setStart(tmpDest);
+                        setDestination(tmpStart);
+                      }}
+                      className="p-2 hover:bg-accent rounded-xl transition-colors"
+                      title="Byt position och destination"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m21 16-4 4-4-4" stroke="hsl(var(--primary))" />
+                        <path d="M17 20V4" stroke="hsl(var(--primary))" />
+                        <path d="m3 8 4-4 4 4" stroke="hsl(var(--muted-foreground))" />
+                        <path d="M7 4v16" stroke="hsl(var(--muted-foreground))" />
+                      </svg>
+                    </button>
+
+                    {/* Navigate button */}
+                    <button
+                      onClick={handleStartNavigation}
+                      className="p-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-colors shadow-md"
+                    >
+                      <Navigation className="h-5 w-5 text-white" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Add stop */}
