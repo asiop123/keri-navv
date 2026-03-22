@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import StreetViewPanorama from "@/components/StreetViewPanorama";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,10 +65,13 @@ const LEG_COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#0891b2"];
 type ViewState = "search" | "details" | "navigating";
 
 export default function RoutePlanning() {
+  const [searchParams] = useSearchParams();
+  const initialView = searchParams.get('view') === 'map' ? 'search' : 'search';
+  const initialSearchStep = searchParams.get('view') === 'map' ? null : 'search';
   const mapHandleRef = useRef<TomTomMapHandle>(null);
   const bottomSheetRef = useRef<HTMLDivElement>(null);
   const locationCardRef = useRef<HTMLDivElement>(null);
-  const [viewState, setViewState] = useState<ViewState>("search");
+  const [viewState, setViewState] = useState<ViewState>(initialView);
   const [destination, setDestination] = useState("");
   const [start, setStart] = useState("");
   const [waypoints, setWaypoints] = useState<{ address: string; stopMinutes: number }[]>([]);
@@ -86,7 +90,7 @@ export default function RoutePlanning() {
   const [showBottomSheet, setShowBottomSheet] = useState(true);
   const [showFilterCurtain, setShowFilterCurtain] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [searchStep, setSearchStep] = useState<"search" | "filters" | null>("search");
+  const [searchStep, setSearchStep] = useState<"search" | "filters" | null>(initialSearchStep as any);
 
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);

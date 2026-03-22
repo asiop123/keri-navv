@@ -78,7 +78,7 @@ export default function ChauffeurMyDay() {
       icon: Navigation,
       color: 'from-emerald-500 to-emerald-600',
       shadowColor: 'shadow-emerald-500/30',
-      onClick: () => navigate('/ruttplanering'),
+      onClick: () => navigate('/ruttplanering?view=map'),
     },
     {
       id: 'lastsäkring',
