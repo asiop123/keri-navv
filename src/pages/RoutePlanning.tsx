@@ -85,6 +85,7 @@ export default function RoutePlanning() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isZoomedToUser, setIsZoomedToUser] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -1337,10 +1338,23 @@ export default function RoutePlanning() {
                 <div className="flex gap-2 px-4 mb-2">
                   {userPosition && (
                     <button
-                      onClick={() => mapHandleRef.current?.centerOnUser()}
-                      className="bg-card shadow-lg rounded-full p-3 hover:bg-accent transition-colors border border-border"
+                      onClick={() => {
+                        if (isZoomedToUser) {
+                          // Zoom out to overview
+                          const map = mapHandleRef.current?.getMap();
+                          if (map) {
+                            (map as any).flyTo({ zoom: 6, duration: 800 });
+                          }
+                          setIsZoomedToUser(false);
+                        } else {
+                          // Zoom in to user position
+                          mapHandleRef.current?.centerOnUser();
+                          setIsZoomedToUser(true);
+                        }
+                      }}
+                      className={`bg-card shadow-lg rounded-full p-3 hover:bg-accent transition-colors border ${isZoomedToUser ? 'border-primary bg-primary/10' : 'border-border'}`}
                     >
-                      <Locate className="h-5 w-5 text-primary" />
+                      <Locate className={`h-5 w-5 ${isZoomedToUser ? 'text-primary' : 'text-muted-foreground'}`} />
                     </button>
                   )}
                 </div>
