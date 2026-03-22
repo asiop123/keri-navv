@@ -912,7 +912,15 @@ export default function RoutePlanning() {
                       </div>
                       {destination ? (
                         <button
-                          onClick={() => setDestination("")}
+                          onClick={() => {
+                            setDestination("");
+                            setRouteResult(null);
+                            setAlternativeRoutes([]);
+                            setSelectedRouteIndex(0);
+                            setTimeline([]);
+                            setTrips([]);
+                            setViewState("search");
+                          }}
                           className="shrink-0 p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
                         >
                           <X className="h-4 w-4" />
