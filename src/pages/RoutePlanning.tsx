@@ -716,7 +716,9 @@ export default function RoutePlanning() {
   };
 
   return (
-    <div className="fixed inset-0 z-0" style={{ left: "var(--sidebar-width, 0px)", top: "3.5rem" }}>
+    <div className="relative -m-4 md:-m-6 overflow-hidden" style={{ height: "calc(100vh - 3.5rem)", width: "calc(100% + 2rem)" }}>
+      <style>{`@media (min-width: 768px) { .route-planning-root { width: calc(100% + 3rem) !important; } }`}</style>
+      <div className="route-planning-root" style={{ position: 'absolute', inset: 0 }}>
       {/* Map */}
       <TomTomMap
         ref={mapHandleRef}
