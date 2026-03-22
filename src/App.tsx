@@ -28,25 +28,29 @@ function AppRoutes() {
   const { role } = useRole();
 
   return (
-    <AppLayout>
-      <Routes>
-        <Route path="/" element={role === 'chef' ? <ChefDashboard /> : <ChauffeurMyDay />} />
-        <Route path="/fordon" element={<Vehicles />} />
-        <Route path="/fordon/ny" element={<AddVehicle />} />
-        <Route path="/fordon/:id" element={<VehicleDetail />} />
-        <Route path="/ruttplanering" element={<RoutePlanning />} />
-        <Route path="/paminnelser" element={<Reminders />} />
-        <Route path="/dokument" element={<Documents />} />
-        <Route path="/uppgifter" element={<Tasks />} />
-        <Route path="/skyltskanning" element={<SignScanning />} />
-        <Route path="/ekonomi" element={<Economy />} />
-        <Route path="/community" element={<Community />} />
-        <Route path="/besiktning" element={<Besiktning />} />
-        <Route path="/lastsäkring" element={<Lastsäkring />} />
-        <Route path="/install" element={<Install />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AppLayout>
+    <Routes>
+      <Route path="/ruttplanering" element={<RoutePlanning />} />
+      <Route path="*" element={
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={role === 'chef' ? <ChefDashboard /> : <ChauffeurMyDay />} />
+            <Route path="/fordon" element={<Vehicles />} />
+            <Route path="/fordon/ny" element={<AddVehicle />} />
+            <Route path="/fordon/:id" element={<VehicleDetail />} />
+            <Route path="/paminnelser" element={<Reminders />} />
+            <Route path="/dokument" element={<Documents />} />
+            <Route path="/uppgifter" element={<Tasks />} />
+            <Route path="/skyltskanning" element={<SignScanning />} />
+            <Route path="/ekonomi" element={<Economy />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/besiktning" element={<Besiktning />} />
+            <Route path="/lastsäkring" element={<Lastsäkring />} />
+            <Route path="/install" element={<Install />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AppLayout>
+      } />
+    </Routes>
   );
 }
 
