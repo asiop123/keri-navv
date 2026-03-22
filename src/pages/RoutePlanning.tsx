@@ -1478,69 +1478,65 @@ export default function RoutePlanning() {
             </button>
           </div>
 
-          {/* Bottom destination card */}
+          {/* Bottom destination card - Google Maps style */}
           <div className="absolute bottom-4 left-3 right-3 z-20 max-w-lg mx-auto">
-            <div className="bg-card/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50 overflow-hidden">
-              {/* Street View image */}
-              <div
-                className="h-36 w-full bg-muted cursor-pointer relative group"
-                onClick={() => setMapClickCoords({ lat: destinationPreview.lat, lng: destinationPreview.lng })}
-              >
-                <img
-                  src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${destinationPreview.lat},${destinationPreview.lng}&key=${GOOGLE_MAPS_KEY}`}
-                  alt={`Street View: ${destinationPreview.name}`}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                  <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
-                </div>
+            <div className="bg-card rounded-2xl shadow-xl overflow-hidden">
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-8 h-1 rounded-full bg-muted-foreground/25" />
               </div>
 
-              {/* Info section */}
-              <div className="p-4">
-                <h3 className="text-base font-bold text-foreground truncate">{destinationPreview.name}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">{destinationPreview.address}</p>
+              <div className="px-5 pb-5">
+                {/* Title row: name + action icons */}
+                <div className="flex items-start justify-between mb-1">
+                  <h2 className="text-xl font-semibold text-foreground leading-tight pr-3 truncate">
+                    {destinationPreview.name}
+                  </h2>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        setViewState("search");
+                        setSearchStep(null);
+                        setDestinationPreview(null);
+                        setDestination("");
+                        setDestinationCoords(null);
+                        pendingDestCoordsRef.current = null;
+                        if (previewMarkerRef.current) {
+                          previewMarkerRef.current.remove();
+                          previewMarkerRef.current = null;
+                        }
+                      }}
+                      className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
+                      title="Stäng"
+                    >
+                      <X className="h-5 w-5 text-foreground" />
+                    </button>
+                  </div>
+                </div>
 
-                {/* Distance & estimated time */}
+                {/* Subtitle: time + distance */}
                 {userPosition && (
-                  <div className="flex items-center gap-3 mt-2.5">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {(() => {
-                        const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
-                        return dist < 1 ? `${Math.round(dist * 1000)} m bort` : `${Math.round(dist)} km bort`;
-                      })()}
-                    </span>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {(() => {
-                        const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
-                        const estMinutes = Math.round(dist / 1.2); // ~72 km/h average
-                        if (estMinutes < 60) return `~${estMinutes} min`;
-                        return `~${Math.floor(estMinutes / 60)}h ${estMinutes % 60}min`;
-                      })()}
-                    </span>
+                  <div className="text-sm text-muted-foreground mb-1">
+                    {(() => {
+                      const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
+                      const estMinutes = Math.round(dist / 1.2);
+                      const timeStr = estMinutes < 60 ? `~${estMinutes} min` : `~${Math.floor(estMinutes / 60)}h ${estMinutes % 60}min`;
+                      return timeStr;
+                    })()}
                   </div>
                 )}
+                <div className="text-sm text-muted-foreground mb-4">
+                  {userPosition
+                    ? (() => {
+                        const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
+                        return dist < 1 ? `${Math.round(dist * 1000)} m` : `${Math.round(dist)} km`;
+                      })()
+                    : destinationPreview.address}
+                </div>
 
-                {/* Action buttons */}
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setViewState("search");
-                      setSearchStep("search");
-                      setDestinationPreview(null);
-                      setDestination("");
-                      setDestinationCoords(null);
-                      pendingDestCoordsRef.current = null;
-                    }}
-                    className="flex-1 rounded-xl"
-                  >
-                    Ändra destination
-                  </Button>
-                  <Button
+                {/* Action buttons - horizontal pills */}
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  <button
                     onClick={() => {
                       setDestination(destinationPreview.name);
                       pendingDestCoordsRef.current = {
@@ -1552,11 +1548,50 @@ export default function RoutePlanning() {
                       setSearchStep("filters");
                       setViewState("search");
                     }}
-                    className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold"
+                    className="shrink-0 h-10 px-5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold rounded-full text-sm flex items-center gap-2 shadow-md transition-all"
                   >
-                    <Navigation className="h-4 w-4 mr-1" />
+                    <Navigation className="h-4 w-4" />
                     Kör hit
-                  </Button>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewState("search");
+                      setSearchStep("search");
+                      setDestinationPreview(null);
+                      setDestination("");
+                      setDestinationCoords(null);
+                      pendingDestCoordsRef.current = null;
+                    }}
+                    className="shrink-0 h-10 px-4 bg-accent hover:bg-accent/80 text-accent-foreground font-medium rounded-full text-sm flex items-center gap-2 transition-colors"
+                  >
+                    <Search className="h-4 w-4" />
+                    Ändra
+                  </button>
+                  <button
+                    onClick={() => handleSave()}
+                    className="shrink-0 h-10 px-4 bg-accent hover:bg-accent/80 text-accent-foreground font-medium rounded-full text-sm flex items-center gap-2 transition-colors"
+                  >
+                    <Bookmark className="h-4 w-4" />
+                    Spara
+                  </button>
+                </div>
+
+                {/* Street View thumbnail */}
+                <div className="mt-4 rounded-xl overflow-hidden">
+                  <div
+                    className="h-36 w-full bg-muted cursor-pointer relative group"
+                    onClick={() => setMapClickCoords({ lat: destinationPreview.lat, lng: destinationPreview.lng })}
+                  >
+                    <img
+                      src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${destinationPreview.lat},${destinationPreview.lng}&key=${GOOGLE_MAPS_KEY}`}
+                      alt={`Street View: ${destinationPreview.name}`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
