@@ -146,6 +146,9 @@ export default function FleetTracker() {
     });
 
     requestAnimationFrame(() => resizeMap());
+    setTimeout(() => resizeMap(), 100);
+    setTimeout(() => resizeMap(), 500);
+    setTimeout(() => resizeMap(), 1500);
 
     // Also handle style reloads
     map.on('styledata', () => {
