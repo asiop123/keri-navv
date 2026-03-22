@@ -1439,14 +1439,36 @@ export default function RoutePlanning() {
       {/* ===== PREVIEW VIEW ===== */}
       {viewState === "preview" && destinationPreview && (
         <>
+          {/* Transparent map click layer to dismiss preview */}
+          <div
+            className="absolute inset-0 z-10"
+            onClick={() => {
+              setViewState("search");
+              setSearchStep(null);
+              setDestinationPreview(null);
+              setDestination("");
+              setDestinationCoords(null);
+              pendingDestCoordsRef.current = null;
+              if (previewMarkerRef.current) {
+                previewMarkerRef.current.remove();
+                previewMarkerRef.current = null;
+              }
+            }}
+          />
+
           {/* Back button */}
           <div className="absolute top-3 left-3 z-20">
             <button
               onClick={() => {
-                // Zoom out and show destination card
-                const map = mapHandleRef.current?.getMap();
-                if (map) {
-                  (map as any).flyTo({ zoom: 6, duration: 800 });
+                setViewState("search");
+                setSearchStep(null);
+                setDestinationPreview(null);
+                setDestination("");
+                setDestinationCoords(null);
+                pendingDestCoordsRef.current = null;
+                if (previewMarkerRef.current) {
+                  previewMarkerRef.current.remove();
+                  previewMarkerRef.current = null;
                 }
               }}
               className="p-2.5 bg-card/90 backdrop-blur-lg rounded-full shadow-lg border border-border/50 hover:bg-card transition-all"
