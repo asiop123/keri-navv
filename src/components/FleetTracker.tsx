@@ -135,9 +135,17 @@ export default function FleetTracker() {
       language: 'sv-SE',
     });
 
+    const resizeMap = () => map.resize();
+    const containerResizeObserver = new ResizeObserver(() => resizeMap());
+    containerResizeObserver.observe(mapRef.current);
+    window.addEventListener('resize', resizeMap);
+
     map.on('load', () => {
+      resizeMap();
       addSatelliteLayer(map);
     });
+
+    requestAnimationFrame(() => resizeMap());
 
     // Also handle style reloads
     map.on('styledata', () => {
@@ -147,7 +155,13 @@ export default function FleetTracker() {
     });
 
     mapInstance.current = map;
-    return () => { map.remove(); mapInstance.current = null; markersRef.current = {}; };
+    return () => {
+      containerResizeObserver.disconnect();
+      window.removeEventListener('resize', resizeMap);
+      map.remove();
+      mapInstance.current = null;
+      markersRef.current = {};
+    };
   }, []);
 
   const addSatelliteLayer = (map: tt.Map) => {
