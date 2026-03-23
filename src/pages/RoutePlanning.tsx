@@ -798,7 +798,7 @@ export default function RoutePlanning() {
               onClick={() => {
                 setMapClickCoords(null);
                 if (userPosition) {
-                  setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12), 100);
+                  setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 8), 100);
                 } else {
                   const map = mapHandleRef.current?.getMap();
                   if (map) setTimeout(() => (map as any).flyTo({ zoom: 6, duration: 800 }), 100);
@@ -1467,7 +1467,7 @@ export default function RoutePlanning() {
             className="absolute inset-0 z-10 cursor-pointer"
             onClick={() => {
               if (userPosition) {
-                mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12);
+                mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 8);
               } else {
                 const map = mapHandleRef.current?.getMap();
                 if (map) (map as any).flyTo({ zoom: 6, duration: 800 });
@@ -1480,7 +1480,7 @@ export default function RoutePlanning() {
             <button
               onClick={() => {
                 if (userPosition) {
-                  mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12);
+                  mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 8);
                 } else {
                   const map = mapHandleRef.current?.getMap();
                   if (map) (map as any).flyTo({ zoom: 6, duration: 800 });
@@ -1520,7 +1520,7 @@ export default function RoutePlanning() {
                           previewMarkerRef.current = null;
                         }
                         if (userPosition) {
-                          setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12), 100);
+                          setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 8), 100);
                         }
                       }}
                       className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
