@@ -31,6 +31,7 @@ import {
   Repeat,
   ArrowUpDown,
   SlidersHorizontal,
+  Truck,
 } from "lucide-react";
 
 const GOOGLE_MAPS_KEY = "AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y";
