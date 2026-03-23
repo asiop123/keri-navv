@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Maximize2, Minimize2, Eye } from 'lucide-react';
+import { Maximize2, Minimize2, Eye, ZoomIn, ZoomOut } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
