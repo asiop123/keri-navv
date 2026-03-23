@@ -31,6 +31,7 @@ import {
   Repeat,
   ArrowUpDown,
   SlidersHorizontal,
+  Truck,
 } from "lucide-react";
 
 const GOOGLE_MAPS_KEY = "AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y";
@@ -1532,7 +1533,8 @@ export default function RoutePlanning() {
 
                 {/* Subtitle: time + distance */}
                 {userPosition && (
-                  <div className="text-sm text-muted-foreground mb-1">
+                  <div className="text-sm text-muted-foreground mb-1 flex items-center gap-1.5">
+                    <Truck className="h-3.5 w-3.5 shrink-0" />
                     {(() => {
                       const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
                       // Estimate road distance (~1.3x haversine) and drive time at ~70 km/h avg
