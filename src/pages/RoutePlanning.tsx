@@ -1550,8 +1550,10 @@ export default function RoutePlanning() {
                       const timeStr = totalMin < 60 ? `~${totalMin} min` : `~${Math.floor(totalMin / 60)}h ${totalMin % 60}min`;
                       const arrival = new Date(Date.now() + totalMin * 60000);
                       const arrivalStr = arrival.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-                      const isNextDay = arrival.getDate() !== new Date().getDate();
-                      return `${timeStr} · Ank. ${arrivalStr}${isNextDay ? ` (+${Math.ceil((arrival.getTime() - Date.now()) / 86400000)}d)` : ''}`;
+                      const arrivalDay = arrival.toLocaleDateString('sv-SE', { weekday: 'short' });
+                      const todayDay = new Date().toLocaleDateString('sv-SE', { weekday: 'short' });
+                      const dayLabel = arrivalDay !== todayDay ? ` ${arrivalDay}` : '';
+                      return `${timeStr} · Ank.${dayLabel} ${arrivalStr}`;
                     })()}
                   </div>
                 )}
