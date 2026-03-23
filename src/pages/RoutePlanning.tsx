@@ -172,7 +172,7 @@ export default function RoutePlanning() {
     getSavedTrips().then(setSavedTrips);
   }, []);
   useEffect(() => {
-    getSearchHistory(15).then(setSearchHistoryEntries);
+    getSearchHistory(40).then(setSearchHistoryEntries);
   }, []);
 
   useEffect(() => {
@@ -896,7 +896,7 @@ export default function RoutePlanning() {
                                 address: suggestion.address || suggestion.name,
                                 lat: suggestion.lat,
                                 lng: suggestion.lng,
-                              }).then(() => getSearchHistory(15).then(setSearchHistoryEntries));
+                              }).then(() => getSearchHistory(40).then(setSearchHistoryEntries));
                             }
                             if (suggestion.isHistory) {
                               const trip = savedTrips.find((t) => t.id === suggestion.id);
