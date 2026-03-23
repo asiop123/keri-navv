@@ -41,8 +41,8 @@ function useGoogleMapsScript() {
   return loaded;
 }
 
-function PanoramaView({ lat, lng, heading = 0, pitch = 5, className = 'w-full h-full' }: {
-  lat: number; lng: number; heading?: number; pitch?: number; className?: string;
+function PanoramaView({ lat, lng, heading = 0, pitch = 5, className = 'w-full h-full', showZoomButtons = false }: {
+  lat: number; lng: number; heading?: number; pitch?: number; className?: string; showZoomButtons?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const panoramaRef = useRef<google.maps.StreetViewPanorama | null>(null);
@@ -70,6 +70,7 @@ function PanoramaView({ lat, lng, heading = 0, pitch = 5, className = 'w-full h-
           linksControl: true,
           panControl: true,
           zoomControl: true,
+          scrollwheel: true,
           enableCloseButton: false,
         });
       } else {
@@ -82,6 +83,12 @@ function PanoramaView({ lat, lng, heading = 0, pitch = 5, className = 'w-full h-
     };
   }, [lat, lng, heading, pitch]);
 
+  const handleZoom = (delta: number) => {
+    if (!panoramaRef.current) return;
+    const current = panoramaRef.current.getZoom() ?? 0;
+    panoramaRef.current.setZoom(Math.max(0, Math.min(5, current + delta)));
+  };
+
   if (noData) {
     return (
       <div className={`${className} flex items-center justify-center bg-muted`}>
@@ -93,7 +100,31 @@ function PanoramaView({ lat, lng, heading = 0, pitch = 5, className = 'w-full h-
     );
   }
 
-  return <div ref={containerRef} className={className} />;
+  return (
+    <div className={`relative ${className}`}>
+      <div ref={containerRef} className="w-full h-full" />
+      {showZoomButtons && (
+        <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-1">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-9 w-9 p-0 bg-background/90 backdrop-blur shadow-lg hover:bg-background"
+            onClick={() => handleZoom(1)}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-9 w-9 p-0 bg-background/90 backdrop-blur shadow-lg hover:bg-background"
+            onClick={() => handleZoom(-1)}
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function StreetViewPanorama({
