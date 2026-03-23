@@ -819,6 +819,7 @@ export default function RoutePlanning() {
             lng={mapClickCoords.lng}
             className="w-full h-full"
             showExpandButton={false}
+            showZoomButtons={true}
           />
         </div>
       )}
