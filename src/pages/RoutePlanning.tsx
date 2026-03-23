@@ -1455,7 +1455,7 @@ export default function RoutePlanning() {
         <>
           {/* Transparent map click layer to dismiss preview */}
           <div
-            className="absolute inset-0 z-10"
+            className="absolute inset-0 z-10 cursor-pointer"
             onClick={() => {
               if (userPosition) {
                 mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12);
