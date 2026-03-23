@@ -1457,18 +1457,11 @@ export default function RoutePlanning() {
           <div
             className="absolute inset-0 z-10"
             onClick={() => {
-              setViewState("search");
-              setSearchStep(null);
-              setDestinationPreview(null);
-              setDestination("");
-              setDestinationCoords(null);
-              pendingDestCoordsRef.current = null;
-              if (previewMarkerRef.current) {
-                previewMarkerRef.current.remove();
-                previewMarkerRef.current = null;
-              }
               if (userPosition) {
-                setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12), 100);
+                mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12);
+              } else {
+                const map = mapHandleRef.current?.getMap();
+                if (map) (map as any).flyTo({ zoom: 6, duration: 800 });
               }
             }}
           />
