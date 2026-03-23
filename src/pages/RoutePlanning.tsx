@@ -1534,8 +1534,20 @@ export default function RoutePlanning() {
                   <div className="text-sm text-muted-foreground mb-1">
                     {(() => {
                       const dist = haversineKm(userPosition.lat, userPosition.lng, destinationPreview.lat, destinationPreview.lng);
-                      const estMinutes = Math.round(dist / 1.2);
-                      const timeStr = estMinutes < 60 ? `~${estMinutes} min` : `~${Math.floor(estMinutes / 60)}h ${estMinutes % 60}min`;
+                      // Estimate road distance (~1.3x haversine) and drive time at ~70 km/h avg
+                      const roadDist = dist * 1.3;
+                      const pureDriveMinutes = Math.round((roadDist / 70) * 60);
+                      // Add EU rest breaks: 45 min rest every 4h20min (4.5h - 10min safety margin)
+                      const maxDriveBlock = 260; // 4h20min in minutes
+                      const restBreakMin = 45;
+                      const numBreaks = Math.floor(pureDriveMinutes / maxDriveBlock);
+                      const totalRestMin = numBreaks * restBreakMin;
+                      // Add overnight rest (11h) if total drive exceeds ~9h
+                      const maxDailyDrive = 540; // 9h in minutes
+                      const overnightMin = 660; // 11h
+                      const overnights = pureDriveMinutes > maxDailyDrive ? Math.floor(pureDriveMinutes / maxDailyDrive) : 0;
+                      const totalMin = pureDriveMinutes + totalRestMin + (overnights * overnightMin);
+                      const timeStr = totalMin < 60 ? `~${totalMin} min` : `~${Math.floor(totalMin / 60)}h ${totalMin % 60}min`;
                       return timeStr;
                     })()}
                   </div>
