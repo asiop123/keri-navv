@@ -129,7 +129,7 @@ function PanoramaView({ lat, lng, heading = 0, pitch = 5, className = 'w-full h-
 }
 
 export default function StreetViewPanorama({
-  lat, lng, heading = 0, pitch = 5, className = 'w-full h-[160px]', label, showExpandButton = true,
+  lat, lng, heading = 0, pitch = 5, className = 'w-full h-[160px]', label, showExpandButton = true, showZoomButtons = false,
 }: StreetViewPanoramaProps) {
   const loaded = useGoogleMapsScript();
   const [expanded, setExpanded] = useState(false);
@@ -145,7 +145,7 @@ export default function StreetViewPanorama({
   return (
     <>
       <div className={`relative ${className} overflow-hidden`}>
-        <PanoramaView lat={lat} lng={lng} heading={heading} pitch={pitch} className="w-full h-full" />
+        <PanoramaView lat={lat} lng={lng} heading={heading} pitch={pitch} className="w-full h-full" showZoomButtons={showZoomButtons} />
         
         {label && (
           <div className="absolute bottom-2 left-2 bg-background/80 backdrop-blur rounded px-2 py-0.5 text-[10px] font-medium flex items-center gap-1 pointer-events-none">
