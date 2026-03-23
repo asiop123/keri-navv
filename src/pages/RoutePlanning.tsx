@@ -1548,7 +1548,10 @@ export default function RoutePlanning() {
                       const overnights = pureDriveMinutes > maxDailyDrive ? Math.floor(pureDriveMinutes / maxDailyDrive) : 0;
                       const totalMin = pureDriveMinutes + totalRestMin + (overnights * overnightMin);
                       const timeStr = totalMin < 60 ? `~${totalMin} min` : `~${Math.floor(totalMin / 60)}h ${totalMin % 60}min`;
-                      return timeStr;
+                      const arrival = new Date(Date.now() + totalMin * 60000);
+                      const arrivalStr = arrival.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                      const isNextDay = arrival.getDate() !== new Date().getDate();
+                      return `${timeStr} · Ank. ${arrivalStr}${isNextDay ? ` (+${Math.ceil((arrival.getTime() - Date.now()) / 86400000)}d)` : ''}`;
                     })()}
                   </div>
                 )}
