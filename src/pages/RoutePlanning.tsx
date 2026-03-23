@@ -1967,11 +1967,13 @@ export default function RoutePlanning() {
                       {/* Subtitle: arrival + distance */}
                       <div className="text-sm text-muted-foreground mb-1">
                         {(() => {
-                          const travelSec =
-                            trips.length > 1
-                              ? combinedTimeH * 3600 + combinedTimeMin * 60
-                              : routeResult.travelTimeSeconds;
-                          const arr = new Date(new Date(departureTime).getTime() + travelSec * 1000);
+                          // Use timeline end time (includes EU rests) for real arrival
+                          const allTimelines = trips.length > 0 ? trips : [{ timeline }];
+                          const lastTl = allTimelines[allTimelines.length - 1]?.timeline;
+                          const lastEntry = lastTl?.[lastTl.length - 1];
+                          const arr = lastEntry
+                            ? new Date(lastEntry.endTime)
+                            : new Date(new Date(departureTime).getTime() + routeResult.travelTimeSeconds * 1000);
                           const dayName = arr.toLocaleDateString("sv-SE", { weekday: "long" });
                           const timeStr = arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
                           return `${dayName} ${timeStr}`;
