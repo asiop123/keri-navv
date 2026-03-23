@@ -794,7 +794,15 @@ export default function RoutePlanning() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setMapClickCoords(null)}
+              onClick={() => {
+                setMapClickCoords(null);
+                if (userPosition) {
+                  setTimeout(() => mapHandleRef.current?.flyToLocation(userPosition.lng, userPosition.lat, 12), 100);
+                } else {
+                  const map = mapHandleRef.current?.getMap();
+                  if (map) setTimeout(() => (map as any).flyTo({ zoom: 6, duration: 800 }), 100);
+                }
+              }}
               className="gap-1.5 bg-background/90 backdrop-blur shadow-lg"
             >
               <ArrowLeft className="h-4 w-4" />
