@@ -211,7 +211,19 @@ export default function RoutePlanning() {
     setSelectedLocation(null);
     setDetailsExpanded(false);
     setShowFilterCurtain(false);
-  }, []);
+
+    // Toggle zoom like the GPS button
+    if (isZoomedToUser) {
+      const map = mapHandleRef.current?.getMap();
+      if (map) {
+        (map as any).flyTo({ zoom: 6, duration: 800 });
+      }
+      setIsZoomedToUser(false);
+    } else if (userPosition) {
+      mapHandleRef.current?.centerOnUser();
+      setIsZoomedToUser(true);
+    }
+  }, [isZoomedToUser, userPosition]);
 
   // Auto-start GPS watch for smooth position
   const gpsInitRef = useRef(false);
