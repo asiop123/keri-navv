@@ -13,6 +13,7 @@ interface StreetViewPanoramaProps {
   className?: string;
   label?: string;
   showExpandButton?: boolean;
+  showZoomButtons?: boolean;
 }
 
 function useGoogleMapsScript() {
