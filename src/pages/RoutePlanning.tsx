@@ -167,6 +167,16 @@ export default function RoutePlanning() {
   const selectedVehicle = vehicleId ? getVehicleById(vehicleId) : undefined;
   const totalWeight = selectedVehicle ? selectedVehicle.weightKg + Number(loadWeight || 0) : 0;
   const [searchHistoryEntries, setSearchHistoryEntries] = useState<SearchHistoryEntry[]>([]);
+  const latestUserPositionRef = useRef<{ lat: number; lng: number } | null>(null);
+  const startValueRef = useRef("");
+
+  useEffect(() => {
+    latestUserPositionRef.current = userPosition;
+  }, [userPosition]);
+
+  useEffect(() => {
+    startValueRef.current = start;
+  }, [start]);
 
   useEffect(() => {
     getSavedTrips().then(setSavedTrips);
@@ -232,36 +242,47 @@ export default function RoutePlanning() {
     gpsInitRef.current = true;
     // First try high-accuracy, then fall back to low-accuracy if it fails
     let highAccuracyFailed = false;
-    const startWatch = (highAccuracy: boolean) => navigator.geolocation.watchPosition(
-      async (pos) => {
-        // Skip positions with very poor accuracy (> 150m) unless it's the only one we have
-        const accuracy = pos.coords.accuracy;
-        if (accuracy > 150 && userPosition) return;
-        
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setUserPosition(coords);
-        if (!start) {
-          try {
-            const name = await reverseGeocode(coords.lat, coords.lng);
-            setStart(name);
-          } catch {
-            setStart("Min position");
+    const watchIds: number[] = [];
+
+    const startWatch = (highAccuracy: boolean) => {
+      const watchId = navigator.geolocation.watchPosition(
+        async (pos) => {
+          // Skip positions with very poor accuracy (> 150m) unless it's the only one we have
+          const accuracy = pos.coords.accuracy;
+          if (accuracy > 150 && latestUserPositionRef.current) return;
+
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserPosition(coords);
+
+          if (!startValueRef.current) {
+            try {
+              const name = await reverseGeocode(coords.lat, coords.lng);
+              setStart(name);
+            } catch {
+              setStart("Min position");
+            }
           }
-        }
-      },
-      (err) => {
-        // If high accuracy fails (TIMEOUT or POSITION_UNAVAILABLE), try low accuracy
-        if (highAccuracy && !highAccuracyFailed) {
-          highAccuracyFailed = true;
-          console.warn('High accuracy GPS failed, falling back to low accuracy');
-          startWatch(false);
-        }
-        if (!start) setStart("");
-      },
-      { enableHighAccuracy: highAccuracy, maximumAge: highAccuracy ? 5000 : 30000, timeout: highAccuracy ? 10000 : 20000 },
-    );
-    const id = startWatch(true);
-    return () => navigator.geolocation.clearWatch(id);
+        },
+        (err) => {
+          // If high accuracy fails (TIMEOUT=3 or POSITION_UNAVAILABLE=2), try low accuracy
+          if (highAccuracy && !highAccuracyFailed && (err.code === 2 || err.code === 3)) {
+            highAccuracyFailed = true;
+            console.warn('High accuracy GPS failed, falling back to low accuracy');
+            startWatch(false);
+          }
+          if (!startValueRef.current) setStart("");
+        },
+        { enableHighAccuracy: highAccuracy, maximumAge: highAccuracy ? 5000 : 30000, timeout: highAccuracy ? 10000 : 20000 }
+      );
+
+      watchIds.push(watchId);
+    };
+
+    startWatch(true);
+
+    return () => {
+      watchIds.forEach((id) => navigator.geolocation.clearWatch(id));
+    };
   }, []);
 
   const haversineKm = useCallback((lat1: number, lon1: number, lat2: number, lon2: number) => {
