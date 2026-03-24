@@ -230,8 +230,14 @@ export default function RoutePlanning() {
   useEffect(() => {
     if (!("geolocation" in navigator) || gpsInitRef.current) return;
     gpsInitRef.current = true;
-    const id = navigator.geolocation.watchPosition(
+    // First try high-accuracy, then fall back to low-accuracy if it fails
+    let highAccuracyFailed = false;
+    const startWatch = (highAccuracy: boolean) => navigator.geolocation.watchPosition(
       async (pos) => {
+        // Skip positions with very poor accuracy (> 150m) unless it's the only one we have
+        const accuracy = pos.coords.accuracy;
+        if (accuracy > 150 && userPosition) return;
+        
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserPosition(coords);
         if (!start) {
@@ -243,11 +249,18 @@ export default function RoutePlanning() {
           }
         }
       },
-      () => {
+      (err) => {
+        // If high accuracy fails (TIMEOUT or POSITION_UNAVAILABLE), try low accuracy
+        if (highAccuracy && !highAccuracyFailed) {
+          highAccuracyFailed = true;
+          console.warn('High accuracy GPS failed, falling back to low accuracy');
+          startWatch(false);
+        }
         if (!start) setStart("");
       },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
+      { enableHighAccuracy: highAccuracy, maximumAge: highAccuracy ? 5000 : 30000, timeout: highAccuracy ? 10000 : 20000 },
     );
+    const id = startWatch(true);
     return () => navigator.geolocation.clearWatch(id);
   }, []);
 
