@@ -29,11 +29,11 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<RoutePlanning />} />
       <Route path="/ruttplanering" element={<RoutePlanning />} />
       <Route path="*" element={
         <AppLayout>
           <Routes>
+            <Route path="/" element={role === 'chef' ? <ChefDashboard /> : <ChauffeurMyDay />} />
             <Route path="/fordon" element={<Vehicles />} />
             <Route path="/fordon/ny" element={<AddVehicle />} />
             <Route path="/fordon/:id" element={<VehicleDetail />} />

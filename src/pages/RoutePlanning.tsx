@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import StreetViewPanorama from "@/components/StreetViewPanorama";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +74,7 @@ interface DestinationPreview {
 
 export default function RoutePlanning() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialView = searchParams.get('view') === 'map' ? 'search' : 'search';
   const initialSearchStep = searchParams.get('view') === 'map' ? null : 'search';
   const mapHandleRef = useRef<TomTomMapHandle>(null);
@@ -1455,15 +1456,22 @@ export default function RoutePlanning() {
             </div>
           )}
 
-          {/* Map search pill (when no step is active) */}
+          {/* Map search pill + back button */}
           {!searchStep && (
-            <div className="absolute top-4 left-4 right-4 z-20 flex justify-center pointer-events-none">
+            <div className="absolute top-4 left-4 right-4 z-20 flex items-center gap-2 pointer-events-none">
+              <button
+                onClick={() => navigate('/')}
+                className="pointer-events-auto p-2.5 bg-card/90 backdrop-blur-lg rounded-full shadow-lg border border-border/50 hover:bg-card transition-all active:scale-[0.97]"
+                aria-label="Tillbaka till startsidan"
+              >
+                <ArrowLeft className="h-4 w-4 text-foreground" />
+              </button>
               <button
                 onClick={() => setSearchStep("search")}
-                className="pointer-events-auto flex items-center gap-2.5 bg-card/90 backdrop-blur-lg rounded-full shadow-lg border border-border/50 px-4 py-2.5 hover:bg-card hover:shadow-xl transition-all active:scale-[0.97]"
+                className="pointer-events-auto flex-1 flex items-center gap-2.5 bg-card/90 backdrop-blur-lg rounded-full shadow-lg border border-border/50 px-4 py-2.5 hover:bg-card hover:shadow-xl transition-all active:scale-[0.97]"
               >
                 <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className={`text-sm ${destination ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                <span className={`text-sm truncate ${destination ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                   {destination || 'Sök destination...'}
                 </span>
               </button>
