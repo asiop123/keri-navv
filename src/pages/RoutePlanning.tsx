@@ -74,6 +74,7 @@ interface DestinationPreview {
 
 export default function RoutePlanning() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialView = searchParams.get('view') === 'map' ? 'search' : 'search';
   const initialSearchStep = searchParams.get('view') === 'map' ? null : 'search';
   const mapHandleRef = useRef<TomTomMapHandle>(null);
