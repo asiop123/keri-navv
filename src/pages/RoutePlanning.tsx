@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import StreetViewPanorama from "@/components/StreetViewPanorama";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
