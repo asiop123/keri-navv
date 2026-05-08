@@ -121,6 +121,7 @@ export function useTurnByTurn(
     exitNumber: current?.exitNumber || '',
     junctionType: current?.junctionType || '',
     roadNumbers: current?.roadNumbers || [],
+    roundaboutExitNumber: current?.roundaboutExitNumber || 0,
     index: safeIdx,
   };
 }
