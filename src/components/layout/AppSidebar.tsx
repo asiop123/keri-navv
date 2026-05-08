@@ -86,19 +86,20 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         {!collapsed && (
           <div className="space-y-3">
-            <div className="text-xs text-sidebar-foreground/60 uppercase tracking-wider flex items-center gap-1">
-              <UserCog className="h-3 w-3" /> Rollväxlare
-            </div>
-            <div className="flex gap-1">
-              <Button size="sm" variant={role === 'chef' ? 'default' : 'ghost'}
-                className={role === 'chef' ? 'flex-1 bg-secondary text-secondary-foreground hover:bg-secondary/90 text-xs font-semibold' : 'flex-1 text-sidebar-foreground/70 hover:text-sidebar-foreground text-xs'}
-                onClick={() => setRole('chef')}>Chef</Button>
-              <Button size="sm" variant={role === 'chauffeur' ? 'default' : 'ghost'}
-                className={role === 'chauffeur' ? 'flex-1 bg-secondary text-secondary-foreground hover:bg-secondary/90 text-xs font-semibold' : 'flex-1 text-sidebar-foreground/70 hover:text-sidebar-foreground text-xs'}
-                onClick={() => setRole('chauffeur')}>Chaufför</Button>
+            <div className="text-xs text-sidebar-foreground/60">
+              {role === 'chef' ? '👔 Chef' : '🚛 Chaufför'}
             </div>
             <div className="text-xs text-sidebar-foreground/50 truncate">{currentUser.name}</div>
+            <Button size="sm" variant="ghost" className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground"
+              onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" /> Logga ut
+            </Button>
           </div>
+        )}
+        {collapsed && (
+          <Button size="icon" variant="ghost" onClick={signOut} title="Logga ut">
+            <LogOut className="h-4 w-4" />
+          </Button>
         )}
       </SidebarFooter>
     </Sidebar>
