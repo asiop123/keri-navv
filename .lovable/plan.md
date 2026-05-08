@@ -1,45 +1,78 @@
-## Problem
+## Mål
 
-Google Maps API-nyckeln (`AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y`) ligger hårdkodad på 5 ställen i koden:
+Bygg en bättre körvy (HUD) med sväng-för-sväng + röst, EU-vilolagsräknare, och ett **demo-läge** så du kan testa allt från skrivbordet utan riktig GPS.
 
-- `src/pages/RoutePlanning.tsx` (Street View)
-- `src/components/AddressAutocomplete.tsx` (Places sökning)
-- `src/components/FleetTracker.tsx` (kartvisning)
-- `src/components/StreetViewPanorama.tsx` (360-vy)
+## 1. Demo-läge (bygger detta först så du kan utvärdera resten)
 
-Det är dåligt för säkerhet (vem som helst som inspekterar koden ser nyckeln) och för underhåll (måste bytas på 5 ställen).
+- Knapp **"▶ Demo-körning"** i bottom-sheet bredvid "Starta körning" när rutt är vald.
+- Simulerar att lastbilen kör längs vald rutt i ~10× hastighet.
+- Skickar fejk-position (interpolerad längs `route.geometry`) till samma state som riktig GPS.
+- HUD, röst, vilolagschip, sväng-instruktioner — allt aktiveras precis som vid riktig körning.
+- Stopp-knapp avslutar demo och nollställer.
 
-TomTom hanteras redan korrekt via en edge function (`tomtom-proxy`) med secret `TOMTOM_API_KEY`. Google Maps saknar samma skydd.
+## 2. Sväng-för-sväng-navigation
 
-## Lösning
+Idag visar HUD:en bara avstånd till nästa stopp. Vi använder inte TomTom:s `guidance.instructions`.
 
-### Steg 1 — Lägg till `GOOGLE_MAPS_API_KEY` som secret
-Be dig spara nyckeln i Lovable Cloud så den inte ligger i kodbasen.
+- Lägg till `instructionsType=text&language=sv-SE` i `calculateRoute`-anropet (i `tomtom-proxy`).
+- Parsa instruktionerna och spara `instructions[]` i route-resultatet.
+- Ny hook `useTurnByTurn(instructions, userPosition)` returnerar `{ next, distanceToNext, maneuverIcon }`.
+- HUD:n byggs om:
+  - **Stor pil-ikon** (← ↑ → enligt `maneuver`)
+  - **"200 m"** i jättestort
+  - "Sväng höger på E4" som undertext
+  - Liten rad nederst: nästa stopp + km kvar
 
-### Steg 2 — Två sätt att använda nyckeln
+## 3. Röststöd (svenska)
 
-**A. Klient‑sidan (Maps JS + Places + Street View widget)**
-Google Maps JS SDK *måste* köras i webbläsaren med en nyckel synlig i nätverksanropen — det går inte att helt dölja. Bästa praxis är istället:
-- Lagra nyckeln som secret
-- En liten edge function `google-maps-key` returnerar nyckeln endast till inloggade användare
-- Frontend hämtar nyckeln en gång vid app‑start och cacheas i minnet
-- Lås nyckeln i Google Cloud Console till din Lovable‑domän + HTTP referrer (rekommendation jag ger dig efteråt)
+- `src/lib/voice.ts` — wrapper kring webbläsarens `speechSynthesis`, sv-SE.
+- Säger sväng-instruktioner vid 500 m, 200 m och vid svängen.
+- Säger vilolagsvarningar ("Du måste ta rast om 30 minuter").
+- Mute-knapp i HUD.
 
-**B. Server‑sidan (Street View statiska bilder)**
-Street View Static API kan proxas helt — nyckeln läcker aldrig:
-- Edge function `streetview-proxy` tar `lat,lng,size` och returnerar bilden
-- `<img src="">` pekar på edge function istället för `maps.googleapis.com`
+## 4. EU-vilolagen — aktiv övervakning
 
-### Steg 3 — Refaktor
-- Ta bort alla hårdkodade `GOOGLE_MAPS_KEY` konstanter
-- Skapa `src/lib/googleMaps.ts` med en `loadGoogleMapsKey()` helper (cacheas)
-- `AddressAutocomplete`, `FleetTracker`, `StreetViewPanorama` använder helpern
-- `RoutePlanning.tsx` använder `streetview-proxy`‑URLen istället
+Idag finns reglerna dokumenterade men appen påminner inte under körning.
 
-### Steg 4 — Efteråt
-Den gamla nyckeln bör roteras i Google Cloud Console (eftersom den exponerats i git‑historiken) och låsas till din lovable‑domän.
+- Ny hook `useDrivingTimer` räknar:
+  - Sammanhängande körtid (max 4h30 utan 45-min rast)
+  - Daglig körtid (max 9h, 2× per vecka 10h)
+  - Tid sedan senaste dygnsvila
+- Chip i HUD: **🟢 3h12 / 4h30** → gul vid 4h00 → röd + röst vid 4h25.
+- Vid 4h25: föreslå närmaste lämpliga rastplats automatiskt (befintlig `findRestStops`).
+- Knapp "☕ Jag tar rast nu" — loggar starttid, räknar ner 45 min, återupptar automatiskt.
 
-## Frågor innan jag bygger
+## 5. Småfix på köpet
 
-1. Har du tillgång till samma Google Cloud‑projekt så du kan rotera nyckeln efteråt? (Rekommenderas men inte blockerande.)
-2. Ska jag göra både A och B, eller bara A (snabbast — räcker för att få bort hårdkodningen)?
+- **Off-route**: Om chauffören är >150 m från rutten i 30 sek → räkna om automatiskt.
+- **Ankomst**: Inom 100 m från waypoint → "Framme vid X — markera som klar?".
+- **GPS-bortfall**: Banner "GPS svag — sista position 2 min sedan".
+
+## Teknisk översikt
+
+```text
+supabase/functions/tomtom-proxy/index.ts
+  + lägg till instructionsType=text&language=sv-SE i calculateRoute
+
+src/services/tomtom.ts
+  + parsa guidance.instructions → typed array
+  + RouteResult får fältet instructions[]
+
+src/hooks/useTurnByTurn.ts        (ny)
+src/hooks/useDrivingTimer.ts      (ny)
+src/hooks/useDemoDriver.ts        (ny — interpolerar fejk-GPS längs rutt)
+src/lib/voice.ts                  (ny)
+
+src/pages/RoutePlanning.tsx
+  - HUD-blocket (rad 2670-2705) byggs om till sväng-pil + avstånd + röst
+  - lägg till "Demo-körning"-knapp i bottom-sheet
+  - off-route + ankomst-detektor
+```
+
+Inga DB-ändringar, inga nya secrets — TomTom-proxy + speechSynthesis räcker.
+
+## Leveransordning
+
+1. **Demo-läge + sväng-för-sväng + röst** (så du kan testa direkt)
+2. **Vilolagsräknare** (i nästa runda när du sett att HUD-en är OK)
+3. **Off-route / ankomst / GPS-banner** (sist, polish)
