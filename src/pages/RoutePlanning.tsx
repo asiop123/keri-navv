@@ -2102,6 +2102,14 @@ export default function RoutePlanning() {
                           Starta
                         </button>
                         <button
+                          onClick={handleStartDemo}
+                          title="Simulera körning för att förhandsvisa HUD, sväng-instruktioner och röst"
+                          className="shrink-0 h-10 px-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 font-semibold rounded-full text-sm flex items-center gap-2 shadow-md transition-all"
+                        >
+                          <PlayCircle className="h-4 w-4" />
+                          Demo
+                        </button>
+                        <button
                           onClick={() => setBottomSheetTab("streetview")}
                           className="shrink-0 h-10 px-4 bg-accent hover:bg-accent/80 text-accent-foreground font-medium rounded-full text-sm flex items-center gap-2 transition-colors"
                         >
