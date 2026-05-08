@@ -54,6 +54,23 @@ export default function Auth() {
     toast({ title: 'Konto skapat', description: 'Kolla din e-post för att verifiera ditt konto.' });
   }
 
+  async function handleDemo(role: 'chef' | 'chauffeur') {
+    setBusy(true);
+    const email = role === 'chef' ? 'chef@demo.se' : 'chauffeur@demo.se';
+    const password = 'demo1234';
+    // Ensure demo users exist (idempotent)
+    try {
+      await supabase.functions.invoke('seed-demo', { body: {} });
+    } catch {}
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setBusy(false);
+    if (error) {
+      toast({ title: 'Demo-inloggning misslyckades', description: error.message, variant: 'destructive' });
+      return;
+    }
+    navigate('/', { replace: true });
+  }
+
   async function handleGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -68,6 +85,15 @@ export default function Auth() {
         <div className="flex items-center gap-2 justify-center">
           <Truck className="h-8 w-8 text-primary" />
           <h1 className="text-2xl font-bold text-primary">FleetFlow</h1>
+        </div>
+
+        <div className="space-y-2">
+          <Button type="button" className="w-full h-12 text-base" disabled={busy} onClick={() => handleDemo('chef')}>
+            Logga in som Chef (demo)
+          </Button>
+          <Button type="button" variant="secondary" className="w-full h-12 text-base" disabled={busy} onClick={() => handleDemo('chauffeur')}>
+            Logga in som Chaufför (demo)
+          </Button>
         </div>
 
         <Tabs defaultValue="login">
