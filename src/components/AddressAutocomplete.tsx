@@ -151,16 +151,29 @@ export default function AddressAutocomplete({
     });
   }, [biasLat, biasLng]);
 
-  // TomTom fallback
+  // TomTom fallback (via secure proxy)
   const searchTomTom = useCallback(async (query: string) => {
     try {
-      const { getTomTomApiKey } = await import('@/services/tomtom');
-      const key = getTomTomApiKey();
-      let url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(query)}.json?key=${key}&countrySet=SE,NO,DK,FI&limit=5&language=sv-SE&typeahead=true`;
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const proxyUrl = new URL(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tomtom-proxy`);
+      proxyUrl.searchParams.set('path', `/search/2/search/${encodeURIComponent(query)}.json`);
+      proxyUrl.searchParams.set('countrySet', 'SE,NO,DK,FI');
+      proxyUrl.searchParams.set('limit', '5');
+      proxyUrl.searchParams.set('language', 'sv-SE');
+      proxyUrl.searchParams.set('typeahead', 'true');
       if (biasLat && biasLng) {
-        url += `&lat=${biasLat}&lon=${biasLng}&radius=500000`;
+        proxyUrl.searchParams.set('lat', String(biasLat));
+        proxyUrl.searchParams.set('lon', String(biasLng));
+        proxyUrl.searchParams.set('radius', '500000');
       }
-      const res = await fetch(url);
+      const res = await fetch(proxyUrl.toString(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+      });
       if (!res.ok) return;
       const data = await res.json();
       const results: Suggestion[] = (data.results || []).map((r: any) => ({

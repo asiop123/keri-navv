@@ -10,6 +10,7 @@ const ALLOWED_PREFIXES = [
   '/search/2/geocode/',
   '/search/2/reverseGeocode/',
   '/search/2/nearbySearch/',
+  '/search/2/search/',
   '/routing/1/calculateRoute/',
 ];
 
