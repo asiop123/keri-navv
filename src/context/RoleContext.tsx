@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+// Backwards-compat shim: RoleContext now reads from AuthContext.
+import React, { ReactNode } from 'react';
 import { Role, User } from '@/types';
-import { mockUsers } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
 
 interface RoleContextType {
   role: Role;
@@ -8,21 +9,25 @@ interface RoleContextType {
   currentUser: User;
 }
 
-const RoleContext = createContext<RoleContextType | undefined>(undefined);
-
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>('chef');
-  const currentUser = role === 'chef' ? mockUsers[0] : mockUsers[1];
-
-  return (
-    <RoleContext.Provider value={{ role, setRole, currentUser }}>
-      {children}
-    </RoleContext.Provider>
-  );
+  return <>{children}</>;
 }
 
-export function useRole() {
-  const context = useContext(RoleContext);
-  if (!context) throw new Error('useRole must be used within RoleProvider');
-  return context;
+export function useRole(): RoleContextType {
+  const { user, role, displayName } = useAuth();
+  const effectiveRole: Role = role ?? 'chauffeur';
+  const currentUser: User = {
+    id: user?.id ?? '',
+    name: displayName || user?.email || 'Användare',
+    email: user?.email ?? '',
+    role: effectiveRole,
+    phone: '',
+  };
+  return {
+    role: effectiveRole,
+    setRole: () => {
+      console.warn('Rollväxling är borttagen — roller hanteras via konto.');
+    },
+    currentUser,
+  };
 }
