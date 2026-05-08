@@ -142,32 +142,38 @@ export default function FleetTracker() {
     const resizeMap = () => map.resize();
     const containerResizeObserver = new ResizeObserver(() => resizeMap());
     containerResizeObserver.observe(mapRef.current);
-    window.addEventListener('resize', resizeMap);
+      window.addEventListener('resize', resizeMap);
 
-    map.on('load', () => {
-      resizeMap();
-      addSatelliteLayer(map);
-    });
+      map.on('load', () => {
+        resizeMap();
+        addSatelliteLayer(map!);
+      });
 
-    requestAnimationFrame(() => resizeMap());
-    setTimeout(() => resizeMap(), 100);
-    setTimeout(() => resizeMap(), 500);
-    setTimeout(() => resizeMap(), 1500);
+      requestAnimationFrame(() => resizeMap());
+      setTimeout(() => resizeMap(), 100);
+      setTimeout(() => resizeMap(), 500);
+      setTimeout(() => resizeMap(), 1500);
 
-    // Also handle style reloads
-    map.on('styledata', () => {
-      if (!map.getSource('google-satellite')) {
-        addSatelliteLayer(map);
-      }
-    });
+      // Also handle style reloads
+      map.on('styledata', () => {
+        if (!map!.getSource('google-satellite')) {
+          addSatelliteLayer(map!);
+        }
+      });
 
-    mapInstance.current = map;
+      mapInstance.current = map;
+      cleanup = () => {
+        containerResizeObserver.disconnect();
+        window.removeEventListener('resize', resizeMap);
+        map?.remove();
+        mapInstance.current = null;
+        markersRef.current = {};
+      };
+    }).catch(console.error);
+
     return () => {
-      containerResizeObserver.disconnect();
-      window.removeEventListener('resize', resizeMap);
-      map.remove();
-      mapInstance.current = null;
-      markersRef.current = {};
+      cancelled = true;
+      cleanup?.();
     };
   }, []);
 
