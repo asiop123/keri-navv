@@ -1,32 +1,45 @@
-## Mål
-Du ska kunna logga in direkt och börja redigera utan att behöva verifiera e-post. Du får två demoknappar på `/auth` — en för chef, en för chaufför.
+## Problem
 
-## Vad som ändras
+Google Maps API-nyckeln (`AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y`) ligger hårdkodad på 5 ställen i koden:
 
-**1. Stäng av e-postverifiering**
-Konton aktiveras direkt efter signup. Du kommer in på sekunden.
+- `src/pages/RoutePlanning.tsx` (Street View)
+- `src/components/AddressAutocomplete.tsx` (Places sökning)
+- `src/components/FleetTracker.tsx` (kartvisning)
+- `src/components/StreetViewPanorama.tsx` (360-vy)
 
-**2. Skapa två demokonton i databasen**
-- `chef@demo.se` / lösenord `demo1234` — roll: **chef**
-- `chauffeur@demo.se` / lösenord `demo1234` — roll: **chaufför**
+Det är dåligt för säkerhet (vem som helst som inspekterar koden ser nyckeln) och för underhåll (måste bytas på 5 ställen).
 
-Dessa skapas som riktiga konton i auth-systemet med profil + roll. Chef-rollen läggs till manuellt i `user_roles` (eftersom triggern bara sätter chaufför som standard).
+TomTom hanteras redan korrekt via en edge function (`tomtom-proxy`) med secret `TOMTOM_API_KEY`. Google Maps saknar samma skydd.
 
-**3. Lägg till demoknappar på `/auth`**
-Två stora knappar överst på inloggningskortet:
-- "Logga in som Chef (demo)"
-- "Logga in som Chaufför (demo)"
+## Lösning
 
-Klick = auto-fyller fälten och loggar in direkt. Praktiskt för dig att hoppa mellan rollerna under utveckling.
+### Steg 1 — Lägg till `GOOGLE_MAPS_API_KEY` som secret
+Be dig spara nyckeln i Lovable Cloud så den inte ligger i kodbasen.
 
-**4. Ditt eget konto (valfritt)**
-Du kan fortfarande skapa ett eget konto via "Skapa konto"-fliken. Det kontot blir chaufför som standard. Vill du senare göra ditt eget konto till chef gör jag det med ett enkelt SQL-anrop.
+### Steg 2 — Två sätt att använda nyckeln
 
-## Efter implementation
-1. Öppna `/auth`
-2. Klicka "Logga in som Chef (demo)"
-3. Du landar på chef-dashboarden och kan redigera fritt
-4. Logga ut och testa chaufför-vyn på samma sätt
+**A. Klient‑sidan (Maps JS + Places + Street View widget)**
+Google Maps JS SDK *måste* köras i webbläsaren med en nyckel synlig i nätverksanropen — det går inte att helt dölja. Bästa praxis är istället:
+- Lagra nyckeln som secret
+- En liten edge function `google-maps-key` returnerar nyckeln endast till inloggade användare
+- Frontend hämtar nyckeln en gång vid app‑start och cacheas i minnet
+- Lås nyckeln i Google Cloud Console till din Lovable‑domän + HTTP referrer (rekommendation jag ger dig efteråt)
 
-## Säkerhetsnot
-Auto-bekräftad e-post är okej för utveckling, men **innan du publicerar live** bör vi slå på e-postverifiering igen och ta bort demoknapparna. Påminn mig så fixar vi det då.
+**B. Server‑sidan (Street View statiska bilder)**
+Street View Static API kan proxas helt — nyckeln läcker aldrig:
+- Edge function `streetview-proxy` tar `lat,lng,size` och returnerar bilden
+- `<img src="">` pekar på edge function istället för `maps.googleapis.com`
+
+### Steg 3 — Refaktor
+- Ta bort alla hårdkodade `GOOGLE_MAPS_KEY` konstanter
+- Skapa `src/lib/googleMaps.ts` med en `loadGoogleMapsKey()` helper (cacheas)
+- `AddressAutocomplete`, `FleetTracker`, `StreetViewPanorama` använder helpern
+- `RoutePlanning.tsx` använder `streetview-proxy`‑URLen istället
+
+### Steg 4 — Efteråt
+Den gamla nyckeln bör roteras i Google Cloud Console (eftersom den exponerats i git‑historiken) och låsas till din lovable‑domän.
+
+## Frågor innan jag bygger
+
+1. Har du tillgång till samma Google Cloud‑projekt så du kan rotera nyckeln efteråt? (Rekommenderas men inte blockerande.)
+2. Ska jag göra både A och B, eller bara A (snabbast — räcker för att få bort hårdkodningen)?
