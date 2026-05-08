@@ -32,6 +32,15 @@ import {
   ArrowUpDown,
   SlidersHorizontal,
   Truck,
+  ArrowUp,
+  ArrowUpRight,
+  ArrowUpLeft,
+  ArrowRight,
+  ArrowLeftRight,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  PlayCircle,
 } from "lucide-react";
 
 import StreetViewImage from "@/components/StreetViewImage";
@@ -51,6 +60,9 @@ import { getSearchHistory, saveSearchHistory, SearchHistoryEntry } from "@/servi
 import TomTomMap, { TomTomMapHandle } from "@/components/TomTomMap";
 import TripHistory from "@/components/TripHistory";
 import AddressAutocomplete, { AddressSuggestion } from "@/components/AddressAutocomplete";
+import { useTurnByTurn, type ManeuverIcon } from "@/hooks/useTurnByTurn";
+import { useDemoDriver } from "@/hooks/useDemoDriver";
+import { speak, setVoiceMuted, isVoiceMuted, cancelSpeech } from "@/lib/voice";
 
 interface TripLeg {
   id: string;
