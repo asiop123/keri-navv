@@ -2823,3 +2823,30 @@ export default function RoutePlanning() {
     </div>
   );
 }
+
+function ManeuverArrow({ icon, className = "" }: { icon: ManeuverIcon; className?: string }) {
+  switch (icon) {
+    case "left":
+      return <ArrowLeft className={className} />;
+    case "right":
+      return <ArrowRight className={className} />;
+    case "sharp-left":
+      return <ArrowLeft className={`${className} -rotate-12`} />;
+    case "sharp-right":
+      return <ArrowRight className={`${className} rotate-12`} />;
+    case "slight-left":
+      return <ArrowUpLeft className={className} />;
+    case "slight-right":
+      return <ArrowUpRight className={className} />;
+    case "uturn":
+      return <RotateCcw className={className} />;
+    case "roundabout":
+      return <ArrowLeftRight className={className} />;
+    case "arrive":
+      return <MapPin className={className} />;
+    case "depart":
+    case "straight":
+    default:
+      return <ArrowUp className={className} />;
+  }
+}
