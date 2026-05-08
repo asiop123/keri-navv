@@ -2731,37 +2731,66 @@ export default function RoutePlanning() {
       {/* ===== NAVIGATION VIEW ===== */}
       {viewState === "navigating" && routeResult && (
         <>
-          {/* Top HUD - Big & Clear */}
+          {/* Top HUD — Turn-by-turn */}
           <div className="absolute top-0 left-0 right-0 z-30">
-            <div className="bg-foreground/95 backdrop-blur-md text-background px-5 pt-5 pb-4 shadow-2xl">
+            <div className="bg-foreground/95 backdrop-blur-md text-background px-4 pt-4 pb-3 shadow-2xl">
               <div className="max-w-lg mx-auto">
-                {/* Distance - HUGE */}
-                <div className="text-center mb-3">
-                  <div className="text-6xl font-black tracking-tighter leading-none">{distanceToNext || "..."}</div>
-                  <div className="text-sm opacity-60 mt-1">kvar till nästa stopp</div>
+                {/* Demo banner */}
+                {isDemoMode && (
+                  <div className="mb-2 flex items-center justify-center gap-2 bg-secondary text-secondary-foreground rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider">
+                    <PlayCircle className="h-3.5 w-3.5" />
+                    Demokörning · 10× hastighet
+                  </div>
+                )}
+
+                {/* Main turn instruction row */}
+                <div className="flex items-center gap-4">
+                  {/* Maneuver icon — HUGE */}
+                  <div className="shrink-0 w-20 h-20 rounded-2xl bg-secondary/90 text-secondary-foreground flex items-center justify-center shadow-lg">
+                    <ManeuverArrow icon={guidance.icon} className="h-12 w-12" />
+                  </div>
+
+                  {/* Distance + street */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-5xl font-black tracking-tighter leading-none">
+                      {guidance.distanceMeters !== null
+                        ? guidance.distanceMeters < 1000
+                          ? `${Math.max(0, Math.round(guidance.distanceMeters / 10) * 10)} m`
+                          : `${(guidance.distanceMeters / 1000).toFixed(1)} km`
+                        : (distanceToNext || "...")}
+                    </div>
+                    <div className="text-sm font-semibold opacity-80 mt-1 truncate">
+                      {guidance.message || guidance.street || `Mot ${nextWaypoint?.name ?? ""}`}
+                    </div>
+                  </div>
+
+                  {/* Voice toggle */}
+                  <button
+                    onClick={toggleVoiceMute}
+                    className="shrink-0 w-12 h-12 rounded-full bg-background/15 hover:bg-background/25 flex items-center justify-center transition-colors"
+                    title={voiceMuted ? "Slå på röst" : "Stäng av röst"}
+                  >
+                    {voiceMuted
+                      ? <VolumeX className="h-5 w-5 opacity-80" />
+                      : <Volume2 className="h-5 w-5" />}
+                  </button>
                 </div>
 
-                {/* Next stop name */}
-                <div className="bg-background/10 rounded-2xl px-4 py-3 text-center">
-                  <div className="text-xs opacity-50 uppercase tracking-widest mb-0.5">Nästa</div>
-                  <div className="font-bold text-lg leading-tight truncate">{nextWaypoint?.name}</div>
-                </div>
-
-                {/* Stats row */}
-                <div className="flex justify-center gap-4 mt-3">
-                  <div className="flex items-center gap-1.5 text-sm opacity-70">
-                    <Route className="h-4 w-4" />
-                    <span className="font-semibold">{routeResult.distanceKm} km</span>
+                {/* Bottom strip — destination + stats */}
+                <div className="mt-3 flex items-center justify-between gap-3 bg-background/10 rounded-xl px-3 py-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] opacity-50 uppercase tracking-widest">Nästa stopp</div>
+                    <div className="text-sm font-semibold truncate">{nextWaypoint?.name}</div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-sm opacity-70">
-                    <Clock className="h-4 w-4" />
-                    <span className="font-semibold">{elapsedMin} min körd</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <div
-                      className={`w-2.5 h-2.5 rounded-full ${userPosition ? "bg-emerald-400 animate-pulse" : "bg-destructive"}`}
-                    />
-                    <span className="font-semibold opacity-70">GPS</span>
+                  <div className="flex items-center gap-3 shrink-0 text-xs">
+                    <span className="opacity-70">{routeResult.distanceKm} km</span>
+                    <span className="opacity-70">·</span>
+                    <span className="opacity-70">{elapsedMin} min</span>
+                    <span className="opacity-70">·</span>
+                    <div className="flex items-center gap-1">
+                      <div className={`w-2 h-2 rounded-full ${userPosition ? "bg-emerald-400 animate-pulse" : "bg-destructive"}`} />
+                      <span className="opacity-70">{isDemoMode ? "SIM" : "GPS"}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2771,7 +2800,6 @@ export default function RoutePlanning() {
           {/* Bottom controls */}
           <div className="absolute bottom-6 left-0 right-0 z-30">
             <div className="max-w-lg mx-auto px-4 flex items-center gap-3">
-              {/* Center on user */}
               {userPosition && (
                 <button
                   onClick={() => mapHandleRef.current?.centerOnUser()}
@@ -2781,13 +2809,12 @@ export default function RoutePlanning() {
                 </button>
               )}
 
-              {/* Stop button - prominent */}
               <button
                 onClick={handleStopNavigation}
                 className="flex-1 bg-destructive text-destructive-foreground shadow-xl rounded-2xl px-6 py-4 font-bold text-lg flex items-center justify-center gap-3"
               >
                 <Square className="h-6 w-6" />
-                Avsluta körning
+                {isDemoMode ? "Avsluta demo" : "Avsluta körning"}
               </button>
             </div>
           </div>
