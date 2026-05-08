@@ -1,1 +1,4 @@
 project_id = "iibohlzqegaddtzpsvif"
+
+[functions.seed-demo]
+verify_jwt = false
