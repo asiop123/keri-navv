@@ -33,6 +33,17 @@ export interface VehicleParams {
   lengthM?: number;
 }
 
+export interface GuidanceInstruction {
+  routeOffsetMeters: number;
+  travelTimeSeconds: number;
+  point: { lat: number; lng: number };
+  maneuver?: string;
+  message: string;
+  street?: string;
+  signpostText?: string;
+  roadNumbers?: string[];
+}
+
 export interface RouteResult {
   distanceKm: number;
   travelTimeSeconds: number;
@@ -44,6 +55,7 @@ export interface RouteResult {
   waypoints: { lat: number; lng: number; name: string }[];
   routePoints: [number, number][];
   alternatives?: RouteResult[];
+  instructions?: GuidanceInstruction[];
 }
 
 export interface RouteLeg {
@@ -120,6 +132,22 @@ function parseRoute(
   const lats = allPoints.map(p => p[1]);
   const lngs = allPoints.map(p => p[0]);
 
+  // Parse turn-by-turn guidance instructions
+  let instructions: GuidanceInstruction[] | undefined;
+  const rawInstr = routeData.guidance?.instructions;
+  if (Array.isArray(rawInstr) && rawInstr.length > 0) {
+    instructions = rawInstr.map((ins: any) => ({
+      routeOffsetMeters: ins.routeOffsetInMeters ?? 0,
+      travelTimeSeconds: ins.travelTimeInSeconds ?? 0,
+      point: { lat: ins.point?.latitude ?? 0, lng: ins.point?.longitude ?? 0 },
+      maneuver: ins.maneuver,
+      message: ins.message || ins.combinedMessage || '',
+      street: ins.street,
+      signpostText: ins.signpostText,
+      roadNumbers: ins.roadNumbers,
+    }));
+  }
+
   return {
     distanceKm: Math.round(summary.lengthInMeters / 1000),
     travelTimeSeconds: summary.travelTimeInSeconds,
@@ -130,6 +158,7 @@ function parseRoute(
     bbox: [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)],
     waypoints: allCoords.map(c => ({ lat: c.lat, lng: c.lng, name: c.name })),
     routePoints: allPoints,
+    instructions,
   };
 }
 
@@ -151,6 +180,8 @@ export async function calculateRoute(
     routeRepresentation: 'polyline',
     computeTravelTimeFor: 'all',
     maxAlternatives: 2,
+    instructionsType: 'text',
+    language: 'sv-SE',
   };
   if (vehicleParams) {
     if (vehicleParams.weightKg) params.vehicleWeight = vehicleParams.weightKg;
