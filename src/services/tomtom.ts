@@ -41,7 +41,10 @@ export interface GuidanceInstruction {
   message: string;
   street?: string;
   signpostText?: string;
+  exitNumber?: string;
+  junctionType?: string;
   roadNumbers?: string[];
+  roundaboutExitNumber?: number;
 }
 
 export interface RouteResult {
