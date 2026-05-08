@@ -34,7 +34,7 @@ import {
   Truck,
 } from "lucide-react";
 
-const GOOGLE_MAPS_KEY = "AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y";
+import StreetViewImage from "@/components/StreetViewImage";
 import { mockVehicles, getVehicleById } from "@/data/mockData";
 import { BK_LIMITS, BKClass, TimelineEntry, RestStopFacilities } from "@/types";
 import { toast } from "sonner";
@@ -1120,11 +1120,11 @@ export default function RoutePlanning() {
                                 className="h-40 w-full bg-muted cursor-pointer relative group"
                                 onClick={() => setMapClickCoords({ lat: place.lat, lng: place.lng })}
                               >
-                                <img
-                                  src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${place.lat},${place.lng}&key=${GOOGLE_MAPS_KEY}`}
+                                <StreetViewImage
+                                  lat={place.lat}
+                                  lng={place.lng}
                                   alt={`Street View: ${place.name}`}
                                   className="w-full h-full object-cover"
-                                  loading="lazy"
                                 />
 
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -1672,11 +1672,11 @@ export default function RoutePlanning() {
                     className="h-36 w-full bg-muted cursor-pointer relative group"
                     onClick={() => setMapClickCoords({ lat: destinationPreview.lat, lng: destinationPreview.lng })}
                   >
-                    <img
-                      src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${destinationPreview.lat},${destinationPreview.lng}&key=${GOOGLE_MAPS_KEY}`}
+                    <StreetViewImage
+                      lat={destinationPreview.lat}
+                      lng={destinationPreview.lng}
                       alt={`Street View: ${destinationPreview.name}`}
                       className="w-full h-full object-cover"
-                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                       <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
