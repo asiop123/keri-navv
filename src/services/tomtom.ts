@@ -41,7 +41,10 @@ export interface GuidanceInstruction {
   message: string;
   street?: string;
   signpostText?: string;
+  exitNumber?: string;
+  junctionType?: string;
   roadNumbers?: string[];
+  roundaboutExitNumber?: number;
 }
 
 export interface RouteResult {
@@ -142,9 +145,12 @@ function parseRoute(
       point: { lat: ins.point?.latitude ?? 0, lng: ins.point?.longitude ?? 0 },
       maneuver: ins.maneuver,
       message: ins.message || ins.combinedMessage || '',
-      street: ins.street,
-      signpostText: ins.signpostText,
+      street: ins.street || ins.streetName,
+      signpostText: ins.signpostText || ins.signpost?.text,
+      exitNumber: ins.exitNumber,
+      junctionType: ins.junctionType,
       roadNumbers: ins.roadNumbers,
+      roundaboutExitNumber: ins.roundaboutExitNumber,
     }));
   }
 
@@ -180,7 +186,7 @@ export async function calculateRoute(
     routeRepresentation: 'polyline',
     computeTravelTimeFor: 'all',
     maxAlternatives: 2,
-    instructionsType: 'text',
+    instructionsType: 'tagged',
     language: 'sv-SE',
   };
   if (vehicleParams) {
