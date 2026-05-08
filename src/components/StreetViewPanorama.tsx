@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Maximize2, Minimize2, Eye, ZoomIn, ZoomOut } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-
-const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
+import { loadGoogleMapsScript } from '@/lib/googleMaps';
 
 interface StreetViewPanoramaProps {
   lat: number;
@@ -24,19 +23,11 @@ function useGoogleMapsScript() {
       setLoaded(true);
       return;
     }
-
-    // Check if script is already being loaded
-    const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
-    if (existing) {
-      existing.addEventListener('load', () => setLoaded(true));
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places`;
-    script.async = true;
-    script.onload = () => setLoaded(true);
-    document.head.appendChild(script);
+    let cancelled = false;
+    loadGoogleMapsScript('places')
+      .then(() => { if (!cancelled) setLoaded(true); })
+      .catch(() => { /* silent */ });
+    return () => { cancelled = true; };
   }, []);
 
   return loaded;

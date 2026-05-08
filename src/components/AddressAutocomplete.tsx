@@ -8,32 +8,9 @@ declare global {
 }
 import { Input } from '@/components/ui/input';
 import { MapPin, Loader2, History, ChevronDown } from 'lucide-react';
+import { loadGoogleMapsScript } from '@/lib/googleMaps';
 
-const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
-
-// Load Google Maps JS SDK once
-let googleMapsLoaded = false;
-let googleMapsPromise: Promise<void> | null = null;
-
-function loadGoogleMaps(): Promise<void> {
-  if (googleMapsLoaded && window.google?.maps?.places) return Promise.resolve();
-  if (googleMapsPromise) return googleMapsPromise;
-
-  googleMapsPromise = new Promise((resolve, reject) => {
-    if (window.google?.maps?.places) {
-      googleMapsLoaded = true;
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&language=sv&region=SE`;
-    script.async = true;
-    script.onload = () => { googleMapsLoaded = true; resolve(); };
-    script.onerror = () => reject(new Error('Failed to load Google Maps'));
-    document.head.appendChild(script);
-  });
-  return googleMapsPromise;
-}
+const loadGoogleMaps = () => loadGoogleMapsScript('places');
 
 interface Suggestion {
   id: string;

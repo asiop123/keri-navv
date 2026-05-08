@@ -12,8 +12,6 @@ import { subscribeToPositions } from '@/services/gpsTracking';
 import { supabase } from '@/integrations/supabase/client';
 import StreetViewPanorama from '@/components/StreetViewPanorama';
 
-const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
-
 interface VehiclePosition {
   vehicleId: string;
   lat: number;
