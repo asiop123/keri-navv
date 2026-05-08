@@ -2830,6 +2830,14 @@ export default function RoutePlanning() {
                 </div>
 
                 {/* Lane guidance — shown when road splits or at exits */}
+                {/* Visual road diagram — drawn highway with lane to take */}
+                <RoadDiagram
+                  icon={guidance.icon}
+                  junctionType={guidance.junctionType}
+                  distanceMeters={guidance.distanceMeters}
+                  exitNumber={guidance.exitNumber}
+                />
+                {/* Compact lane chips below */}
                 <LaneGuide icon={guidance.icon} junctionType={guidance.junctionType} />
 
                 {/* Footer strip — slightly darker, ETA-focused */}
