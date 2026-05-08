@@ -139,9 +139,9 @@ export default function FleetTracker() {
         language: 'sv-SE',
       });
 
-    const resizeMap = () => map.resize();
-    const containerResizeObserver = new ResizeObserver(() => resizeMap());
-    containerResizeObserver.observe(mapRef.current);
+      const resizeMap = () => map!.resize();
+      const containerResizeObserver = new ResizeObserver(() => resizeMap());
+      if (mapRef.current) containerResizeObserver.observe(mapRef.current);
       window.addEventListener('resize', resizeMap);
 
       map.on('load', () => {
