@@ -42,6 +42,7 @@ export interface CurrentGuidance {
   exitNumber: string;
   junctionType: string;
   roadNumbers: string[];
+  roundaboutExitNumber: number;
   index: number;
 }
 
