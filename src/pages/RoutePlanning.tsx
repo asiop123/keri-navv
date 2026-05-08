@@ -2783,6 +2783,21 @@ export default function RoutePlanning() {
 
                   {/* Distance + instruction */}
                   <div className="flex-1 min-w-0">
+                    {/* Exit number + road numbers (above distance) */}
+                    {(guidance.exitNumber || guidance.roadNumbers.length > 0) && (
+                      <div className="flex items-center gap-1.5 mb-1">
+                        {guidance.exitNumber && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground text-xs font-black tracking-wide shadow">
+                            AVF {guidance.exitNumber}
+                          </span>
+                        )}
+                        {guidance.roadNumbers.slice(0, 2).map((rn) => (
+                          <span key={rn} className="inline-flex items-center px-1.5 py-0.5 rounded border-2 border-primary-foreground/40 text-[11px] font-black">
+                            {rn}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <div className="text-[44px] font-black tracking-tight leading-none">
                       {guidance.distanceMeters !== null
                         ? guidance.distanceMeters < 1000
@@ -2793,6 +2808,12 @@ export default function RoutePlanning() {
                     <div className="text-base font-medium opacity-90 mt-0.5 truncate">
                       {guidance.message || guidance.street || `Mot ${nextWaypoint?.name ?? ""}`}
                     </div>
+                    {/* Signpost text — green motorway sign style */}
+                    {guidance.signpostText && (
+                      <div className="mt-1.5 inline-block px-2 py-1 rounded bg-emerald-700 text-white text-xs font-bold border border-white/30 shadow-sm max-w-full truncate">
+                        ➜ {guidance.signpostText}
+                      </div>
+                    )}
                   </div>
 
                   {/* Voice toggle */}
@@ -2806,6 +2827,9 @@ export default function RoutePlanning() {
                       : <Volume2 className="h-5 w-5" />}
                   </button>
                 </div>
+
+                {/* Lane guidance — shown when road splits or at exits */}
+                <LaneGuide icon={guidance.icon} junctionType={guidance.junctionType} />
 
                 {/* Footer strip — slightly darker, ETA-focused */}
                 <div className="bg-primary-foreground/10 px-4 py-2.5 flex items-center justify-between gap-3 text-xs">
