@@ -972,6 +972,16 @@ export async function generateTimeline(
   return timeline;
 }
 
-export function getTomTomApiKey(): string {
-  return API_KEY;
+/**
+ * Fetch a short-lived TomTom tile key (used by the map SDK to load tiles).
+ * Calls the secure proxy — only authenticated users can retrieve it.
+ */
+let _tileKeyCache: string | null = null;
+export async function getTomTomTileKey(): Promise<string> {
+  if (_tileKeyCache) return _tileKeyCache;
+  const res = await fetch(`${PROXY_URL}/tile-key`, { headers: await authHeaders() });
+  if (!res.ok) throw new Error(`Failed to fetch tile key: ${res.status}`);
+  const data = await res.json();
+  _tileKeyCache = data.key;
+  return data.key;
 }
