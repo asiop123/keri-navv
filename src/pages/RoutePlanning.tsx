@@ -389,20 +389,37 @@ export default function RoutePlanning() {
   const handleStartNavigation = useCallback(() => {
     if (!routeResult) return;
     setIsNavigating(true);
+    setIsDemoMode(false);
     setViewState("navigating");
     setCurrentStep(0);
     setNavStartTime(new Date());
     startGpsTracking();
+    speak("Navigation startad", { priority: "high" });
     toast.success("Navigation startad!");
   }, [routeResult, startGpsTracking]);
 
-  const handleStopNavigation = useCallback(async () => {
-    setIsNavigating(false);
-    setViewState("details");
-    stopGpsTracking();
+  const handleStartDemo = useCallback(() => {
+    if (!routeResult) return;
+    setIsNavigating(true);
+    setIsDemoMode(true);
+    setViewState("navigating");
+    setCurrentStep(0);
+    setNavStartTime(new Date());
+    // Don't start GPS — demo driver provides position
+    speak("Demokörning startad", { priority: "high" });
+    toast.success("Demokörning startad — fejkad GPS, 10× hastighet");
+  }, [routeResult]);
 
-    // Save driven trip
-    if (routeResult && navStartTime) {
+  const handleStopNavigation = useCallback(async () => {
+    const wasDemoMode = isDemoMode;
+    setIsNavigating(false);
+    setIsDemoMode(false);
+    setViewState("details");
+    cancelSpeech();
+    if (!wasDemoMode) stopGpsTracking();
+
+    // Save driven trip (only for real navigation, not demo)
+    if (!wasDemoMode && routeResult && navStartTime) {
       const drivenTimeSeconds = Math.round((Date.now() - navStartTime.getTime()) / 1000);
       const points = gpsPointsRef.current;
       let drivenDistanceKm = 0;
@@ -433,12 +450,13 @@ export default function RoutePlanning() {
       setSavedTrips(updated);
       toast.info(`Körning sparad: ${Math.round(drivenDistanceKm)} km`);
     } else {
-      toast.info("Navigation avslutad");
+      toast.info(wasDemoMode ? "Demo avslutad" : "Navigation avslutad");
     }
 
     setNavStartTime(null);
     gpsPointsRef.current = [];
   }, [
+    isDemoMode,
     stopGpsTracking,
     routeResult,
     navStartTime,
@@ -449,6 +467,30 @@ export default function RoutePlanning() {
     timeline,
     haversineKm,
   ]);
+
+  // Demo driver — supplies fake GPS along the route
+  const demo = useDemoDriver(routeResult?.routePoints, isDemoMode && isNavigating, 10);
+  useEffect(() => {
+    if (isDemoMode && demo.position) {
+      setUserPosition(demo.position);
+    }
+  }, [isDemoMode, demo.position]);
+
+  // Turn-by-turn — only active during navigation
+  const guidance = useTurnByTurn(
+    routeResult?.instructions,
+    isNavigating ? userPosition : null,
+    { voice: isNavigating && !voiceMuted },
+  );
+
+  const toggleVoiceMute = useCallback(() => {
+    setVoiceMutedState((prev) => {
+      const next = !prev;
+      setVoiceMuted(next);
+      if (!next) speak("Röst på", { priority: "high" });
+      return next;
+    });
+  }, []);
 
   const getBKStatus = (weight: number) => {
     const results: { bk: BKClass; limit: number; status: "green" | "yellow" | "red" }[] = [];
