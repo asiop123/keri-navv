@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import tt from '@tomtom-international/web-sdk-maps';
 import '@tomtom-international/web-sdk-maps/dist/maps.css';
-import { getTomTomApiKey } from '@/services/tomtom';
+import { getTomTomTileKey } from '@/services/tomtom';
 import { mockVehicles, getDriverForVehicle } from '@/data/mockData';
 import { Vehicle } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,6 @@ import { subscribeToPositions } from '@/services/gpsTracking';
 import { supabase } from '@/integrations/supabase/client';
 import StreetViewPanorama from '@/components/StreetViewPanorama';
 
-const TOMTOM_KEY = getTomTomApiKey();
 const GOOGLE_MAPS_KEY = 'AIzaSyDtwH0gOPIznevKsiEncudw9kaoH6Q8p_Y';
 
 interface VehiclePosition {
@@ -126,14 +125,19 @@ export default function FleetTracker() {
   // Initialize map with Google Maps satellite tiles
   useEffect(() => {
     if (!mapRef.current) return;
+    let map: tt.Map | null = null;
+    let cleanup: (() => void) | null = null;
+    let cancelled = false;
 
-    const map = tt.map({
-      key: TOMTOM_KEY,
-      container: mapRef.current,
-      center: [15.5, 58.5],
-      zoom: 6,
-      language: 'sv-SE',
-    });
+    getTomTomTileKey().then((tileKey) => {
+      if (cancelled || !mapRef.current) return;
+      map = tt.map({
+        key: tileKey,
+        container: mapRef.current,
+        center: [15.5, 58.5],
+        zoom: 6,
+        language: 'sv-SE',
+      });
 
     const resizeMap = () => map.resize();
     const containerResizeObserver = new ResizeObserver(() => resizeMap());
