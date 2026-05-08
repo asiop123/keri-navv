@@ -2824,7 +2824,7 @@ export default function RoutePlanning() {
   );
 }
 
-function ManeuverArrow({ icon, className = "" }: { icon: ManeuverIcon; className?: string }) {
+const ManeuverArrow = ({ icon, className = "" }: { icon: ManeuverIcon; className?: string }) => {
   switch (icon) {
     case "left":
       return <ArrowLeft className={className} />;
@@ -2849,4 +2849,5 @@ function ManeuverArrow({ icon, className = "" }: { icon: ManeuverIcon; className
     default:
       return <ArrowUp className={className} />;
   }
-}
+};
+
