@@ -1,10 +1,11 @@
 import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Truck, ClipboardList, FileText, Bell,
-  MapPin, Calendar, UserCog, ScanLine, Fuel, Users
+  MapPin, Calendar, ScanLine, Fuel, Users, LogOut
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useRole } from '@/context/RoleContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -34,7 +35,8 @@ const chauffeurItems = [
 ];
 
 export function AppSidebar() {
-  const { role, setRole, currentUser } = useRole();
+  const { role, currentUser } = useRole();
+  const { signOut } = useAuth();
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
