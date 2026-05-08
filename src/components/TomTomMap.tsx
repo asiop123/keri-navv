@@ -144,7 +144,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       const map = mapInstance.current;
       if (!map) return;
 
-      const style = MAP_STYLES.find(s => s.id === styleId);
+      const style = mapStyles.find(s => s.id === styleId);
       if (!style) return;
 
       setCurrentStyle(styleId);
@@ -456,7 +456,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
                   <span className="text-xs font-semibold text-foreground">Kartvy</span>
                 </div>
                 <div className="p-1.5 grid grid-cols-2 gap-1">
-                  {MAP_STYLES.map((style) => (
+                  {mapStyles.map((style) => (
                     <button
                       key={style.id}
                       onClick={() => handleStyleChange(style.id)}
