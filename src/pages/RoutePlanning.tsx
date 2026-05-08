@@ -142,6 +142,8 @@ export default function RoutePlanning() {
 
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [voiceMuted, setVoiceMutedState] = useState(false);
   const [gpsWatchId, setGpsWatchId] = useState<number | null>(null);
   const [distanceToNext, setDistanceToNext] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
