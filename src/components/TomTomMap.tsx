@@ -53,6 +53,8 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     const routeMarkersRef = useRef<tt.Marker[]>([]);
     const [currentStyle, setCurrentStyle] = useState(defaultStyle);
     const [showStylePicker, setShowStylePicker] = useState(false);
+    const [tileKey, setTileKey] = useState<string | null>(null);
+    const mapStyles = tileKey ? buildMapStyles(tileKey) : [];
     const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[]; alternativeRoutes?: RouteResult[]; previousLegs?: { route: RouteResult; color: string }[] }>({});
     const onMapClickRef = useRef(onMapClick);
     const onMapTapRef = useRef(onMapTap);
@@ -83,14 +85,22 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       flyToLocation,
     }));
 
-    // Initialize map
+    // Fetch tile key (only available to authenticated users)
     useEffect(() => {
-      if (!mapRef.current) return;
+      let cancelled = false;
+      getTomTomTileKey().then((k) => { if (!cancelled) setTileKey(k); }).catch(console.error);
+      return () => { cancelled = true; };
+    }, []);
 
-      const initStyle = MAP_STYLES.find(s => s.id === defaultStyle);
+    // Initialize map (waits for tileKey)
+    useEffect(() => {
+      if (!mapRef.current || !tileKey) return;
+
+      const styles = buildMapStyles(tileKey);
+      const initStyle = styles.find(s => s.id === defaultStyle);
 
       const map = tt.map({
-        key: API_KEY,
+        key: tileKey,
         container: mapRef.current,
         center: [15.6, 59.3],
         zoom: 5,
@@ -127,7 +137,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         map.remove();
         mapInstance.current = null;
       };
-    }, []);
+    }, [tileKey]);
 
     // Change map style
     const handleStyleChange = useCallback((styleId: string) => {
