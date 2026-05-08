@@ -115,7 +115,11 @@ export function useTurnByTurn(
     distanceMeters,
     icon: maneuverToIcon(current?.maneuver),
     message: current?.message || '',
-    street: current?.street || current?.signpostText || '',
+    street: current?.street || '',
+    signpostText: current?.signpostText || '',
+    exitNumber: current?.exitNumber || '',
+    junctionType: current?.junctionType || '',
+    roadNumbers: current?.roadNumbers || [],
     index: safeIdx,
   };
 }
