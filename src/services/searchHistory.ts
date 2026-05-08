@@ -44,10 +44,12 @@ export async function saveSearchHistory(entry: {
 }): Promise<void> {
   try {
     // Upsert: increment count if same location exists
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
     const { data: existing } = await supabase
       .from('search_history')
       .select('id, search_count')
-      .eq('user_id', 'default')
+      .eq('user_id', user.id)
       .gte('lat', entry.lat - 0.0001)
       .lte('lat', entry.lat + 0.0001)
       .gte('lng', entry.lng - 0.0001)

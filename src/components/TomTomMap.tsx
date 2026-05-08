@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import tt from '@tomtom-international/web-sdk-maps';
 import '@tomtom-international/web-sdk-maps/dist/maps.css';
-import { getTomTomApiKey, RouteResult } from '@/services/tomtom';
+import { getTomTomTileKey, RouteResult } from '@/services/tomtom';
 import { TimelineEntry } from '@/types';
 import { Map, Satellite, Moon, Mountain, Layers } from 'lucide-react';
-
-const API_KEY = getTomTomApiKey();
 
 type MapStyle = {
   id: string;
@@ -14,32 +12,18 @@ type MapStyle = {
   style: string;
 };
 
-const MAP_STYLES: MapStyle[] = [
-  {
-    id: 'basic',
-    label: 'Karta',
-    icon: <Map className="h-4 w-4" />,
-    style: `https://api.tomtom.com/style/1/style/*?map=basic_main&key=${API_KEY}`,
-  },
-  {
-    id: 'satellite',
-    label: 'Satellit',
-    icon: <Satellite className="h-4 w-4" />,
-    style: `https://api.tomtom.com/style/1/style/*?map=2/basic_street-satellite&poi=2/poi_dynamic-satellite&key=${API_KEY}`,
-  },
-  {
-    id: 'night',
-    label: 'Natt',
-    icon: <Moon className="h-4 w-4" />,
-    style: `https://api.tomtom.com/style/1/style/*?map=basic_night&key=${API_KEY}`,
-  },
-  {
-    id: 'terrain',
-    label: 'Terräng',
-    icon: <Mountain className="h-4 w-4" />,
-    style: `https://api.tomtom.com/style/1/style/*?map=basic_main&hillshading=1&key=${API_KEY}`,
-  },
-];
+function buildMapStyles(key: string): MapStyle[] {
+  return [
+    { id: 'basic', label: 'Karta', icon: <Map className="h-4 w-4" />,
+      style: `https://api.tomtom.com/style/1/style/*?map=basic_main&key=${key}` },
+    { id: 'satellite', label: 'Satellit', icon: <Satellite className="h-4 w-4" />,
+      style: `https://api.tomtom.com/style/1/style/*?map=2/basic_street-satellite&poi=2/poi_dynamic-satellite&key=${key}` },
+    { id: 'night', label: 'Natt', icon: <Moon className="h-4 w-4" />,
+      style: `https://api.tomtom.com/style/1/style/*?map=basic_night&key=${key}` },
+    { id: 'terrain', label: 'Terräng', icon: <Mountain className="h-4 w-4" />,
+      style: `https://api.tomtom.com/style/1/style/*?map=basic_main&hillshading=1&key=${key}` },
+  ];
+}
 
 interface TomTomMapProps {
   route?: RouteResult | null;
@@ -69,6 +53,8 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
     const routeMarkersRef = useRef<tt.Marker[]>([]);
     const [currentStyle, setCurrentStyle] = useState(defaultStyle);
     const [showStylePicker, setShowStylePicker] = useState(false);
+    const [tileKey, setTileKey] = useState<string | null>(null);
+    const mapStyles = tileKey ? buildMapStyles(tileKey) : [];
     const routeDataRef = useRef<{ route?: RouteResult | null; timeline?: TimelineEntry[]; alternativeRoutes?: RouteResult[]; previousLegs?: { route: RouteResult; color: string }[] }>({});
     const onMapClickRef = useRef(onMapClick);
     const onMapTapRef = useRef(onMapTap);
@@ -99,14 +85,22 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
       flyToLocation,
     }));
 
-    // Initialize map
+    // Fetch tile key (only available to authenticated users)
     useEffect(() => {
-      if (!mapRef.current) return;
+      let cancelled = false;
+      getTomTomTileKey().then((k) => { if (!cancelled) setTileKey(k); }).catch(console.error);
+      return () => { cancelled = true; };
+    }, []);
 
-      const initStyle = MAP_STYLES.find(s => s.id === defaultStyle);
+    // Initialize map (waits for tileKey)
+    useEffect(() => {
+      if (!mapRef.current || !tileKey) return;
+
+      const styles = buildMapStyles(tileKey);
+      const initStyle = styles.find(s => s.id === defaultStyle);
 
       const map = tt.map({
-        key: API_KEY,
+        key: tileKey,
         container: mapRef.current,
         center: [15.6, 59.3],
         zoom: 5,
@@ -143,14 +137,14 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
         map.remove();
         mapInstance.current = null;
       };
-    }, []);
+    }, [tileKey]);
 
     // Change map style
     const handleStyleChange = useCallback((styleId: string) => {
       const map = mapInstance.current;
       if (!map) return;
 
-      const style = MAP_STYLES.find(s => s.id === styleId);
+      const style = mapStyles.find(s => s.id === styleId);
       if (!style) return;
 
       setCurrentStyle(styleId);
@@ -462,7 +456,7 @@ const TomTomMap = forwardRef<TomTomMapHandle, TomTomMapProps>(
                   <span className="text-xs font-semibold text-foreground">Kartvy</span>
                 </div>
                 <div className="p-1.5 grid grid-cols-2 gap-1">
-                  {MAP_STYLES.map((style) => (
+                  {mapStyles.map((style) => (
                     <button
                       key={style.id}
                       onClick={() => handleStyleChange(style.id)}
