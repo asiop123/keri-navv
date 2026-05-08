@@ -145,9 +145,12 @@ function parseRoute(
       point: { lat: ins.point?.latitude ?? 0, lng: ins.point?.longitude ?? 0 },
       maneuver: ins.maneuver,
       message: ins.message || ins.combinedMessage || '',
-      street: ins.street,
-      signpostText: ins.signpostText,
+      street: ins.street || ins.streetName,
+      signpostText: ins.signpostText || ins.signpost?.text,
+      exitNumber: ins.exitNumber,
+      junctionType: ins.junctionType,
       roadNumbers: ins.roadNumbers,
+      roundaboutExitNumber: ins.roundaboutExitNumber,
     }));
   }
 
