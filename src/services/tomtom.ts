@@ -186,7 +186,7 @@ export async function calculateRoute(
     routeRepresentation: 'polyline',
     computeTravelTimeFor: 'all',
     maxAlternatives: 2,
-    instructionsType: 'text',
+    instructionsType: 'tagged',
     language: 'sv-SE',
   };
   if (vehicleParams) {
