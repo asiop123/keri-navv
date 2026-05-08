@@ -2758,35 +2758,38 @@ export default function RoutePlanning() {
       {/* ===== NAVIGATION VIEW ===== */}
       {viewState === "navigating" && routeResult && (
         <>
-          {/* Top HUD — Turn-by-turn */}
-          <div className="absolute top-0 left-0 right-0 z-30">
-            <div className="bg-foreground/95 backdrop-blur-md text-background px-4 pt-4 pb-3 shadow-2xl">
-              <div className="max-w-lg mx-auto">
-                {/* Demo banner */}
-                {isDemoMode && (
-                  <div className="mb-2 flex items-center justify-center gap-2 bg-secondary text-secondary-foreground rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider">
-                    <PlayCircle className="h-3.5 w-3.5" />
-                    Demokörning · 10× hastighet
+          {/* Top HUD — Google/Waze-style */}
+          <div className="absolute top-0 left-0 right-0 z-30 px-3 pt-3">
+            <div className="max-w-xl mx-auto">
+              {/* Demo banner — small pill above */}
+              {isDemoMode && (
+                <div className="mb-2 flex justify-center">
+                  <div className="inline-flex items-center gap-1.5 bg-secondary text-secondary-foreground rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider shadow-lg">
+                    <PlayCircle className="h-3 w-3" />
+                    Demo · 10×
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Main turn instruction row */}
-                <div className="flex items-center gap-4">
-                  {/* Maneuver icon — HUGE */}
-                  <div className="shrink-0 w-20 h-20 rounded-2xl bg-secondary/90 text-secondary-foreground flex items-center justify-center shadow-lg">
-                    <ManeuverArrow icon={guidance.icon} className="h-12 w-12" />
+              {/* Main HUD card — primary navy with rounded corners (floating) */}
+              <div className="bg-primary text-primary-foreground rounded-3xl shadow-2xl overflow-hidden">
+                {/* Top: arrow + distance + voice */}
+                <div className="flex items-center gap-4 px-4 py-4">
+                  {/* Maneuver in yellow accent circle */}
+                  <div className="shrink-0 w-16 h-16 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center shadow-lg ring-4 ring-primary-foreground/10">
+                    <ManeuverArrow icon={guidance.icon} className="h-10 w-10" />
                   </div>
 
-                  {/* Distance + street */}
+                  {/* Distance + instruction */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-5xl font-black tracking-tighter leading-none">
+                    <div className="text-[44px] font-black tracking-tight leading-none">
                       {guidance.distanceMeters !== null
                         ? guidance.distanceMeters < 1000
                           ? `${Math.max(0, Math.round(guidance.distanceMeters / 10) * 10)} m`
                           : `${(guidance.distanceMeters / 1000).toFixed(1)} km`
-                        : (distanceToNext || "...")}
+                        : (distanceToNext || "—")}
                     </div>
-                    <div className="text-sm font-semibold opacity-80 mt-1 truncate">
+                    <div className="text-base font-medium opacity-90 mt-0.5 truncate">
                       {guidance.message || guidance.street || `Mot ${nextWaypoint?.name ?? ""}`}
                     </div>
                   </div>
@@ -2794,29 +2797,29 @@ export default function RoutePlanning() {
                   {/* Voice toggle */}
                   <button
                     onClick={toggleVoiceMute}
-                    className="shrink-0 w-12 h-12 rounded-full bg-background/15 hover:bg-background/25 flex items-center justify-center transition-colors"
+                    className="shrink-0 w-11 h-11 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 flex items-center justify-center transition-colors"
                     title={voiceMuted ? "Slå på röst" : "Stäng av röst"}
                   >
                     {voiceMuted
-                      ? <VolumeX className="h-5 w-5 opacity-80" />
+                      ? <VolumeX className="h-5 w-5 opacity-70" />
                       : <Volume2 className="h-5 w-5" />}
                   </button>
                 </div>
 
-                {/* Bottom strip — destination + stats */}
-                <div className="mt-3 flex items-center justify-between gap-3 bg-background/10 rounded-xl px-3 py-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[10px] opacity-50 uppercase tracking-widest">Nästa stopp</div>
-                    <div className="text-sm font-semibold truncate">{nextWaypoint?.name}</div>
+                {/* Footer strip — slightly darker, ETA-focused */}
+                <div className="bg-primary-foreground/10 px-4 py-2.5 flex items-center justify-between gap-3 text-xs">
+                  <div className="min-w-0 flex-1 truncate">
+                    <span className="opacity-60">Mot </span>
+                    <span className="font-semibold">{nextWaypoint?.name}</span>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0 text-xs">
-                    <span className="opacity-70">{routeResult.distanceKm} km</span>
-                    <span className="opacity-70">·</span>
-                    <span className="opacity-70">{elapsedMin} min</span>
-                    <span className="opacity-70">·</span>
+                  <div className="flex items-center gap-2 shrink-0 font-medium">
+                    <span>{routeResult.distanceKm} km</span>
+                    <span className="opacity-40">•</span>
+                    <span>{elapsedMin} min</span>
+                    <span className="opacity-40">•</span>
                     <div className="flex items-center gap-1">
-                      <div className={`w-2 h-2 rounded-full ${userPosition ? "bg-emerald-400 animate-pulse" : "bg-destructive"}`} />
-                      <span className="opacity-70">{isDemoMode ? "SIM" : "GPS"}</span>
+                      <div className={`w-1.5 h-1.5 rounded-full ${userPosition ? "bg-emerald-400 animate-pulse" : "bg-destructive"}`} />
+                      <span>{isDemoMode ? "SIM" : "GPS"}</span>
                     </div>
                   </div>
                 </div>
