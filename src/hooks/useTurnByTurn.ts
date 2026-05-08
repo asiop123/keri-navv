@@ -38,6 +38,10 @@ export interface CurrentGuidance {
   icon: ManeuverIcon;
   message: string;
   street: string;
+  signpostText: string;
+  exitNumber: string;
+  junctionType: string;
+  roadNumbers: string[];
   index: number;
 }
 
