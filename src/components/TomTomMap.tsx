@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import tt from '@tomtom-international/web-sdk-maps';
 import '@tomtom-international/web-sdk-maps/dist/maps.css';
-import { getTomTomApiKey, RouteResult } from '@/services/tomtom';
+import { getTomTomTileKey, RouteResult } from '@/services/tomtom';
 import { TimelineEntry } from '@/types';
 import { Map, Satellite, Moon, Mountain, Layers } from 'lucide-react';
-
-const API_KEY = getTomTomApiKey();
 
 type MapStyle = {
   id: string;
@@ -14,32 +12,18 @@ type MapStyle = {
   style: string;
 };
 
-const MAP_STYLES: MapStyle[] = [
-  {
-    id: 'basic',
-    label: 'Karta',
-    icon: <Map className="h-4 w-4" />,
-    style: `https://api.tomtom.com/style/1/style/*?map=basic_main&key=${API_KEY}`,
-  },
-  {
-    id: 'satellite',
-    label: 'Satellit',
-    icon: <Satellite className="h-4 w-4" />,
-    style: `https://api.tomtom.com/style/1/style/*?map=2/basic_street-satellite&poi=2/poi_dynamic-satellite&key=${API_KEY}`,
-  },
-  {
-    id: 'night',
-    label: 'Natt',
-    icon: <Moon className="h-4 w-4" />,
-    style: `https://api.tomtom.com/style/1/style/*?map=basic_night&key=${API_KEY}`,
-  },
-  {
-    id: 'terrain',
-    label: 'Terräng',
-    icon: <Mountain className="h-4 w-4" />,
-    style: `https://api.tomtom.com/style/1/style/*?map=basic_main&hillshading=1&key=${API_KEY}`,
-  },
-];
+function buildMapStyles(key: string): MapStyle[] {
+  return [
+    { id: 'basic', label: 'Karta', icon: <Map className="h-4 w-4" />,
+      style: `https://api.tomtom.com/style/1/style/*?map=basic_main&key=${key}` },
+    { id: 'satellite', label: 'Satellit', icon: <Satellite className="h-4 w-4" />,
+      style: `https://api.tomtom.com/style/1/style/*?map=2/basic_street-satellite&poi=2/poi_dynamic-satellite&key=${key}` },
+    { id: 'night', label: 'Natt', icon: <Moon className="h-4 w-4" />,
+      style: `https://api.tomtom.com/style/1/style/*?map=basic_night&key=${key}` },
+    { id: 'terrain', label: 'Terräng', icon: <Mountain className="h-4 w-4" />,
+      style: `https://api.tomtom.com/style/1/style/*?map=basic_main&hillshading=1&key=${key}` },
+  ];
+}
 
 interface TomTomMapProps {
   route?: RouteResult | null;
