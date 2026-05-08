@@ -62,6 +62,7 @@ import TripHistory from "@/components/TripHistory";
 import AddressAutocomplete, { AddressSuggestion } from "@/components/AddressAutocomplete";
 import { useTurnByTurn, type ManeuverIcon } from "@/hooks/useTurnByTurn";
 import { LaneGuide } from "@/components/navigation/LaneGuide";
+import { RoadDiagram } from "@/components/navigation/RoadDiagram";
 import { useDemoDriver } from "@/hooks/useDemoDriver";
 import { speak, setVoiceMuted, isVoiceMuted, cancelSpeech } from "@/lib/voice";
 
@@ -2829,6 +2830,14 @@ export default function RoutePlanning() {
                 </div>
 
                 {/* Lane guidance — shown when road splits or at exits */}
+                {/* Visual road diagram — drawn highway with lane to take */}
+                <RoadDiagram
+                  icon={guidance.icon}
+                  junctionType={guidance.junctionType}
+                  distanceMeters={guidance.distanceMeters}
+                  exitNumber={guidance.exitNumber}
+                />
+                {/* Compact lane chips below */}
                 <LaneGuide icon={guidance.icon} junctionType={guidance.junctionType} />
 
                 {/* Footer strip — slightly darker, ETA-focused */}
