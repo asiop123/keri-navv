@@ -2829,16 +2829,16 @@ export default function RoutePlanning() {
                   </button>
                 </div>
 
-                {/* Lane guidance — shown when road splits or at exits */}
-                {/* Visual road diagram — drawn highway with lane to take */}
+                {/* Visual road diagram — drawn highway / roundabout / intersection with animated lanes */}
                 <RoadDiagram
                   icon={guidance.icon}
                   junctionType={guidance.junctionType}
                   distanceMeters={guidance.distanceMeters}
                   exitNumber={guidance.exitNumber}
+                  signpostText={guidance.signpostText}
+                  roundaboutExitNumber={guidance.roundaboutExitNumber}
+                  roadNumbers={guidance.roadNumbers}
                 />
-                {/* Compact lane chips below */}
-                <LaneGuide icon={guidance.icon} junctionType={guidance.junctionType} />
 
                 {/* Footer strip — slightly darker, ETA-focused */}
                 <div className="bg-primary-foreground/10 px-4 py-2.5 flex items-center justify-between gap-3 text-xs">
