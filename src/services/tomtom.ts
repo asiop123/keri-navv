@@ -1,8 +1,30 @@
 import { TimelineEntry, RestStopInfo, RestStopSuitability, RestStopFacilities } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
-const API_KEY = 'MuNXa5wvdkAvcr10ExFWNBen06rcF3mT';
+const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tomtom-proxy`;
 
-const BASE_URL = 'https://api.tomtom.com';
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  return {
+    Authorization: `Bearer ${token}`,
+    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  };
+}
+
+/**
+ * Call TomTom via the secure edge-function proxy.
+ * `path` is the TomTom API path (e.g. "/search/2/geocode/foo.json").
+ * `params` are the TomTom query params (the proxy injects the API key).
+ */
+async function proxyFetch(path: string, params: Record<string, string | number | undefined>): Promise<Response> {
+  const url = new URL(PROXY_URL);
+  url.searchParams.set('path', path);
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, String(v));
+  }
+  return fetch(url.toString(), { headers: await authHeaders() });
+}
 
 export interface VehicleParams {
   weightKg?: number;
@@ -38,8 +60,10 @@ interface GeocodingResult {
 }
 
 export async function geocode(query: string): Promise<GeocodingResult> {
-  const url = `${BASE_URL}/search/2/geocode/${encodeURIComponent(query)}.json?key=${API_KEY}&countrySet=SE,NO,DK,FI&limit=1`;
-  const res = await fetch(url);
+  const res = await proxyFetch(`/search/2/geocode/${encodeURIComponent(query)}.json`, {
+    countrySet: 'SE,NO,DK,FI',
+    limit: 1,
+  });
   if (!res.ok) throw new Error(`Geocoding failed for "${query}": ${res.status}`);
   const data = await res.json();
   if (!data.results?.length) throw new Error(`Ingen plats hittades för "${query}"`);
@@ -52,9 +76,8 @@ export async function geocode(query: string): Promise<GeocodingResult> {
 }
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  const url = `${BASE_URL}/search/2/reverseGeocode/${lat},${lng}.json?key=${API_KEY}&language=sv-SE`;
   try {
-    const res = await fetch(url);
+    const res = await proxyFetch(`/search/2/reverseGeocode/${lat},${lng}.json`, { language: 'sv-SE' });
     if (!res.ok) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     const data = await res.json();
     const addr = data.addresses?.[0]?.address;
@@ -122,18 +145,23 @@ export async function calculateRoute(
     .join(':');
 
   const depart = departAt || new Date().toISOString();
-  let url = `${BASE_URL}/routing/1/calculateRoute/${locations}/json?key=${API_KEY}&travelMode=truck&departAt=${depart}&routeRepresentation=polyline&computeTravelTimeFor=all&maxAlternatives=2`;
-
+  const params: Record<string, string | number | undefined> = {
+    travelMode: 'truck',
+    departAt: depart,
+    routeRepresentation: 'polyline',
+    computeTravelTimeFor: 'all',
+    maxAlternatives: 2,
+  };
   if (vehicleParams) {
-    if (vehicleParams.weightKg) url += `&vehicleWeight=${vehicleParams.weightKg}`;
-    if (vehicleParams.heightM) url += `&vehicleHeight=${vehicleParams.heightM}`;
-    if (vehicleParams.widthM) url += `&vehicleWidth=${vehicleParams.widthM}`;
-    if (vehicleParams.lengthM) url += `&vehicleLength=${vehicleParams.lengthM}`;
+    if (vehicleParams.weightKg) params.vehicleWeight = vehicleParams.weightKg;
+    if (vehicleParams.heightM) params.vehicleHeight = vehicleParams.heightM;
+    if (vehicleParams.widthM) params.vehicleWidth = vehicleParams.widthM;
+    if (vehicleParams.lengthM) params.vehicleLength = vehicleParams.lengthM;
   } else {
-    url += `&vehicleWeight=40000`;
+    params.vehicleWeight = 40000;
   }
 
-  const res = await fetch(url);
+  const res = await proxyFetch(`/routing/1/calculateRoute/${locations}/json`, params);
   if (!res.ok) throw new Error(`Routing failed: ${res.status}`);
   const data = await res.json();
 
@@ -409,9 +437,11 @@ export async function searchRestStopsAlongRoute(
     // categorySet: 7369=truck stop, 9352=rest area, 7312=petrol station, 7311=parking garage
     await Promise.all(
       searchPoints.map(async (pt) => {
-        const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${pt.lat}&lon=${pt.lng}&radius=${searchRadiusM}&categorySet=7369,9352,7312,7311&limit=15&language=sv-SE`;
         try {
-          const res = await fetch(url);
+          const res = await proxyFetch(`/search/2/nearbySearch/.json`, {
+            lat: pt.lat, lon: pt.lng, radius: searchRadiusM,
+            categorySet: '7369,9352,7312,7311', limit: 15, language: 'sv-SE',
+          });
           if (!res.ok) return;
           const data = await res.json();
           for (const r of (data.results || [])) {
@@ -531,9 +561,10 @@ export async function searchRestStops(
   vehicle?: VehicleParams,
   filters?: RestStopFacilities
 ): Promise<RestStopInfo[]> {
-  const url = `${BASE_URL}/search/2/nearbySearch/.json?key=${API_KEY}&lat=${lat}&lon=${lng}&radius=${radius}&categorySet=7369,9352,7312,7311&limit=10&language=sv-SE`;
   try {
-    const res = await fetch(url);
+    const res = await proxyFetch(`/search/2/nearbySearch/.json`, {
+      lat, lon: lng, radius, categorySet: '7369,9352,7312,7311', limit: 10, language: 'sv-SE',
+    });
     if (!res.ok) return [];
     const data = await res.json();
     const stops: RestStopInfo[] = [];
