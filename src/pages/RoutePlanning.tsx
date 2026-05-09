@@ -981,12 +981,21 @@ export default function RoutePlanning() {
               <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
                 <div className="px-4 pb-2">
                   <div className="relative bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-                    {/* From - compact */}
+                    {/* From - editable */}
                     <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/40">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                      <div className="flex-1 min-w-0 flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground shrink-0">Från</span>
-                        <span className="text-sm text-foreground truncate">{start || "Min position"}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">Från</span>
+                      <div className="flex-1 min-w-0">
+                        <AddressAutocomplete
+                          value={start}
+                          onChange={setStart}
+                          onSelect={(suggestion) => {
+                            if (suggestion.name) setStart(suggestion.name);
+                          }}
+                          placeholder="Min position"
+                          biasLat={userPosition?.lat}
+                          biasLng={userPosition?.lng}
+                        />
                       </div>
                       {userPosition && (
                         <button
