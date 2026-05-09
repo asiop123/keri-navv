@@ -3,6 +3,44 @@ import { supabase } from '@/integrations/supabase/client';
 
 const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tomtom-proxy`;
 
+type CachedProxyResponse = {
+  body: string;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  expiresAt: number;
+};
+
+const proxyResponseCache = new Map<string, CachedProxyResponse>();
+const proxyInFlight = new Map<string, Promise<CachedProxyResponse>>();
+
+function responseFromCache(entry: CachedProxyResponse): Response {
+  return new Response(entry.body, {
+    status: entry.status,
+    statusText: entry.statusText,
+    headers: entry.headers,
+  });
+}
+
+function proxyCacheTtl(path: string): number {
+  if (path.startsWith('/search/2/nearbySearch/')) return 10 * 60_000;
+  if (path.startsWith('/search/2/search/')) return 2 * 60_000;
+  if (path.startsWith('/search/2/geocode/') || path.startsWith('/search/2/reverseGeocode/')) return 30 * 60_000;
+  if (path.startsWith('/routing/1/calculateRoute/')) return 2 * 60_000;
+  return 60_000;
+}
+
+async function runLimited<T>(items: T[], limit: number, worker: (item: T, index: number) => Promise<void>): Promise<void> {
+  let nextIndex = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex++;
+      await worker(items[currentIndex], currentIndex);
+    }
+  });
+  await Promise.all(workers);
+}
+
 async function authHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -23,7 +61,29 @@ async function proxyFetch(path: string, params: Record<string, string | number |
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, String(v));
   }
-  return fetch(url.toString(), { headers: await authHeaders() });
+  const cacheKey = url.toString();
+  const cached = proxyResponseCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return responseFromCache(cached);
+
+  const existing = proxyInFlight.get(cacheKey);
+  if (existing) return responseFromCache(await existing);
+
+  const request = (async (): Promise<CachedProxyResponse> => {
+    const res = await fetch(url.toString(), { headers: await authHeaders() });
+    const body = await res.text();
+    const entry: CachedProxyResponse = {
+      body,
+      status: res.status,
+      statusText: res.statusText,
+      headers: Object.fromEntries(res.headers.entries()),
+      expiresAt: Date.now() + proxyCacheTtl(path),
+    };
+    if (res.ok) proxyResponseCache.set(cacheKey, entry);
+    return entry;
+  })();
+
+  proxyInFlight.set(cacheKey, request);
+  return responseFromCache(await request.finally(() => proxyInFlight.delete(cacheKey)));
 }
 
 export interface VehicleParams {
@@ -472,8 +532,7 @@ export async function searchRestStopsAlongRoute(
 
     // TomTom search from multiple corridor points
     // categorySet: 7369=truck stop, 9352=rest area, 7312=petrol station, 7311=parking garage
-    await Promise.all(
-      searchPoints.map(async (pt) => {
+    await runLimited(searchPoints, 2, async (pt) => {
         try {
           const res = await proxyFetch(`/search/2/nearbySearch/.json`, {
             lat: pt.lat, lon: pt.lng, radius: searchRadiusM,
@@ -504,7 +563,7 @@ export async function searchRestStopsAlongRoute(
             });
           }
         } catch { /* skip */ }
-      })
+      }
     );
 
     // Google Places JS SDK search from multiple corridor points
@@ -514,8 +573,7 @@ export async function searchRestStopsAlongRoute(
       searchPoints[searchPoints.length - 1],
     ].filter((p, i, arr) => arr.findIndex(a => a.lat === p.lat && a.lng === p.lng) === i);
 
-    await Promise.all(
-      googleSearchPoints.map(async (pt) => {
+    await runLimited(googleSearchPoints, 2, async (pt) => {
         try {
           const googleResults = await searchGooglePlaces(pt.lat, pt.lng, searchRadiusM);
           for (const place of googleResults) {
@@ -536,7 +594,7 @@ export async function searchRestStopsAlongRoute(
             });
           }
         } catch { /* skip */ }
-      })
+      }
     );
   };
 
@@ -939,8 +997,8 @@ export async function generateTimeline(
 
   // Search for rest stops along the route corridor for all break points
   if (restBreakPoints.length > 0 && route.routePoints.length > 0) {
-    const results = await Promise.all(
-      restBreakPoints.map(async (bp) => {
+    const results: Array<{ bp: typeof restBreakPoints[number]; stops: RestStopInfo[] }> = [];
+    await runLimited(restBreakPoints, 1, async (bp) => {
         const stops = await searchRestStopsAlongRoute(
           route.routePoints,
           bp.fraction,
@@ -949,8 +1007,8 @@ export async function generateTimeline(
           vehicle,
           facilityFilters
         );
-        return { bp, stops };
-      })
+        results.push({ bp, stops });
+      }
     );
 
     for (const { bp, stops } of results) {
