@@ -73,13 +73,23 @@ Deno.serve(async (req) => {
     });
     ttUrl.searchParams.set('key', TOMTOM_API_KEY);
 
-    const ttRes = await fetch(ttUrl.toString());
-    const body = await ttRes.text();
+    // Retry with exponential backoff on 429 (TomTom rate limit).
+    let ttRes: Response;
+    let body = '';
+    const MAX_RETRIES = 4;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      ttRes = await fetch(ttUrl.toString());
+      body = await ttRes.text();
+      if (ttRes.status !== 429) break;
+      const delay = 250 * Math.pow(2, attempt) + Math.floor(Math.random() * 100);
+      console.warn(`TomTom 429, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
     return new Response(body, {
-      status: ttRes.status,
+      status: ttRes!.status,
       headers: {
         ...corsHeaders,
-        'Content-Type': ttRes.headers.get('Content-Type') ?? 'application/json',
+        'Content-Type': ttRes!.headers.get('Content-Type') ?? 'application/json',
       },
     });
   } catch (err) {
