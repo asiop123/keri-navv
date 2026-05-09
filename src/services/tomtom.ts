@@ -532,8 +532,7 @@ export async function searchRestStopsAlongRoute(
 
     // TomTom search from multiple corridor points
     // categorySet: 7369=truck stop, 9352=rest area, 7312=petrol station, 7311=parking garage
-    await Promise.all(
-      searchPoints.map(async (pt) => {
+    await runLimited(searchPoints, 2, async (pt) => {
         try {
           const res = await proxyFetch(`/search/2/nearbySearch/.json`, {
             lat: pt.lat, lon: pt.lng, radius: searchRadiusM,
@@ -564,7 +563,7 @@ export async function searchRestStopsAlongRoute(
             });
           }
         } catch { /* skip */ }
-      })
+      }
     );
 
     // Google Places JS SDK search from multiple corridor points
@@ -574,8 +573,7 @@ export async function searchRestStopsAlongRoute(
       searchPoints[searchPoints.length - 1],
     ].filter((p, i, arr) => arr.findIndex(a => a.lat === p.lat && a.lng === p.lng) === i);
 
-    await Promise.all(
-      googleSearchPoints.map(async (pt) => {
+    await runLimited(googleSearchPoints, 2, async (pt) => {
         try {
           const googleResults = await searchGooglePlaces(pt.lat, pt.lng, searchRadiusM);
           for (const place of googleResults) {
@@ -596,7 +594,7 @@ export async function searchRestStopsAlongRoute(
             });
           }
         } catch { /* skip */ }
-      })
+      }
     );
   };
 
