@@ -990,6 +990,8 @@ export default function RoutePlanning() {
                           type="text"
                           value={start}
                           onChange={(e) => setStart(e.target.value)}
+                          onFocus={(e) => e.currentTarget.placeholder = ""}
+                          onBlur={(e) => e.currentTarget.placeholder = "Min position"}
                           placeholder="Min position"
                           className="flex-1 min-w-0 bg-transparent border-0 outline-none text-sm text-foreground placeholder:text-foreground truncate p-0"
                         />
