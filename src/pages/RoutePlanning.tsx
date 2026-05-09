@@ -990,13 +990,11 @@ export default function RoutePlanning() {
                           value={start}
                           onChange={setStart}
                           onSelect={(suggestion) => {
-                            if (suggestion.lat && suggestion.lng) {
-                              setStart(suggestion.name);
-                              setStartCoords({ lat: suggestion.lat, lng: suggestion.lng });
-                            }
+                            if (suggestion.name) setStart(suggestion.name);
                           }}
                           placeholder="Min position"
-                          userPosition={userPosition}
+                          biasLat={userPosition?.lat}
+                          biasLng={userPosition?.lng}
                         />
                       </div>
                       {userPosition && (
@@ -1004,7 +1002,6 @@ export default function RoutePlanning() {
                           onClick={async () => {
                             const name = await reverseGeocode(userPosition.lat, userPosition.lng);
                             setStart(name);
-                            setStartCoords({ lat: userPosition.lat, lng: userPosition.lng });
                           }}
                           className="shrink-0 p-1.5 rounded-lg hover:bg-accent transition-colors"
                           title="Min position"
