@@ -997,8 +997,8 @@ export async function generateTimeline(
 
   // Search for rest stops along the route corridor for all break points
   if (restBreakPoints.length > 0 && route.routePoints.length > 0) {
-    const results = await Promise.all(
-      restBreakPoints.map(async (bp) => {
+    const results: Array<{ bp: typeof restBreakPoints[number]; stops: RestStopInfo[] }> = [];
+    await runLimited(restBreakPoints, 1, async (bp) => {
         const stops = await searchRestStopsAlongRoute(
           route.routePoints,
           bp.fraction,
@@ -1007,8 +1007,8 @@ export async function generateTimeline(
           vehicle,
           facilityFilters
         );
-        return { bp, stops };
-      })
+        results.push({ bp, stops });
+      }
     );
 
     for (const { bp, stops } of results) {
