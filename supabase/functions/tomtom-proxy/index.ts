@@ -19,6 +19,51 @@ const ALLOWED_PREFIXES = [
   '/routing/1/calculateRoute/',
 ];
 
+type CachedTomTomResponse = {
+  body: string;
+  contentType: string;
+  status: number;
+  expiresAt: number;
+  staleUntil: number;
+};
+
+const responseCache = new Map<string, CachedTomTomResponse>();
+const inFlightRequests = new Map<string, Promise<CachedTomTomResponse>>();
+let tomtomBackoffUntil = 0;
+
+const emptySearchResponse = JSON.stringify({ results: [], rateLimited: true });
+
+function ttlForPath(path: string): number {
+  if (path.startsWith('/search/2/nearbySearch/')) return 10 * 60_000;
+  if (path.startsWith('/search/2/reverseGeocode/')) return 30 * 60_000;
+  if (path.startsWith('/search/2/geocode/')) return 30 * 60_000;
+  if (path.startsWith('/search/2/search/')) return 2 * 60_000;
+  if (path.startsWith('/routing/1/calculateRoute/')) return 2 * 60_000;
+  return 60_000;
+}
+
+function isSearchPath(path: string): boolean {
+  return path.startsWith('/search/2/nearbySearch/') || path.startsWith('/search/2/search/');
+}
+
+function cacheKeyFor(url: URL): string {
+  const params = [...url.searchParams.entries()]
+    .filter(([key]) => key !== 'key')
+    .sort(([a], [b]) => a.localeCompare(b));
+  return `${url.pathname}?${params.map(([k, v]) => `${k}=${v}`).join('&')}`;
+}
+
+function responseFromCache(entry: CachedTomTomResponse, extraHeaders: Record<string, string> = {}) {
+  return new Response(entry.body, {
+    status: entry.status,
+    headers: {
+      ...corsHeaders,
+      ...extraHeaders,
+      'Content-Type': entry.contentType,
+    },
+  });
+}
+
 function isAllowed(path: string): boolean {
   return ALLOWED_PREFIXES.some((p) => path.startsWith(p));
 }
